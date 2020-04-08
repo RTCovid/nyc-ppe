@@ -1,0 +1,31 @@
+version: '3'
+services:
+  backend:
+    env_file:
+      - backend.env
+    build:
+      dockerfile: Dockerfile
+      context: .
+    entrypoint: ["sleep", "infinity"]
+    links:
+      - db
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./:/app
+      - ~/.covid_bash_history:/home/root/.bash_history
+    environment:
+      - HISTFILE=/home/root/.bash_history
+
+  db:
+    restart: always
+    ports:
+      - "5432:5432"
+    image: postgres:11
+    env_file:
+      - db.env
+    volumes:
+      - local-db:/var/lib/postgresql/data
+
+volumes:
+  local-db:
