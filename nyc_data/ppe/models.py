@@ -3,27 +3,36 @@ import uuid
 from django.contrib.postgres.fields import JSONField
 from django.db import models
 
-from ppe.dataclasses import Item, Unit
-
-
-class BaseModel(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    data_source = models.TextField()
-
-    class Meta:
-        abstract = True
+import ppe.dataclasses as dc
+from ppe.data_mappings import DataType
 
 
 def enum2choices(enum):
     return [(v[0], v[0]) for v in enum.__members__.items()]
 
 
+def ChoiceField(enum, default=None):
+    return models.TextField(choices=[(v[0], v[0]) for v in enum.__members__.items()], default=default)
+
+
+class BaseModel(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    # TODO: why isn't this getting validated
+    data_source = ChoiceField(DataType)
+    # Keep track of data that's been replaced
+    replaced = models.BooleanField(default=False)
+
+    class Meta:
+        abstract = True
+
+
 class Purchase(BaseModel):
-    item = models.TextField(choices=enum2choices(Item))
+    order_type = ChoiceField(dc.OrderType)
+    item = ChoiceField(dc.Item)
     quantity = models.IntegerField()
-    unit = models.TextField(choices=enum2choices(Unit), default=Unit.each)
+    unit = ChoiceField(dc.Unit, default=dc.Unit.each)
 
     vendor = models.TextField()
     cost = models.IntegerField(null=True)
@@ -44,7 +53,7 @@ class Hospital(BaseModel):
 
 
 class Need(BaseModel):
-    item = models.TextField(choices=enum2choices(Item))
+    item = models.TextField(choices=enum2choices(dc.Item))
     date = models.DateField()
 
     quantity = models.IntegerField()

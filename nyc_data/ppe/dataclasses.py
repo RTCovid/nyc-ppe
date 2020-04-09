@@ -20,6 +20,11 @@ class Unit(str, Enum):
     lb = "lb"
 
 
+class OrderType(str, Enum):
+    Purchase = 'purchase'
+    Make = 'make'
+
+
 # tightly control this column to keep the DB clean
 class Item(str, Enum):
     faceshield = "faceshield"

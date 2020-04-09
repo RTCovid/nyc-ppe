@@ -1,12 +1,17 @@
 import json
 from datetime import datetime
+from enum import Enum
 from typing import NamedTuple, Dict
 
 from django.core.serializers.json import DjangoJSONEncoder
 
 from ppe import models
-from ppe.dataclasses import Item
+from ppe.dataclasses import Item, OrderType
 from xlsx_utils import SheetMapping, Mapping
+
+
+class DataType(str, Enum):
+    EDC_PPE = 'edc_ppe_data'
 
 
 def asset_name_to_item(asset_name: str) -> Item:
@@ -71,9 +76,9 @@ class SourcingRow(NamedTuple):
         delivered_quantity = (self.delivery_day_1_quantity or 0) + (self.delivery_day_2_quantity or 0)
         errors = []
         # lots of data doesn't have delivery dates.
-        #if delivered_quantity > self.quantity:
+        # if delivered_quantity > self.quantity:
         #    errors.append('Delivery > total')
-        #if delivered_quantity < self.quantity:
+        # if delivered_quantity < self.quantity:
         #    errors.append(f'Delivery < total {delivered_quantity} < {self.quantity}')
         if self.quantity is None:
             errors.append('Quantity is None')
@@ -88,7 +93,9 @@ class SourcingRow(NamedTuple):
             item=self.item,
             quantity=self.quantity,
             vendor=self.vendor,
-            raw_data=self.raw_data
+            raw_data=self.raw_data,
+            data_source=DataType.EDC_PPE,
+            order_type=OrderType.Purchase
         )
         deliveries = []
         for day in [1, 2]:
@@ -102,7 +109,8 @@ class SourcingRow(NamedTuple):
                     models.Delivery(
                         purchase=purchase,
                         delivery_date=getattr(self, f'delivery_day_{day}'),
-                        quantity=quantity
+                        quantity=quantity,
+                        data_source=DataType.EDC_PPE
                     )
                 )
         return [purchase, *deliveries]
