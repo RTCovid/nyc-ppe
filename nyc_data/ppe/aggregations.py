@@ -2,6 +2,8 @@ import datetime
 from dataclasses import dataclass
 from typing import Dict, List
 
+import django_tables2 as tables
+
 from ppe.models import Delivery
 import ppe.dataclasses as dc
 
@@ -23,7 +25,8 @@ MAPPING = {
 
 def asset_rollup(time_start: datetime, time_end: datetime) -> Dict[dc.Item, AssetRollup]:
     relevant_deliveries = Delivery.objects.prefetch_related('purchase').filter(delivery_date__gte=time_start,
-                                                                               delivery_date__lte=time_end)
+                                                                               delivery_date__lte=time_end,
+                                                                               replaced=False)
 
     results: Dict[dc.Item, AssetRollup] = {}
     for _, item in dc.Item.__members__.items():
@@ -35,7 +38,18 @@ def asset_rollup(time_start: datetime, time_end: datetime) -> Dict[dc.Item, Asse
         tpe = delivery.purchase.order_type
         param = MAPPING.get(tpe)
         if param is None:
-            raise Exception(f'unexpected purchase type: {tpe}')
+            raise Exception(f'unexpected purchase type: `{tpe}`')
         setattr(rollup, param, delivery.quantity)
 
     return results
+
+
+class AggregationTable(tables.Table):
+    asset = tables.Column()
+    demand = tables.Column()
+    donate = tables.Column()
+    sell = tables.Column()
+    make = tables.Column()
+
+    class Meta:
+        template_name = "django_tables2/bootstrap4.html"

@@ -5,7 +5,6 @@ from django.test import TestCase
 from ppe import aggregations
 from ppe.aggregations import AssetRollup
 from ppe.data_mappings import SourcingRow
-from ppe.models import Purchase
 import ppe.dataclasses as dc
 
 
