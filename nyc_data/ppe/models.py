@@ -1,8 +1,9 @@
 import uuid
-from enum import Enum
 
 from django.contrib.postgres.fields import JSONField
 from django.db import models
+
+from ppe.dataclasses import Item, Unit
 
 
 class BaseModel(models.Model):
@@ -17,20 +18,6 @@ class BaseModel(models.Model):
 
 def enum2choices(enum):
     return [(v[0], v[0]) for v in enum.__members__.items()]
-
-
-# tightly control this column to keep the DB clean
-class Item(str, Enum):
-    faceshield = "faceshield"
-    gown = "gown"
-    gown_material = "gown_material"
-    n95_mask = "n95_mask"
-
-
-class Unit(str, Enum):
-    each = "each"
-    yard = "yard"
-    lb = "lb"
 
 
 class Purchase(BaseModel):
