@@ -8,4 +8,6 @@ def run():
     path = Path('../private-data/ppe_orders.xlsx')
     data = import_xlsx(path, 'Data - Daily DCAS Sourcing', data_mappings.DCAS_DAILY_SOURCING)
     data = list(data)
-    print(data)
+    for item in data:
+        for obj in item.to_objects():
+            obj.save()

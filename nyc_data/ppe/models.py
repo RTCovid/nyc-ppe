@@ -25,15 +25,16 @@ class Purchase(BaseModel):
     quantity = models.IntegerField()
     unit = models.TextField(choices=enum2choices(Unit), default=Unit.each)
 
-    delivery_date = models.DateField(null=True)
-
-    cost = models.IntegerField()
+    vendor = models.TextField()
+    cost = models.IntegerField(null=True)
 
     raw_data = JSONField()
 
-    counterparty = models.TextField()
 
-    delivery_to = models.TextField()
+class Delivery(BaseModel):
+    purchase = models.ForeignKey(Purchase, on_delete=models.CASCADE)
+    delivery_date = models.DateField(null=True)
+    quantity = models.IntegerField()
 
 
 class Hospital(BaseModel):

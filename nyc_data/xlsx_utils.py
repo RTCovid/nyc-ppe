@@ -1,6 +1,8 @@
+import json
 from pathlib import Path
 from typing import NamedTuple, Any, Callable, List, Optional
 
+from django.core.serializers.json import DjangoJSONEncoder
 from openpyxl import load_workbook
 
 
@@ -22,7 +24,11 @@ class Mapping(NamedTuple):
 
 class SheetMapping(NamedTuple):
     mappings: List[Mapping]
+    include_raw: bool
     obj_constructor: Optional[Callable[[Any], Any]] = None
+
+
+RAW_DATA = 'raw_data'
 
 
 def import_xlsx(sheet: Path, sheet_name: str, sheet_mapping: SheetMapping):
@@ -36,7 +42,11 @@ def import_xlsx(sheet: Path, sheet_name: str, sheet_mapping: SheetMapping):
             if mapping.proc:
                 item = mapping.proc(item)
             mapped_row[mapping.obj_column_name] = item
+
+        if sheet_mapping.include_raw:
+            # allow serialization of datetimes
+            mapped_row[RAW_DATA] = json.dumps(row, cls=DjangoJSONEncoder)
         if sheet_mapping.obj_constructor:
-            yield sheet_mapping.obj_constructor(mapped_row)
+            yield sheet_mapping.obj_constructor(**mapped_row)
         else:
             yield mapped_row
