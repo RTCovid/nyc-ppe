@@ -13,3 +13,9 @@ Standard django stuff:
 python manage.py makemigrations
 python manage.py migrate
 ```
+
+## Import Data
+1. Create a directory called `private-data` at the repo root (automatically gitignored)
+2. Insert the PPE spreadsheet at `ppe_orders.xlsx`
+3. `cd nyc_data`
+3. `python manage.py runscript ppe_import`
