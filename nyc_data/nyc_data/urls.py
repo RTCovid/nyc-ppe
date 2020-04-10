@@ -18,7 +18,4 @@ from django.urls import path, include
 
 import ppe
 
-urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('ppe/', include('ppe.urls'))
-]
+urlpatterns = [path("admin/", admin.site.urls), path("ppe/", include("ppe.urls"))]

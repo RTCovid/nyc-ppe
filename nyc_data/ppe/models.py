@@ -12,7 +12,9 @@ def enum2choices(enum):
 
 
 def ChoiceField(enum, default=None):
-    return models.TextField(choices=[(v[0], v[0]) for v in enum.__members__.items()], default=default)
+    return models.TextField(
+        choices=[(v[0], v[0]) for v in enum.__members__.items()], default=default
+    )
 
 
 class BaseModel(models.Model):

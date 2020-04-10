@@ -6,13 +6,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('ppe', '0001_initial'),
+        ("ppe", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='purchase',
-            name='order_type',
-            field=models.CharField(choices=[('Purchase', 'Purchase'), ('Make', 'Make')], max_length=32),
+            model_name="purchase",
+            name="order_type",
+            field=models.CharField(
+                choices=[("Purchase", "Purchase"), ("Make", "Make")], max_length=32
+            ),
         ),
     ]

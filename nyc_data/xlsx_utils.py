@@ -23,12 +23,13 @@ class Mapping(NamedTuple):
 
 
 class SheetMapping(NamedTuple):
+    sheet_name: str
     mappings: List[Mapping]
     include_raw: bool
     obj_constructor: Optional[Callable[[Any], Any]] = None
 
 
-RAW_DATA = 'raw_data'
+RAW_DATA = "raw_data"
 
 
 def import_xlsx(sheet: Path, sheet_name: str, sheet_mapping: SheetMapping):
@@ -37,6 +38,8 @@ def import_xlsx(sheet: Path, sheet_name: str, sheet_mapping: SheetMapping):
     as_dicts = XLSXDictReader(sheet)
     for row in as_dicts:
         mapped_row = {}
+        if all(el is None for el in row.values()):
+            continue
         for mapping in sheet_mapping.mappings:
             item = row[mapping.sheet_column_name]
             if mapping.proc:

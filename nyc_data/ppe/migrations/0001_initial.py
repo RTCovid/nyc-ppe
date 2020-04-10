@@ -11,72 +11,164 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Hospital',
+            name="Hospital",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True, db_index=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('data_source', models.TextField(choices=[('EDC_PPE', 'EDC_PPE')])),
-                ('name', models.TextField()),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True, db_index=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("data_source", models.TextField(choices=[("EDC_PPE", "EDC_PPE")])),
+                ("name", models.TextField()),
             ],
-            options={
-                'abstract': False,
-            },
+            options={"abstract": False,},
         ),
         migrations.CreateModel(
-            name='Purchase',
+            name="Purchase",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True, db_index=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('data_source', models.TextField(choices=[('EDC_PPE', 'EDC_PPE')])),
-                ('order_type', models.TextField(choices=[('Purchase', 'Purchase'), ('Make', 'Make')])),
-                ('item', models.TextField(choices=[('faceshield', 'faceshield'), ('gown', 'gown'), ('gown_material', 'gown_material'), ('coveralls', 'coveralls'), ('n95_mask_non_surgical', 'n95_mask_non_surgical'), ('n95_mask_surgical', 'n95_mask_surgical'), ('kn95_mask', 'kn95_mask'), ('surgical_mask', 'surgical_mask'), ('mask_other', 'mask_other'), ('goggles', 'goggles'), ('gloves', 'gloves'), ('ventilators_full_service', 'ventilators_full_service'), ('ventilators_non_full_service', 'ventilators_non_full_service'), ('ppe_other', 'ppe_other'), ('unknown', 'unknown')])),
-                ('quantity', models.IntegerField()),
-                ('unit', models.TextField(choices=[('each', 'each'), ('yard', 'yard'), ('lb', 'lb')], default=ppe.dataclasses.Unit['each'])),
-                ('vendor', models.TextField()),
-                ('cost', models.IntegerField(null=True)),
-                ('raw_data', django.contrib.postgres.fields.jsonb.JSONField()),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True, db_index=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("data_source", models.TextField(choices=[("EDC_PPE", "EDC_PPE")])),
+                (
+                    "order_type",
+                    models.TextField(
+                        choices=[("Purchase", "Purchase"), ("Make", "Make")]
+                    ),
+                ),
+                (
+                    "item",
+                    models.TextField(
+                        choices=[
+                            ("faceshield", "faceshield"),
+                            ("gown", "gown"),
+                            ("gown_material", "gown_material"),
+                            ("coveralls", "coveralls"),
+                            ("n95_mask_non_surgical", "n95_mask_non_surgical"),
+                            ("n95_mask_surgical", "n95_mask_surgical"),
+                            ("kn95_mask", "kn95_mask"),
+                            ("surgical_mask", "surgical_mask"),
+                            ("mask_other", "mask_other"),
+                            ("goggles", "goggles"),
+                            ("gloves", "gloves"),
+                            ("ventilators_full_service", "ventilators_full_service"),
+                            (
+                                "ventilators_non_full_service",
+                                "ventilators_non_full_service",
+                            ),
+                            ("ppe_other", "ppe_other"),
+                            ("unknown", "unknown"),
+                        ]
+                    ),
+                ),
+                ("quantity", models.IntegerField()),
+                (
+                    "unit",
+                    models.TextField(
+                        choices=[("each", "each"), ("yard", "yard"), ("lb", "lb")],
+                        default=ppe.dataclasses.Unit["each"],
+                    ),
+                ),
+                ("vendor", models.TextField()),
+                ("cost", models.IntegerField(null=True)),
+                ("raw_data", django.contrib.postgres.fields.jsonb.JSONField()),
             ],
-            options={
-                'abstract': False,
-            },
+            options={"abstract": False,},
         ),
         migrations.CreateModel(
-            name='Need',
+            name="Need",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True, db_index=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('data_source', models.TextField(choices=[('EDC_PPE', 'EDC_PPE')])),
-                ('item', models.TextField(choices=[('faceshield', 'faceshield'), ('gown', 'gown'), ('gown_material', 'gown_material'), ('coveralls', 'coveralls'), ('n95_mask_non_surgical', 'n95_mask_non_surgical'), ('n95_mask_surgical', 'n95_mask_surgical'), ('kn95_mask', 'kn95_mask'), ('surgical_mask', 'surgical_mask'), ('mask_other', 'mask_other'), ('goggles', 'goggles'), ('gloves', 'gloves'), ('ventilators_full_service', 'ventilators_full_service'), ('ventilators_non_full_service', 'ventilators_non_full_service'), ('ppe_other', 'ppe_other'), ('unknown', 'unknown')])),
-                ('date', models.DateField()),
-                ('quantity', models.IntegerField()),
-                ('satisfied', models.BooleanField()),
-                ('hospital', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='ppe.Hospital')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True, db_index=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("data_source", models.TextField(choices=[("EDC_PPE", "EDC_PPE")])),
+                (
+                    "item",
+                    models.TextField(
+                        choices=[
+                            ("faceshield", "faceshield"),
+                            ("gown", "gown"),
+                            ("gown_material", "gown_material"),
+                            ("coveralls", "coveralls"),
+                            ("n95_mask_non_surgical", "n95_mask_non_surgical"),
+                            ("n95_mask_surgical", "n95_mask_surgical"),
+                            ("kn95_mask", "kn95_mask"),
+                            ("surgical_mask", "surgical_mask"),
+                            ("mask_other", "mask_other"),
+                            ("goggles", "goggles"),
+                            ("gloves", "gloves"),
+                            ("ventilators_full_service", "ventilators_full_service"),
+                            (
+                                "ventilators_non_full_service",
+                                "ventilators_non_full_service",
+                            ),
+                            ("ppe_other", "ppe_other"),
+                            ("unknown", "unknown"),
+                        ]
+                    ),
+                ),
+                ("date", models.DateField()),
+                ("quantity", models.IntegerField()),
+                ("satisfied", models.BooleanField()),
+                (
+                    "hospital",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="ppe.Hospital"
+                    ),
+                ),
             ],
-            options={
-                'abstract': False,
-            },
+            options={"abstract": False,},
         ),
         migrations.CreateModel(
-            name='Delivery',
+            name="Delivery",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True, db_index=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('data_source', models.TextField(choices=[('EDC_PPE', 'EDC_PPE')])),
-                ('delivery_date', models.DateField(null=True)),
-                ('quantity', models.IntegerField()),
-                ('purchase', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='ppe.Purchase')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True, db_index=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("data_source", models.TextField(choices=[("EDC_PPE", "EDC_PPE")])),
+                ("delivery_date", models.DateField(null=True)),
+                ("quantity", models.IntegerField()),
+                (
+                    "purchase",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="ppe.Purchase"
+                    ),
+                ),
             ],
-            options={
-                'abstract': False,
-            },
+            options={"abstract": False,},
         ),
     ]

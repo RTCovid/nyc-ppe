@@ -6,38 +6,59 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('ppe', '0002_auto_20200409_2215'),
+        ("ppe", "0002_auto_20200409_2215"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='delivery',
-            name='data_source',
-            field=models.TextField(choices=[('EDC_PPE', 'EDC_PPE')], default=None),
+            model_name="delivery",
+            name="data_source",
+            field=models.TextField(choices=[("EDC_PPE", "EDC_PPE")], default=None),
         ),
         migrations.AlterField(
-            model_name='hospital',
-            name='data_source',
-            field=models.TextField(choices=[('EDC_PPE', 'EDC_PPE')], default=None),
+            model_name="hospital",
+            name="data_source",
+            field=models.TextField(choices=[("EDC_PPE", "EDC_PPE")], default=None),
         ),
         migrations.AlterField(
-            model_name='need',
-            name='data_source',
-            field=models.TextField(choices=[('EDC_PPE', 'EDC_PPE')], default=None),
+            model_name="need",
+            name="data_source",
+            field=models.TextField(choices=[("EDC_PPE", "EDC_PPE")], default=None),
         ),
         migrations.AlterField(
-            model_name='purchase',
-            name='data_source',
-            field=models.TextField(choices=[('EDC_PPE', 'EDC_PPE')], default=None),
+            model_name="purchase",
+            name="data_source",
+            field=models.TextField(choices=[("EDC_PPE", "EDC_PPE")], default=None),
         ),
         migrations.AlterField(
-            model_name='purchase',
-            name='item',
-            field=models.TextField(choices=[('faceshield', 'faceshield'), ('gown', 'gown'), ('gown_material', 'gown_material'), ('coveralls', 'coveralls'), ('n95_mask_non_surgical', 'n95_mask_non_surgical'), ('n95_mask_surgical', 'n95_mask_surgical'), ('kn95_mask', 'kn95_mask'), ('surgical_mask', 'surgical_mask'), ('mask_other', 'mask_other'), ('goggles', 'goggles'), ('gloves', 'gloves'), ('ventilators_full_service', 'ventilators_full_service'), ('ventilators_non_full_service', 'ventilators_non_full_service'), ('ppe_other', 'ppe_other'), ('unknown', 'unknown')], default=None),
+            model_name="purchase",
+            name="item",
+            field=models.TextField(
+                choices=[
+                    ("faceshield", "faceshield"),
+                    ("gown", "gown"),
+                    ("gown_material", "gown_material"),
+                    ("coveralls", "coveralls"),
+                    ("n95_mask_non_surgical", "n95_mask_non_surgical"),
+                    ("n95_mask_surgical", "n95_mask_surgical"),
+                    ("kn95_mask", "kn95_mask"),
+                    ("surgical_mask", "surgical_mask"),
+                    ("mask_other", "mask_other"),
+                    ("goggles", "goggles"),
+                    ("gloves", "gloves"),
+                    ("ventilators_full_service", "ventilators_full_service"),
+                    ("ventilators_non_full_service", "ventilators_non_full_service"),
+                    ("ppe_other", "ppe_other"),
+                    ("unknown", "unknown"),
+                ],
+                default=None,
+            ),
         ),
         migrations.AlterField(
-            model_name='purchase',
-            name='order_type',
-            field=models.TextField(choices=[('Purchase', 'Purchase'), ('Make', 'Make')], default=None),
+            model_name="purchase",
+            name="order_type",
+            field=models.TextField(
+                choices=[("Purchase", "Purchase"), ("Make", "Make")], default=None
+            ),
         ),
     ]
