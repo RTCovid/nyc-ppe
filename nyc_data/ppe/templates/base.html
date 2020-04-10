@@ -1,0 +1,21 @@
+{% load static %}
+<html>
+<head>
+    <title>{% block titleprefix %}{% endblock %}NYC PPE Data</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">
+</head>
+<body>
+    <div class="disclaimer">
+        <strong>CONFIDENTIAL.</strong>&nbsp;DO NOT DISTRIBUTE WITHOUT AUTHORIZATION.
+    </div>
+    <div class="mid-bar">
+        NYC<b>PPE</b>
+    </div>
+    <div class="low-bar">
+        {% block titlebar %}{% endblock %}
+    </div>
+    <div class="content">
+        {% block content %}{% endblock %}
+    </div> 
+</body>
+</html>
