@@ -13,6 +13,7 @@ django-extensions = "*"
 ipdb = "*"
 django-tables2 = "*"
 django-lockdown = "*"
+gunicorn = "*"
 
 [requires]
 python_version = "3.8"
