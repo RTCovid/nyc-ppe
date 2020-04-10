@@ -45,7 +45,10 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+
     "django_extensions",
+    "lockdown",
+
     "ppe",
 ]
 
@@ -57,6 +60,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    'lockdown.middleware.LockdownMiddleware',
 ]
 
 DJANGO_TABLES2_TEMPLATE = "django_tables2/semantic.html"
@@ -66,7 +70,7 @@ ROOT_URLCONF = "nyc_data.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [os.path.join(BASE_DIR, 'templates')],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -128,3 +132,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = "/static/"
+
+
+# Third party config
+
+LOCKDOWN_PASSWORDS = (os.environ.get('LOCKDOWN_PASSWORD','opensesame'))

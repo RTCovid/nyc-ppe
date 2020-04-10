@@ -12,6 +12,7 @@ openpyxl = "*"
 django-extensions = "*"
 ipdb = "*"
 django-tables2 = "*"
+django-lockdown = "*"
 
 [requires]
 python_version = "3.8"

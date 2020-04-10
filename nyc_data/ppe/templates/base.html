@@ -1,0 +1,21 @@
+{% load static %}
+<html>
+<head>
+    <title>{% block titleprefix %}{% endblock %}NYC PPE Data</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">
+</head>
+<body>
+    <section class="disclaimer">
+        <strong>CONFIDENTIAL.</strong>&nbsp;DO NOT DISTRIBUTE WITHOUT AUTHORIZATION.
+    </section>
+    <section class="brand-bar container">
+        NYC<b>PPE</b>
+    </section>
+    <section class="title-bar">
+        {% block titlebar %}{% endblock %}
+    </section>
+    <section class="content container">
+        {% block content %}{% endblock %}
+    </section> 
+</body>
+</html>

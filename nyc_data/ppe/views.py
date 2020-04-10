@@ -24,4 +24,4 @@ def default(request):
     table = aggregations.AggregationTable(list(aggregation.values()))
     RequestConfig(request).configure(table)
     context = {"aggregations": table}
-    return render(request, "index.html", context)
+    return render(request, "dashboard.html", context)
