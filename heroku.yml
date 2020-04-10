@@ -2,4 +2,4 @@ build:
     docker:
         web: Dockerfile
 run:
-    web: gunicorn -b 0.0.0.0:$PORT nyc_data.wsgi
+    web: pipenv run gunicorn -b 0.0.0.0:$PORT nyc_data.wsgi
