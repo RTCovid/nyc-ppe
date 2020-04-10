@@ -5,17 +5,17 @@
     <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">
 </head>
 <body>
-    <div class="disclaimer">
+    <section class="disclaimer">
         <strong>CONFIDENTIAL.</strong>&nbsp;DO NOT DISTRIBUTE WITHOUT AUTHORIZATION.
-    </div>
-    <div class="mid-bar">
+    </section>
+    <section class="brand-bar container">
         NYC<b>PPE</b>
-    </div>
-    <div class="low-bar">
+    </section>
+    <section class="title-bar">
         {% block titlebar %}{% endblock %}
-    </div>
-    <div class="content">
+    </section>
+    <section class="content container">
         {% block content %}{% endblock %}
-    </div> 
+    </section> 
 </body>
 </html>

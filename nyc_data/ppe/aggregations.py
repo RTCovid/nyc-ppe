@@ -96,6 +96,7 @@ class AggregationTable(tables.Table):
     balance = tables.Column(empty_values=(), order_by="percent_balance")
 
     total = NumericalColumn()
+    inventory = NumericalColumn()
     donate = NumericalColumn()
     sell = NumericalColumn()
     make = NumericalColumn()
@@ -118,8 +119,8 @@ class AggregationTable(tables.Table):
             '<span >'
             '<span class="value balance-col {}">{}</span><span class="unit">{}</span>'
             '</span>'
-            '&nbsp;/&nbsp'
-            '<span class="value {} balance-col">{}</span>%',
+            '&nbsp;<span class="value-divider">/</span>&nbsp;'
+            '<span><span class="value {} balance-col">{}</span><span class="unit">%</span></span>',
             color_class,
             value,
 
@@ -129,4 +130,14 @@ class AggregationTable(tables.Table):
         )
 
     class Meta:
-        pass
+        order_by = ('balance',)
+        sequence = (
+            'asset',
+            'projected_demand',
+            'total',
+            'balance',
+            'inventory',
+            'donate',
+            'sell',
+            'make',
+        )
