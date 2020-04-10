@@ -18,6 +18,8 @@ COPY . /app
 
 ENV PYTHONPATH /
 
+WORKDIR /app/nyc_data
+
 ENTRYPOINT ["./prod-entrypoint.sh"]
 
 EXPOSE 8000
