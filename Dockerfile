@@ -20,6 +20,6 @@ ENV PYTHONPATH /
 
 WORKDIR /app/nyc_data
 
-ENTRYPOINT ["./prod-entrypoint.sh"]
+CMD ["./launch.sh"]
 
 EXPOSE 8000

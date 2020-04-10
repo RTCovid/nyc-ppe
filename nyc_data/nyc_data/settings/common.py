@@ -27,7 +27,7 @@ def env(k, default=None):
 ENVIRONMENT = env("ENVIRONMENT", "local")
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "2a0nl@yj7^!3ri!w((qw@ounn+gxpmrwz$22+bu%0i8owv3$e#"
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "2a0nl@yj7^!3ri!w((qw@ounn+gxpmrwz$22+bu%0i8owv3$e#")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = ENVIRONMENT == "local"
