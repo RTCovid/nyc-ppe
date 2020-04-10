@@ -42,6 +42,13 @@ class Purchase(BaseModel):
     raw_data = JSONField()
 
 
+class Inventory(BaseModel):
+    item = ChoiceField(dc.Item)
+    quantity = models.IntegerField()
+
+    raw_data = JSONField()
+
+
 class Delivery(BaseModel):
     purchase = models.ForeignKey(Purchase, on_delete=models.CASCADE)
     delivery_date = models.DateField(null=True)

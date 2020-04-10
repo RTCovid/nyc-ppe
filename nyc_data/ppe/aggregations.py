@@ -6,7 +6,7 @@ import django_tables2 as tables
 from django.utils.html import format_html
 
 import ppe.dataclasses as dc
-from ppe.models import Delivery
+from ppe.models import Delivery, Inventory
 
 
 @dataclass
@@ -16,6 +16,7 @@ class AssetRollup:
     donate: int = 0
     sell: int = 0
     make: int = 0
+    inventory: int = 0
 
     @property
     def total(self):
@@ -54,6 +55,12 @@ def asset_rollup(
         if param is None:
             raise Exception(f"unexpected purchase type: `{tpe}`")
         setattr(rollup, param, getattr(rollup, param) + delivery.quantity)
+
+    inventory = Inventory.objects.filter(replaced=False)
+    for item in inventory:
+        rollup = results[rollup_fn(dc.Item(item.item))]
+        rollup.inventory += item.quantity
+
     if estimate_demand:
         add_demand_estimate(time_start, time_end, results, rollup_fn)
 

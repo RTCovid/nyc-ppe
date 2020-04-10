@@ -1,7 +1,8 @@
 import json
+from abc import ABC, abstractmethod, ABCMeta
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import NamedTuple, Dict, Optional
+from typing import NamedTuple, Dict, Optional, NamedTupleMeta
 
 from django.core.serializers.json import DjangoJSONEncoder
 
@@ -13,6 +14,27 @@ from xlsx_utils import SheetMapping, Mapping
 class DataType(str, Enum):
     EDC_PPE = "edc_ppe_data"
     EDC_MAKE = "edc_suppliers_partners"
+    INVENTORY = "inventory"
+
+
+class ImportedNamedTuple(ABCMeta, NamedTupleMeta):
+    pass
+
+
+def repr_no_raw(obj):
+    fields = obj._asdict()
+    del fields["raw_data"]
+    return json.dumps(fields, indent=1, cls=DjangoJSONEncoder)
+
+
+class ImportedRow(metaclass=ImportedNamedTuple):
+    @abstractmethod
+    def to_objects(self):
+        pass
+
+    @abstractmethod
+    def __repr__(self):
+        pass
 
 
 def asset_name_to_item(asset_name: str) -> Item:
@@ -35,6 +57,12 @@ def asset_name_to_item(asset_name: str) -> Item:
         "Face Shield": Item.faceshield,
         "Gloves": Item.gloves,
         "Surgical Masks": Item.surgical_mask,
+        "N95": Item.n95_mask_surgical,
+        "Facemasks": Item.mask_other,
+        "Eyewear": Item.generic_eyeware,
+        "Vents": Item.ventilators_full_service,
+        "BiPAP Machines": Item.bipap_machines,
+        "Body Bags": Item.body_bags
     }
     match = mapping.get(asset_name)
     if match is not None:
@@ -76,14 +104,7 @@ def parse_int(inp: str):
         return None
 
 
-class BaseMapper:
-    def __repr__(self):
-        fields = self._asdict()
-        del fields["raw_data"]
-        return json.dumps(fields, indent=1, cls=DjangoJSONEncoder)
-
-
-class SourcingRow(BaseMapper, NamedTuple):
+class SourcingRow(ImportedRow, NamedTuple):
     item: Item
     quantity: int
 
@@ -96,9 +117,13 @@ class SourcingRow(BaseMapper, NamedTuple):
 
     raw_data: Dict[str, any]
 
+    def __repr__(self):
+        # return super().repr_no_raw()
+        return repr_no_raw(self)
+
     def sanity(self):
         delivered_quantity = (self.delivery_day_1_quantity or 0) + (
-            self.delivery_day_2_quantity or 0
+                self.delivery_day_2_quantity or 0
         )
         errors = []
         # lots of data doesn't have delivery dates.
@@ -184,7 +209,7 @@ DCAS_DAILY_SOURCING = SheetMapping(
 )
 
 
-class MakeRow(BaseMapper, NamedTuple):
+class MakeRow(ImportedRow, NamedTuple):
     item: Item
     quantity: int
     raw_data: Dict[str, any]
@@ -195,9 +220,7 @@ class MakeRow(BaseMapper, NamedTuple):
     vendor: Optional[str]
 
     def __repr__(self):
-        fields = self._asdict()
-        del fields["raw_data"]
-        return json.dumps(fields, indent=1, cls=DjangoJSONEncoder)
+        return repr_no_raw(self)
 
     def sanity(self):
         if self.quantity is None:
@@ -269,4 +292,42 @@ SUPPLIERS_AND_PARTNERS = SheetMapping(
     ],
     include_raw=True,
     obj_constructor=MakeRow,
+)
+
+
+class InventoryRow(ImportedRow, NamedTuple):
+    raw_data: Dict[str, any]
+    item: Item
+    quantity: int
+
+    def to_objects(self):
+        return [
+            models.Inventory(
+                item=self.item,
+                raw_data=self.raw_data,
+                quantity=self.quantity,
+                data_source=DataType.INVENTORY
+            )
+        ]
+
+    def __repr__(self):
+        return repr_no_raw(self)
+
+
+INVENTORY = SheetMapping(
+    sheet_name='InventoryHand',
+    mappings=[
+        Mapping(
+            sheet_column_name="Item",
+            obj_column_name="item",
+            proc=asset_name_to_item,
+        ),
+        Mapping(
+            sheet_column_name="CITY",
+            obj_column_name="quantity",
+            proc=parse_int
+        )
+    ],
+    include_raw=True,
+    obj_constructor=InventoryRow
 )

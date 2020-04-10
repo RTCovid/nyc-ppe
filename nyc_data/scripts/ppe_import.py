@@ -36,3 +36,7 @@ def run():
     print("Importing PPE made")
     path = Path("../private-data/ppe_make.xlsx")
     do_import(path, data_mappings.SUPPLIERS_AND_PARTNERS, DataType.EDC_MAKE)
+
+    print('Importing inventory')
+    path = Path('../private-data/inventory.xlsx')
+    do_import(path, data_mappings.INVENTORY, DataType.INVENTORY)
