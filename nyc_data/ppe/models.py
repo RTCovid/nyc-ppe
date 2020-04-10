@@ -1,10 +1,11 @@
 import uuid
+from enum import Enum
 
 from django.contrib.postgres.fields import JSONField
 from django.db import models
 
 import ppe.dataclasses as dc
-from ppe.data_mappings import DataType
+from ppe.data_mappings import DataSource
 
 
 def enum2choices(enum):
@@ -17,14 +18,36 @@ def ChoiceField(enum, default=None):
     )
 
 
+class ImportStatus(str, Enum):
+    active = "active"
+    replaced = "replaced"
+    candidate = "candidate"
+
+
+class DataImport(models.Model):
+    import_date = models.DateTimeField(auto_now_add=True, db_index=True)
+    status = ChoiceField(ImportStatus)
+    data_source = ChoiceField(DataSource)
+
+    uploaded_by = models.TextField(blank=True)
+    file_checksum = models.TextField()
+
+    @classmethod
+    def sanity(cls):
+        # for each data_source, at most 1 active
+        for _, src in DataSource.__members__.item():
+            ct = DataImport.objects.filter(data_source=src, status=ImportStatus.active).count()
+            if ct > 1:
+                print(f'Something is weird, more than one active object for {src}')
+                return False
+        return True
+
+
 class BaseModel(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
-    # TODO: why isn't this getting validated
-    data_source = ChoiceField(DataType)
-    # Keep track of data that's been replaced
-    replaced = models.BooleanField(default=False)
+    source = models.ForeignKey(DataImport, on_delete=models.CASCADE)
 
     class Meta:
         abstract = True

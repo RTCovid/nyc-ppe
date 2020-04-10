@@ -6,7 +6,7 @@ import django_tables2 as tables
 from django.utils.html import format_html
 
 import ppe.dataclasses as dc
-from ppe.models import Delivery, Inventory
+from ppe.models import Delivery, Inventory, ImportStatus
 
 
 @dataclass
@@ -40,8 +40,8 @@ def asset_rollup(
         rollup_fn: Callable[[dc.Item], any] = lambda x: x,
         estimate_demand=True
 ) -> Dict[str, AssetRollup]:
-    relevant_deliveries = Delivery.objects.prefetch_related("purchase").filter(
-        delivery_date__gte=time_start, delivery_date__lte=time_end, replaced=False
+    relevant_deliveries = Delivery.objects.prefetch_related("purchase", "source").filter(
+        delivery_date__gte=time_start, delivery_date__lte=time_end, source__status=ImportStatus.active
     )
 
     results: Dict[str, AssetRollup] = {}
@@ -56,7 +56,7 @@ def asset_rollup(
             raise Exception(f"unexpected purchase type: `{tpe}`")
         setattr(rollup, param, getattr(rollup, param) + delivery.quantity)
 
-    inventory = Inventory.objects.filter(replaced=False)
+    inventory = Inventory.objects.prefetch_related("source").filter(source__status=ImportStatus.active)
     for item in inventory:
         rollup = results[rollup_fn(dc.Item(item.item))]
         rollup.inventory += item.quantity

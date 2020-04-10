@@ -11,7 +11,7 @@ from ppe.dataclasses import Item, OrderType
 from xlsx_utils import SheetMapping, Mapping
 
 
-class DataType(str, Enum):
+class DataSource(str, Enum):
     EDC_PPE = "edc_ppe_data"
     EDC_MAKE = "edc_suppliers_partners"
     INVENTORY = "inventory"
@@ -145,7 +145,6 @@ class SourcingRow(ImportedRow, NamedTuple):
             quantity=self.quantity,
             vendor=self.vendor,
             raw_data=self.raw_data,
-            data_source=DataType.EDC_PPE,
             order_type=OrderType.Purchase,
         )
         deliveries = []
@@ -163,7 +162,6 @@ class SourcingRow(ImportedRow, NamedTuple):
                         purchase=purchase,
                         delivery_date=getattr(self, f"delivery_day_{day}"),
                         quantity=quantity,
-                        data_source=DataType.EDC_PPE,
                     )
                 )
         return [purchase, *deliveries]
@@ -236,7 +234,6 @@ class MakeRow(ImportedRow, NamedTuple):
             quantity=self.quantity,
             vendor=self.vendor,
             raw_data=self.raw_data,
-            data_source=DataType.EDC_MAKE,
             order_type=OrderType.Make,
         )
         dates = []
@@ -258,7 +255,6 @@ class MakeRow(ImportedRow, NamedTuple):
                 purchase=purchase,
                 delivery_date=date,
                 quantity=self.quantity,
-                data_source=DataType.EDC_MAKE,
             )
             for date in dates
         ]
@@ -306,7 +302,6 @@ class InventoryRow(ImportedRow, NamedTuple):
                 item=self.item,
                 raw_data=self.raw_data,
                 quantity=self.quantity,
-                data_source=DataType.INVENTORY
             )
         ]
 
