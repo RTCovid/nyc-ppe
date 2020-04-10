@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="lockdown">
+    {% if form %}
+    <form action="" method="post">{% csrf_token %}
+      {{ form.as_p }}
+      <p><button type="submit">Sign In</button></p>
+    </form>
+    {% endif %}
+</div>
+{% endblock %}
