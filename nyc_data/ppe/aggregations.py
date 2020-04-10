@@ -1,12 +1,12 @@
 import datetime
 from dataclasses import dataclass
-from typing import Dict, List, Callable
+from typing import Dict, Callable
 
 import django_tables2 as tables
 from django.utils.html import format_html
 
-from ppe.models import Delivery
 import ppe.dataclasses as dc
+from ppe.models import Delivery
 
 
 @dataclass
@@ -115,11 +115,11 @@ class AggregationTable(tables.Table):
             color_class = 'yellow'
 
         return format_html(
-            '<span class="balance-absolute">'
-            '<span class="value {}">{}</span><span class="unit">{}</span>'
+            '<span >'
+            '<span class="value balance-col {}">{}</span><span class="unit">{}</span>'
             '</span>'
             '&nbsp;/&nbsp'
-            '<span class="value {}">{}</span>%',
+            '<span class="value {} balance-col">{}</span>%',
             color_class,
             value,
 

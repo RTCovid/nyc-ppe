@@ -61,9 +61,15 @@ line-height: 37px;
 color: #666666;
 }
 
+tr.even {
+    background: #ACACAC21;
+}
+
 td {
     white-space: pre;
     padding-right: 40px;
+    padding-top: 16px;
+    padding-bottom: 16px;
 }
 
 th {
@@ -73,8 +79,11 @@ th {
 .value {
     font-size: 18px;
     line-height: 21px;
-    font-weight: bold;
     color: #000000;
+}
+
+.balance-col {
+    font-weight: bold;
 }
 
 .unit {
@@ -94,6 +103,7 @@ th {
 
 table {
     border-spacing: 0 1em;
+    border-collapse: collapse;
 
 }
 
