@@ -14,6 +14,7 @@ ipdb = "*"
 django-tables2 = "*"
 django-lockdown = "*"
 gunicorn = "*"
+dj-database-url = "*"
 
 [requires]
 python_version = "3.8"
