@@ -34,7 +34,7 @@ def asset_name_to_item(asset_name: str) -> Item:
         "Faceshield": Item.faceshield,
         "Face Shield": Item.faceshield,
         "Gloves": Item.gloves,
-        "Surgical Masks": Item.mask_other,
+        "Surgical Masks": Item.surgical_mask,
     }
     match = mapping.get(asset_name)
     if match is not None:
@@ -220,9 +220,6 @@ class MakeRow(BaseMapper, NamedTuple):
         if self.delivery_date:
             dates.append(self.delivery_date)
         elif "weekly" in self.raw_date:
-            import pdb
-
-            pdb.set_trace()
             import re
 
             date_str = re.sub(r"[a-zA-Z ]+", "", self.raw_date).strip()

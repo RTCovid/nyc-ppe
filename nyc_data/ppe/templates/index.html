@@ -1,9 +1,20 @@
 {% load render_table from django_tables2 %}
+{% load static %}
 <html>
 <head>
     <title>Live PPE Data</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">
 </head>
 <body>
+<div class="top-bar">
+    <strong>CONFIDENTIAL.</strong>&nbsp;DO NOT DISTRIBUTE WITHOUT AUTHORIZATION
+</div>
+<div class="mid-bar">
+    NYC<b>PPE</b>
+</div>
+<div class="low-bar">
+    Current status including all sources for the next 30 days
+</div>
 {% render_table aggregations %}
 </body>
 </html>
