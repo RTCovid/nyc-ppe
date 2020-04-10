@@ -12,6 +12,7 @@ class MayoralCategory(str, Enum):
     other_ppe = "Other PPE"
     surgical_masks = "Surgical Masks"
     other_medical_supplies = "Other Medical Supplies"
+    uncategorized = "Uncategorized"
 
     def display(self):
         return self.value
@@ -42,14 +43,18 @@ class Item(str, Enum):
     mask_other = "mask_other"
 
     goggles = "goggles"
+    generic_eyeware = "generic_eyeware"
 
     gloves = "gloves"
 
     ventilators_full_service = "ventilators_full"
     ventilators_non_full_service = "ventilators_non_full"
+    bipap_machines = "bipap_machines"
 
     ppe_other = "ppe_other"
     unknown = "unknown"
+
+    body_bags = "body_bags"
 
     def to_mayoral_category(self):
         return ITEM_TO_MAYORAL[self]
@@ -72,19 +77,23 @@ ITEM_TO_DISPLAYNAME = {
 
     Item.goggles: 'Goggles',
     Item.gloves: 'Gloves',
+    Item.generic_eyeware: 'Eyeware',
 
     Item.ventilators_full_service: 'Full Service Ventilators',
     Item.ventilators_non_full_service: 'Non Full Service Ventilators',
+    Item.bipap_machines: 'BiPap Machines',
 
     Item.ppe_other: 'Other PPE',
-    Item.unknown: 'Unknown'
+    Item.unknown: 'Unknown',
+
+    Item.body_bags: 'Body bags'
 
 }
 
 ITEM_TO_MAYORAL = {
     Item.faceshield: MayoralCategory.eye_protection,
     Item.gown: MayoralCategory.iso_gowns,
-    Item.gown_material: None,
+    Item.gown_material: MayoralCategory.uncategorized,
     Item.coveralls: MayoralCategory.other_ppe,
 
     Item.n95_mask_non_surgical: MayoralCategory.non_surgical_masks,
@@ -95,10 +104,14 @@ ITEM_TO_MAYORAL = {
 
     Item.goggles: MayoralCategory.eye_protection,
     Item.gloves: MayoralCategory.gloves,
+    Item.generic_eyeware: MayoralCategory.eye_protection,
 
     Item.ventilators_full_service: MayoralCategory.ventilators_full_service,
     Item.ventilators_non_full_service: MayoralCategory.ventilators_non_full_service,
+    # TODO: mayoral category for BiPAP machines
+    Item.bipap_machines: MayoralCategory.uncategorized,
 
     Item.ppe_other: MayoralCategory.other_ppe,
-    Item.unknown: None
+    Item.unknown: MayoralCategory.uncategorized,
+    Item.body_bags: MayoralCategory.uncategorized
 }

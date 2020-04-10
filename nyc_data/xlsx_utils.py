@@ -26,7 +26,7 @@ class SheetMapping(NamedTuple):
     sheet_name: str
     mappings: List[Mapping]
     include_raw: bool
-    obj_constructor: Optional[Callable[[Any], Any]] = None
+    obj_constructor: Optional[Callable[[Any], 'ImportedRow']] = None
 
 
 RAW_DATA = "raw_data"
