@@ -129,7 +129,7 @@ class AggregationTable(tables.Table):
         # for some reason the whitespace keeps showing up in the HTML
         # so confused.
         return format_html(
-            '<div style="width: 250px; display: flex; justify-content: space-between">'
+            '<div style="width: 230px; display: flex; justify-content: space-between">'
             '<span>'  # start numeric
             '<span>'
             '<span class="value balance-col {color_class}">{value}</span><span class="unit">{unit}</span>'
