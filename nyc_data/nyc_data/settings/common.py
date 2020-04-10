@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 # Quick-start development settings - unsuitable for production
@@ -27,7 +27,7 @@ def env(k, default=None):
 ENVIRONMENT = env("ENVIRONMENT", "local")
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "2a0nl@yj7^!3ri!w((qw@ounn+gxpmrwz$22+bu%0i8owv3$e#"
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "2a0nl@yj7^!3ri!w((qw@ounn+gxpmrwz$22+bu%0i8owv3$e#")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = ENVIRONMENT == "local"
@@ -54,6 +54,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",

@@ -13,6 +13,9 @@ django-extensions = "*"
 ipdb = "*"
 django-tables2 = "*"
 django-lockdown = "*"
+gunicorn = "*"
+dj-database-url = "*"
+whitenoise = "*"
 
 [requires]
 python_version = "3.8"
