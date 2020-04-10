@@ -116,25 +116,59 @@ class AggregationTable(tables.Table):
         percent = record.percent_balance
         value, unit = split_value_unit(absolute)
         percent_str = f'{int(percent * 100)}'
+        if percent*100 > 500:
+            percent_str = '>500'
         color_class = ''
         if percent < -.2:
             color_class = 'red'
         elif percent < 0:
             color_class = 'yellow'
+        else:
+            color_class = 'gray'
 
+        # for some reason the whitespace keeps showing up in the HTML
+        # so confused.
         return format_html(
-            '<span >'
-            '<span class="value balance-col {}">{}</span><span class="unit">{}</span>'
+            '<div style="width: 250px; display: flex; justify-content: space-between">'
+            '<span>'  # start numeric
+            '<span>'
+            '<span class="value balance-col {color_class}">{value}</span><span class="unit">{unit}</span>'
             '</span>'
             '&nbsp;<span class="value-divider">/</span>&nbsp;'
-            '<span><span class="value {} balance-col">{}</span><span class="unit">%</span></span>',
-            color_class,
-            value,
+            '<span><span class="value {color_class} balance-col">{percent_str}</span><span class="unit">%</span></span>'
+            '</span>'
+            '</span>'  # end numeric
+            '<span >'  # start balance bar
+            '<span style="padding-left: {neg_delta}px">'
+            '<span class="balance-bar-{color_class}" style="padding-left: {neg_width}px"></span>'
+            '</span>'
+            '<span class="divider"></span>'
+            '<span style="padding-right: {pos_delta}px">'
+            '<span class="balance-bar-{color_class}" style="padding-left: {pos_width}px"></span>'
+            '</span>'
+            '</span>'  # end balance bar
+            '</div>',
 
-            unit,
-            color_class,
-            percent_str
+            color_class=color_class,
+            value=value,
+
+            unit=unit,
+            percent_str=percent_str,
+            neg_width=min(min(int(percent * 100), 0) * -1, 50),
+            pos_width=max(min(int(percent * 100), 50), 0),
+            neg_delta=50-min(min(int(percent * 100), 0) * -1, 50),
+            pos_delta=50-max(min(int(percent * 100), 50), 0),
         )
+
+        # """
+        # <span>
+        #    <span class="value balance-col {color_class}">{value}</span><span class="unit">{unit}</span>
+        #    <span>&nbsp;<span class="value-divider">/</span>&nbsp;</span>
+        #    <span>
+        #        <span class="value {color_class} balance-col">{percent}</span><span class="unit">%</span>
+        #    </span>
+        # </span>
+        # """
 
     class Meta:
         order_by = ('balance',)
