@@ -1,9 +1,11 @@
 import collections
 import dataclasses as dc
 import hashlib
+import tempfile
 from pathlib import Path
 from typing import Optional
 
+import xlsx_utils
 from ppe.data_mappings import DataSource
 from ppe import data_mappings
 from ppe.models import Purchase, Delivery, Inventory, ImportStatus, DataImport
@@ -20,8 +22,40 @@ class DataImportError(Exception):
     pass
 
 
+def handle_upload(f) -> DataImport:
+    with tempfile.NamedTemporaryFile('w+b', delete=False, suffix=f.name) as upload_target:
+        for chunk in f.chunks():
+            upload_target.write(chunk)
+        return smart_import(Path(upload_target.name))
+
+
 def import_in_progress(data_source: DataSource):
     return DataImport.objects.filter(data_source=data_source, status=ImportStatus.candidate)
+
+
+class NoMappingForFileError(DataImportError):
+    pass
+
+
+class MultipleMappingsForFileError(DataImportError):
+    pass
+
+
+class ImportInProgressError(DataImportError):
+    def __init__(self, import_id):
+        self.import_id = import_id
+
+
+def smart_import(path: Path) -> DataImport:
+    possible_mappings = xlsx_utils.guess_mapping(path, list(MAPPINGS.values()))
+    if len(possible_mappings) == 0:
+        raise NoMappingForFileError()
+    elif len(possible_mappings) > 1:
+        raise MultipleMappingsForFileError()
+    else:
+        inferred_mapping = possible_mappings[0]
+        data_source = [src for (src, mapping) in MAPPINGS.items() if mapping == inferred_mapping][0]
+        return import_data(path, data_source)
 
 
 def import_data(path: Path, data_source: DataSource, uploaded_by: Optional[str] = None, overwrite_in_prog=False):
@@ -31,8 +65,7 @@ def import_data(path: Path, data_source: DataSource, uploaded_by: Optional[str] 
         if overwrite_in_prog:
             in_progress.update(status=ImportStatus.replaced)
         else:
-            raise DataImportError(
-                f"Can't import data -- there is already an import in progress ({in_progress.first().import_date})")
+            raise ImportInProgressError(in_progress.first().id)
 
     with open(path, 'rb') as f:
         checksum = hashlib.sha256(f.read())
