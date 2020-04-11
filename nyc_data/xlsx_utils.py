@@ -32,9 +32,24 @@ class SheetMapping(NamedTuple):
 RAW_DATA = "raw_data"
 
 
-def import_xlsx(sheet: Path, sheet_name: str, sheet_mapping: SheetMapping):
+def guess_mapping(sheet: Path, possible_mappings: List[SheetMapping]):
     workbook = load_workbook(sheet)
-    sheet = workbook[sheet_name]
+    possible_mappings = [m for m in possible_mappings if m.sheet_name in workbook.sheetnames]
+
+    final_mappings = []
+    for mapping in possible_mappings:
+        sheet = workbook[mapping.sheet_name]
+        first_row = next(XLSXDictReader(sheet))
+        col_names = [m.sheet_column_name for m in mapping.mappings]
+        if all(col_name in first_row for col_name in col_names):
+            final_mappings.append(mapping)
+
+    return final_mappings
+
+
+def import_xlsx(sheet: Path, sheet_mapping: SheetMapping):
+    workbook = load_workbook(sheet)
+    sheet = workbook[sheet_mapping.sheet_name]
     as_dicts = XLSXDictReader(sheet)
     for row in as_dicts:
         mapped_row = {}

@@ -1,27 +1,24 @@
+import os
 from pathlib import Path
 
-from ppe.data_import import full_import
-from ppe.data_mappings import DataSource
+import xlsx_utils
+from ppe.data_import import MAPPINGS
+from ppe import data_import
 
 
 def run():
-    print("Importing PPEs purchased")
-    path = Path("../private-data/ppe_orders.xlsx")
-    if path.exists():
-        full_import(path, DataSource.EDC_PPE, overwrite_in_prog=True)
-    else:
-        print(f'No file to import @ {path}')
+    private_data_dir = Path('../private-data')
+    xlsx_files = [f for f in private_data_dir.iterdir() if f.suffix == '.xlsx']
+    print(f"Found {len(xlsx_files)} xlsx files in private-data")
+    for file in xlsx_files:
+        possible_mappings = xlsx_utils.guess_mapping(file, MAPPINGS.values())
+        if len(possible_mappings) == 0:
+            print(f'No mapping found for {file}, ignoring')
+        elif len(possible_mappings) > 1:
+            print(f'Multiple mappings found for {file}. This is weird (ignoring)!')
+        else:
+            inferred_mapping = possible_mappings[0]
+            print(f'Importing {file} inferred to be {inferred_mapping}')
+            data_source = [src for (src, mapping) in MAPPINGS.items() if mapping == inferred_mapping][0]
+            data_import.full_import(file, data_source, overwrite_in_prog=True)
 
-    print("Importing PPE made")
-    path = Path("../private-data/ppe_make.xlsx")
-    if path.exists():
-        full_import(path, DataSource.EDC_MAKE)
-    else:
-        print(f'No file to import @ {path}')
-
-    print('Importing inventory')
-    path = Path('../private-data/inventory.xlsx')
-    if path.exists():
-        full_import(path, DataSource.INVENTORY)
-    else:
-        print(f'No file to import @ {path}')

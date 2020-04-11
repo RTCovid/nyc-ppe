@@ -9,7 +9,7 @@ from ppe import data_mappings
 from ppe.models import Purchase, Delivery, Inventory, ImportStatus, DataImport
 from xlsx_utils import import_xlsx
 
-mappings = {
+MAPPINGS = {
     DataSource.EDC_MAKE: data_mappings.SUPPLIERS_AND_PARTNERS,
     DataSource.INVENTORY: data_mappings.INVENTORY,
     DataSource.EDC_PPE: data_mappings.DCAS_DAILY_SOURCING
@@ -39,8 +39,8 @@ def import_data(path: Path, data_source: DataSource, uploaded_by: Optional[str] 
 
     uploaded_by = uploaded_by or ''
 
-    mapping = mappings[data_source]
-    data = import_xlsx(path, mapping.sheet_name, mapping)
+    mapping = MAPPINGS[data_source]
+    data = import_xlsx(path, mapping)
     data = list(data)
     obj_types = {Purchase, Delivery, Inventory}
     num_active_objects = {
