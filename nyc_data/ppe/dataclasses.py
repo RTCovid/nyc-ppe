@@ -1,4 +1,6 @@
+from datetime import datetime
 from enum import Enum
+from typing import NamedTuple, Optional
 
 
 class MayoralCategory(str, Enum):
@@ -62,6 +64,15 @@ class Item(str, Enum):
     def display(self):
         return ITEM_TO_DISPLAYNAME[self]
 
+
+class Delivery(NamedTuple):
+    quantity: int
+    delivery_date: datetime
+    item: str
+    description: str
+    # TODO: probably want to have source info structured
+    source: str
+    vendor: Optional[str] = None
 
 ITEM_TO_DISPLAYNAME = {
     Item.faceshield: 'Face Shields',

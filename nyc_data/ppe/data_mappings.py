@@ -106,6 +106,7 @@ def parse_int(inp: str):
 
 class SourcingRow(ImportedRow, NamedTuple):
     item: Item
+    description: str
     quantity: int
 
     vendor: str
@@ -146,6 +147,7 @@ class SourcingRow(ImportedRow, NamedTuple):
             vendor=self.vendor,
             raw_data=self.raw_data,
             order_type=OrderType.Purchase,
+            description=self.description
         )
         deliveries = []
         for day in [1, 2]:
@@ -174,6 +176,10 @@ DCAS_DAILY_SOURCING = SheetMapping(
             sheet_column_name="Type  Hierarchy - Critical Asset",
             obj_column_name="item",
             proc=asset_name_to_item,
+        ),
+        Mapping(
+            sheet_column_name='Type  Hierarchy - Description',
+            obj_column_name='description',
         ),
         Mapping(
             sheet_column_name="Sum of Total Ordered Individual Unit Qty",

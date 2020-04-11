@@ -53,7 +53,8 @@ def import_data(path: Path, data_source: DataSource, uploaded_by: Optional[str] 
         status=ImportStatus.candidate,
         data_source=data_source,
         uploaded_by=uploaded_by,
-        file_checksum=checksum
+        file_checksum=checksum,
+        file_name=path.name
     )
     data_import.save()
     for item in data:

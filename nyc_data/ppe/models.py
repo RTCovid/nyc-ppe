@@ -31,6 +31,7 @@ class DataImport(models.Model):
 
     uploaded_by = models.TextField(blank=True)
     file_checksum = models.TextField()
+    file_name = models.TextField()
 
     @classmethod
     def sanity(cls):
@@ -42,6 +43,9 @@ class DataImport(models.Model):
                 return False
         return True
 
+    def display(self):
+        return f'File uploaded {self.import_date.strftime("%d/%m/%y")} by {self.uploaded_by or "unknown"}. Filename: {self.file_name}'
+
 
 class BaseModel(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -49,13 +53,19 @@ class BaseModel(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     source = models.ForeignKey(DataImport, on_delete=models.CASCADE)
 
+    @classmethod
+    def active(cls):
+        return cls.objects.prefetch_related('source').filter(source__status=ImportStatus.active)
+
     class Meta:
         abstract = True
 
 
 class Purchase(BaseModel):
     order_type = ChoiceField(dc.OrderType)
+
     item = ChoiceField(dc.Item)
+    description = models.TextField(blank=True)
     quantity = models.IntegerField()
     unit = ChoiceField(dc.Unit, default=dc.Unit.each)
 
@@ -76,6 +86,16 @@ class Delivery(BaseModel):
     purchase = models.ForeignKey(Purchase, on_delete=models.CASCADE)
     delivery_date = models.DateField(null=True)
     quantity = models.IntegerField()
+
+    def to_dataclass(self):
+        return dc.Delivery(
+            item=dc.Item(self.purchase.item).display(),
+            description=self.purchase.description,
+            delivery_date=self.delivery_date,
+            quantity=self.quantity,
+            vendor=self.purchase.vendor,
+            source=self.source.display()
+        )
 
 
 class Hospital(BaseModel):
