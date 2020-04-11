@@ -5,12 +5,19 @@ from django.test import TestCase
 
 from ppe import aggregations
 from ppe.aggregations import AssetRollup
-from ppe.data_mappings import SourcingRow
+from ppe.data_mappings import SourcingRow, DataSource
 import ppe.dataclasses as dc
+from ppe.models import DataImport, ImportStatus
 
 
 class TestAssetRollup(TestCase):
     def setUp(self) -> None:
+        self.data_import = DataImport(
+            status=ImportStatus.active,
+            data_source=DataSource.EDC_PPE,
+            file_checksum='123'
+        )
+        self.data_import.save()
         items = SourcingRow(
             item=dc.Item.gown,
             quantity=1005,
@@ -23,6 +30,7 @@ class TestAssetRollup(TestCase):
         ).to_objects()
 
         for item in items:
+            item.source = self.data_import
             item.save()
 
     def test_rollup(self):
@@ -49,6 +57,18 @@ class TestAssetRollup(TestCase):
         self.assertEqual(len(rollup), len(dc.MayoralCategory) - 1)
         self.assertEqual(rollup[dc.MayoralCategory.iso_gowns],
                          AssetRollup(asset=dc.MayoralCategory.iso_gowns, demand=20, sell=5))
+
+    def test_only_aggregate_active_items(self):
+        self.data_import.status = ImportStatus.replaced
+        self.data_import.save()
+        try:
+            rollup = aggregations.asset_rollup(
+                datetime.now() - timedelta(days=28), datetime.now()
+            )
+            self.assertEqual(rollup[dc.Item.gown], AssetRollup(asset=dc.Item.gown, demand=0, sell=0))
+        finally:
+            self.data_import.status = ImportStatus.active
+            self.data_import.save()
 
 
 class TestCategoryMappings(unittest.TestCase):
