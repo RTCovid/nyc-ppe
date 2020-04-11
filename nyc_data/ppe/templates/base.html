@@ -12,10 +12,14 @@
         NYC<b>PPE</b>
     </section>
     <section class="title-bar">
-        {% block titlebar %}{% endblock %}
+        <section class="container">
+            {% block titlebar %}{% endblock %}
+        </section>
     </section>
     <section class="content container">
         {% block content %}{% endblock %}
     </section> 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.0/jquery.slim.min.js" integrity="sha256-MlusDLJIP1GRgLrOflUQtshyP0TwT/RHXsI1wWGnQhs=" crossorigin="anonymous"></script>
+    <script src="{% static 'script.js' %}"></script>
 </body>
 </html>

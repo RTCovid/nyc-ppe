@@ -46,16 +46,22 @@ section.container {
 .title-bar {
     height: 70px;
     background: #EEEEEE;
+}
 
+.title-bar .container {
     display: flex;
     align-items: center;
-    justify-content: center;
     font-style: normal;
-    font-weight: normal;
-    font-size: 32px;
-    line-height: 37px;
+    justify-content: space-between;
+    height: 100%;
+}
+
+.title-bar h2 {
+    font-weight: 300;
+    font-size: 28px;
     /* identical to box height */
     color: #666666;
+    padding-right: 20px;
 }
 
 section.content {
@@ -205,4 +211,42 @@ td:last-child {
 .lockdown button:hover {
     box-shadow: rgba(0, 0, 0, 0.05) 0px 0px 0px 1px, rgba(0, 0, 0, 0.15) 0px 5px 10px;
     outline: none;
+}
+
+/* Rollup toggle */
+
+.toggle {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+}
+.toggle label {
+    display: inline-block;
+    color: #aaa;
+    text-transform: uppercase;
+    padding-right: 10px;
+}
+.toggle ul {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    list-style-type: none;
+}
+.toggle li {
+    border: 1px solid #ddd;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-weight: 300;
+    margin-right: 10px;
+}
+.toggle li.active {
+    background: #666;
+}
+.toggle a {
+    color: #666;
+    text-decoration: none;
+}
+.toggle li.active a {
+    color: #fff;
+    font-weight: normal;
 }
