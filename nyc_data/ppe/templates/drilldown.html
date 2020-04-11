@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block titlebar %}
+<h2>Incoming supply for {{ asset_category }}</h2>
+{% endblock %}
+
+{% block content %}
+<div class="incoming-supply">
+    <ul>
+        {% for delivery in deliveries %}
+        <li>
+            Receiving {{ delivery.quantity }} {{ delivery.item }} ({{ delivery.description }}) on {{ delivery.delivery_date }} from {{ delivery.vendor }} (source: {{ delivery.source }})
+        </li>
+        {% endfor %}
+
+    </ul>
+
+</div>
+{% endblock %}

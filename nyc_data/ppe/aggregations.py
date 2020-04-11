@@ -109,14 +109,17 @@ class AggregationTable(tables.Table):
     make = NumericalColumn()
 
     def render_asset(self, value):
-        return value.display()
+        href = f'/drilldown?category={value}'
+        if isinstance(value, dc.MayoralCategory):
+            href += '&rollup=mayoral'
+        return format_html('<a href="{href}">{display_name}', href=href, display_name=value.display())
 
     def render_balance(self, record: AssetRollup):
         absolute = record.absolute_balance
         percent = record.percent_balance
         value, unit = split_value_unit(absolute)
         percent_str = f'{int(percent * 100)}'
-        if percent*100 > 500:
+        if percent * 100 > 500:
             percent_str = '>500'
         color_class = ''
         if percent < -.2:
@@ -156,8 +159,8 @@ class AggregationTable(tables.Table):
             percent_str=percent_str,
             neg_width=min(min(int(percent * 100), 0) * -1, 50),
             pos_width=max(min(int(percent * 100), 50), 0),
-            neg_delta=50-min(min(int(percent * 100), 0) * -1, 50),
-            pos_delta=50-max(min(int(percent * 100), 50), 0),
+            neg_delta=50 - min(min(int(percent * 100), 0) * -1, 50),
+            pos_delta=50 - max(min(int(percent * 100), 50), 0),
         )
 
         # """
