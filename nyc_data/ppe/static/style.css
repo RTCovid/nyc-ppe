@@ -40,7 +40,18 @@ section.container {
     font-size: 42px;
     line-height: 49px;
 
+    justify-content: space-between;
+
     color: #666666;
+}
+
+.upload-btn {
+    border-radius: 20px;
+    background: #EEEEEE;
+    font-size: 14px;
+    text-decoration: none;
+    color: rgb(102, 102, 102);
+    padding: 20px;
 }
 
 .title-bar {
@@ -233,18 +244,19 @@ td:last-child {
     list-style-type: none;
 }
 .toggle li {
-    border: 1px solid #ddd;
-    padding: 10px 20px;
-    border-radius: 20px;
     font-weight: 300;
     margin-right: 10px;
 }
-.toggle li.active {
+
+.toggle li.active a {
     background: #666;
 }
 .toggle a {
     color: #666;
+    border-radius: 20px;
     text-decoration: none;
+    padding: 10px 20px;
+    border: 1px solid #ddd;
 }
 .toggle li.active a {
     color: #fff;
