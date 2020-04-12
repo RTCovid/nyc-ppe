@@ -72,6 +72,11 @@ class Upload(View):
                 return render(request, "upload.html",
                               UploadContext(error="Import already in progress for this file type",
                                             import_in_progress=ex.import_id)._asdict())
+            
+            except data_import.NoMappingForFileError as ex:
+                return render(request, "upload.html",
+                              UploadContext(error="No mapping found for this file")._asdict())
+            
 
 
 class Verify(View):
