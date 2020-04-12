@@ -19,12 +19,12 @@ def mayoral_rollup(row):
 
 
 def default(request):
-    if request.GET.get('rollup') == 'mayoral':
+    if request.GET.get('rollup', '') in ['mayoral', '', None]:
         aggregation = aggregations.asset_rollup(
             datetime.now(), datetime.now() + timedelta(days=30),
             mayoral_rollup
         )
-    else:
+    elif request.GET.get('rollup', '') in ['critical',]:
         aggregation = aggregations.asset_rollup(
             datetime.now(), datetime.now() + timedelta(days=30)
         )
