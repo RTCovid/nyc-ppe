@@ -2,6 +2,7 @@ import collections
 import datetime
 from dataclasses import dataclass
 from typing import Dict, Callable
+import json
 
 import django_tables2 as tables
 from django.db.models import Sum
@@ -9,6 +10,12 @@ from django.utils.html import format_html
 
 import ppe.dataclasses as dc
 from ppe.models import ScheduledDelivery, Inventory, ImportStatus, FacilityDelivery
+
+# NY Forecast from https://covid19.healthdata.org/united-states-of-america/new-york
+HOSPITALIZATION = {}
+with open('../public-data/hospitalization_projection_new_york.json', 'r') as f:
+    HOSPITALIZATION = json.load(f)
+ALL_BEDS_AVAILABLE = 20420
 
 
 @dataclass
@@ -40,7 +47,8 @@ def asset_rollup(
         time_start: datetime,
         time_end: datetime,
         rollup_fn: Callable[[dc.Item], any] = lambda x: x,
-        estimate_demand=True
+        estimate_demand=True,
+        use_hospitalization_projection=True
 ) -> Dict[str, AssetRollup]:
     relevant_deliveries = ScheduledDelivery.active().prefetch_related('purchase').filter(
         delivery_date__gte=time_start, delivery_date__lte=time_end
@@ -64,7 +72,7 @@ def asset_rollup(
         rollup.inventory += item.quantity
 
     if estimate_demand:
-        add_demand_estimate(time_start, time_end, results, rollup_fn)
+        add_demand_estimate(time_start, time_end, results, rollup_fn, use_hospitalization_projection)
 
     return results
 
@@ -82,15 +90,46 @@ def demand_for_period(time_start: datetime, time_end: datetime, rollup_fn):
         rollup[rollup_fn(dc.Item(row['item']))] += row['quantity__sum']
     return rollup
 
-def add_demand_estimate(time_start: datetime, time_end: datetime, rollup: Dict[str, AssetRollup], rollup_fn):
+def add_demand_estimate(time_start: datetime,
+                        time_end: datetime,
+                        rollup: Dict[str, AssetRollup],
+                        rollup_fn,
+                        use_hospitalization_projection=True):
     last_week = datetime.datetime.today() - datetime.timedelta(days=7)
-
     last_weeks_demand = demand_for_period(last_week, datetime.datetime.today(), rollup_fn)
     last_week_rollup = asset_rollup(time_start, time_end, rollup_fn, estimate_demand=False)
     scaling_factor = (time_end - time_start) / datetime.timedelta(days=7)
+
+    # Get last week's total hospitalization
+    total_hospitalization = 0
+    for n in range(0, 6):
+        date = last_week + datetime.timedelta(days=n)
+        hospitalization = HOSPITALIZATION[date.strftime("%Y-%m-%d")]
+        # Use All Beds Available as baseline
+        if not hospitalization or hospitalization < ALL_BEDS_AVAILABLE:
+            hospitalization = ALL_BEDS_AVAILABLE
+        total_hospitalization += hospitalization
+
+    # Iterate through each category
     for k, rollup in rollup.items():
         # ignore donations
-        rollup.demand = int((last_week_rollup[k].sell + last_week_rollup[k].make) * scaling_factor)
+        last_week_supply = last_week_rollup[k].sell + last_week_rollup[k].make
+        if use_hospitalization_projection:
+            # Per hospitalization demand
+            demand_per_patient_per_day = last_week_supply / total_hospitalization
+
+            # Add up the forecast demand for each day between time_start and time_end
+            rollup.demand = 0
+            date = time_start
+            while date <= time_end:
+                hospitalization = HOSPITALIZATION[date.strftime("%Y-%m-%d")]
+                if not hospitalization or hospitalization < ALL_BEDS_AVAILABLE:
+                    hospitalization = ALL_BEDS_AVAILABLE
+                rollup.demand += demand_per_patient_per_day * hospitalization
+                date += datetime.timedelta(days=1)
+            rollup.demand = int(rollup.demand)
+        else:
+            rollup.demand = int(last_week_supply * scaling_factor)
 
 
 def pretty_render_numeric(value):

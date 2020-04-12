@@ -1,7 +1,9 @@
 from datetime import datetime
 from enum import Enum
-from typing import NamedTuple, Optional, List
 
+from dataclasses import dataclass
+
+from typing import NamedTuple, Optional, List
 
 class MayoralCategory(str, Enum):
     eye_protection = "Eye Protection"
@@ -76,6 +78,16 @@ class Delivery(NamedTuple):
     source: str
     vendor: Optional[str] = None
 
+
+@dataclass
+class Forecast:
+    date: str
+    demand: int
+    existing_supply: int
+    additional_supply: int
+    inventory: int
+
+
 class Purchase(NamedTuple):
     order_type: OrderType
     vendor: str
@@ -88,11 +100,13 @@ class Purchase(NamedTuple):
 
     deliveries: List[Delivery]
 
+
 class Supplier(str, Enum):
     dcas_donations = 'dcas_donations'
     dcas_procurement = 'dcas_procurement'
     # stuff like CVD19 Supply, SNS, etc.
     other = 'other'
+
 
 class FacilityType(str, Enum):
     government = 'government'
@@ -100,6 +114,7 @@ class FacilityType(str, Enum):
     ems = 'ems'
     nursing_home = 'nursing_home'
     clinic = 'clinic'
+
 
 ITEM_TO_DISPLAYNAME = {
     Item.faceshield: 'Face Shields',

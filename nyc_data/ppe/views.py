@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from typing import NamedTuple, Optional
 
+from django.http import HttpResponse, JsonResponse
 from django.forms import Form
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
@@ -12,6 +13,7 @@ from ppe import aggregations, dataclasses as dc
 from ppe import forms, data_import
 from ppe.drilldown import drilldown_result
 from ppe.models import DataImport
+from ppe.optimization import generate_forecast
 
 
 def mayoral_rollup(row):
@@ -59,6 +61,32 @@ def drilldown(request):
     return render(request, "drilldown.html", context)
 
 
+def supply_forecast(request):
+    category = request.GET.get('category')
+    if category is None:
+        return HttpResponse("Need an asset category param", status=400)
+
+    start_date = datetime.strptime(request.GET.get('start_date'), '%Y%m%d')  # e.g. 20200406
+    end_date = datetime.strptime(request.GET.get('end_date'), '%Y%m%d')  # e.g. 20200430
+    days = (end_date - start_date).days + 1
+
+    # TODO Get inventory on the start date
+    start_inventory = 0  # inventory available at the beginning of start date
+
+    # TODO Get demand forecast between start and end date
+    demand_forecast = []  # array of integers with size == days
+
+    # TODO Get known supply arriving between start and end date
+    known_supply = []  # array of integers with size == days
+
+    forecasts = generate_forecast(start_date,
+                                  start_inventory,
+                                  demand_forecast,
+                                  known_supply)
+    resp = [forecast.to_dict() for forecast in forecasts]
+    return JsonResponse(dict(category=category, forecast=resp))
+
+
 class UploadContext(NamedTuple):
     form: Form = forms.UploadFileForm
     error: Optional[str] = None
@@ -96,4 +124,3 @@ class CancelImport(View):
         import_obj.cancel()
         import_obj.save()
         return HttpResponseRedirect(reverse('upload'))
-

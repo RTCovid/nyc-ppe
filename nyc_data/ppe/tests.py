@@ -26,9 +26,9 @@ class TestAssetRollup(TestCase):
             quantity=1005,
             vendor="Gown Sellers Ltd",
             description='Some gowns',
-            delivery_day_1=datetime.now() - timedelta(days=5),
+            delivery_day_1=datetime.strptime('2020-04-12', '%Y-%m-%d') - timedelta(days=5),
             delivery_day_1_quantity=5,
-            delivery_day_2=datetime.now() + timedelta(days=1),
+            delivery_day_2=datetime.strptime('2020-04-12', '%Y-%m-%d') + timedelta(days=1),
             delivery_day_2_quantity=1000,
             raw_data={},
         ).to_objects(ErrorCollector())
@@ -38,36 +38,65 @@ class TestAssetRollup(TestCase):
             item.save()
 
     def test_rollup(self):
+        today = datetime(2020, 4, 12)
         rollup = aggregations.asset_rollup(
-            datetime.now() - timedelta(days=28), datetime.now()
+            today - timedelta(days=28), today
         )
         self.assertEqual(len(rollup), len(dc.Item))
         # demand of 20 = 5 in the last week * 4 weeks in the period
+        self.assertEqual(rollup[dc.Item.gown], AssetRollup(asset=dc.Item.gown, demand=21, sell=5))
+
+        # Turn of use of hospitalization projection
+        rollup = aggregations.asset_rollup(
+            today - timedelta(days=28), today,
+            use_hospitalization_projection=False
+        )
         self.assertEqual(rollup[dc.Item.gown], AssetRollup(asset=dc.Item.gown, demand=20, sell=5))
 
         future_rollup = aggregations.asset_rollup(
-            datetime.now() - timedelta(days=30), datetime.now() + timedelta(days=30)
+            today - timedelta(days=30), today + timedelta(days=30)
+        )
+        self.assertEqual(
+            future_rollup[dc.Item.gown], AssetRollup(asset=dc.Item.gown, demand=58, sell=1005)
+        )
+
+        # Turn of use of hospitalization projection
+        future_rollup = aggregations.asset_rollup(
+            today - timedelta(days=30), today + timedelta(days=30),
+            use_hospitalization_projection=False
         )
         self.assertEqual(
             future_rollup[dc.Item.gown], AssetRollup(asset=dc.Item.gown, demand=42, sell=1005)
         )
 
     def test_mayoral_rollup(self):
+        today = datetime(2020, 4, 12)
         rollup = aggregations.asset_rollup(
-            datetime.now() - timedelta(days=28), datetime.now(),
+            today - timedelta(days=28), today,
             rollup_fn=lambda row: row.to_mayoral_category()
         )
         # no uncategorized items in the rollup
         self.assertEqual(len(rollup), len(dc.MayoralCategory) - 1)
         self.assertEqual(rollup[dc.MayoralCategory.iso_gowns],
+                         AssetRollup(asset=dc.MayoralCategory.iso_gowns, demand=21, sell=5))
+
+        # Turn of use of hospitalization projection
+        rollup = aggregations.asset_rollup(
+            today - timedelta(days=28), today,
+            rollup_fn=lambda row: row.to_mayoral_category(),
+            use_hospitalization_projection=False
+        )
+        self.assertEqual(rollup[dc.MayoralCategory.iso_gowns],
                          AssetRollup(asset=dc.MayoralCategory.iso_gowns, demand=20, sell=5))
 
+
     def test_only_aggregate_active_items(self):
+        today = datetime(2020, 4, 12)
         self.data_import.status = ImportStatus.replaced
         self.data_import.save()
         try:
             rollup = aggregations.asset_rollup(
-                datetime.now() - timedelta(days=28), datetime.now()
+                today - timedelta(days=28), today
             )
             self.assertEqual(rollup[dc.Item.gown], AssetRollup(asset=dc.Item.gown, demand=0, sell=0))
         finally:
@@ -87,9 +116,9 @@ class TestUnscheduledDeliveries(unittest.TestCase):
             quantity=2000,
             vendor="Gown Sellers Ltd",
             description="Some gowns",
-            delivery_day_1=datetime.now() - timedelta(days=5),
+            delivery_day_1=datetime.strptime('2020-04-12', '%Y-%m-%d') - timedelta(days=5),
             delivery_day_1_quantity=5,
-            delivery_day_2=datetime.now() + timedelta(days=1),
+            delivery_day_2=datetime.strptime('2020-04-12', '%Y-%m-%d') + timedelta(days=1),
             delivery_day_2_quantity=1000,
             raw_data={},
         ).to_objects(ErrorCollector())

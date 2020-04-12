@@ -16,6 +16,7 @@ django-lockdown = "*"
 gunicorn = "*"
 dj-database-url = "*"
 whitenoise = "*"
+ortools = "*"
 
 [requires]
 python_version = "3.8"
