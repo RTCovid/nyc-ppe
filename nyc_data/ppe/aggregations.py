@@ -11,7 +11,7 @@ from ppe.models import ScheduledDelivery, Inventory, ImportStatus
 
 # NY Forecast from https://covid19.healthdata.org/united-states-of-america/new-york
 HOSPITALIZATION = {}
-with open('../public-data/ihme_projection_new_york.json', 'r') as f:
+with open('../public-data/hospitalization_projection_new_york.json', 'r') as f:
     HOSPITALIZATION = json.load(f)
 ALL_BEDS_AVAILABLE = 20420
 
@@ -46,7 +46,7 @@ def asset_rollup(
         time_end: datetime,
         rollup_fn: Callable[[dc.Item], any] = lambda x: x,
         estimate_demand=True,
-        use_ihme_projection=True
+        use_hospitalization_projection=True
 ) -> Dict[str, AssetRollup]:
     relevant_deliveries = ScheduledDelivery.active().prefetch_related('purchase').filter(
         delivery_date__gte=time_start, delivery_date__lte=time_end
@@ -70,7 +70,7 @@ def asset_rollup(
         rollup.inventory += item.quantity
 
     if estimate_demand:
-        add_demand_estimate(time_start, time_end, results, rollup_fn, use_ihme_projection)
+        add_demand_estimate(time_start, time_end, results, rollup_fn, use_hospitalization_projection)
 
     return results
 
@@ -81,7 +81,7 @@ def add_demand_estimate(time_start: datetime,
                         time_end: datetime,
                         rollup: Dict[str, AssetRollup],
                         rollup_fn,
-                        use_ihme_projection=True):
+                        use_hospitalization_projection=True):
     last_week = datetime.datetime.today() - datetime.timedelta(days=7)
     last_week_rollup = asset_rollup(last_week, datetime.datetime.today(), rollup_fn=rollup_fn, estimate_demand=False)
     scaling_factor = (time_end - time_start) / datetime.timedelta(days=7)
@@ -100,7 +100,7 @@ def add_demand_estimate(time_start: datetime,
     for k, rollup in rollup.items():
         # ignore donations
         last_week_supply = last_week_rollup[k].sell + last_week_rollup[k].make
-        if use_ihme_projection:
+        if use_hospitalization_projection:
             # Per hospitalization demand
             demand_per_patient_per_day = last_week_supply / total_hospitalization
 

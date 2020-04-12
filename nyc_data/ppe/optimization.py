@@ -10,7 +10,7 @@ from ppe.dataclasses import Forecast
 # additional_supply_N : manually input additional source of supply arriving on this day (will become available for the next day, N+1).
 # inventory_N : inventory of this type of resource at the end of the day. If negative, it will indicate a shortage.
 
-# demand_N  will be estimated from IHME's model and the per patient consumption rate.
+# demand_N  will be estimated from hospitalization projection and the per patient consumption rate.
 # supply_N  will come from their data.
 # additional_supply_N  will be part of the manual input from the user (maybe Dan?). They can plug in different numbers to examine different procurement startegy.
 # inventory_N  will be estimated by the LP model.

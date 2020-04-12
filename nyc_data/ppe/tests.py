@@ -49,7 +49,7 @@ class TestAssetRollup(TestCase):
         # Turn of use of hospitalization projection
         rollup = aggregations.asset_rollup(
             today - timedelta(days=28), today,
-            use_ihme_projection=False
+            use_hospitalization_projection=False
         )
         self.assertEqual(rollup[dc.Item.gown], AssetRollup(asset=dc.Item.gown, demand=20, sell=5))
 
@@ -63,7 +63,7 @@ class TestAssetRollup(TestCase):
         # Turn of use of hospitalization projection
         future_rollup = aggregations.asset_rollup(
             today - timedelta(days=30), today + timedelta(days=30),
-            use_ihme_projection=False
+            use_hospitalization_projection=False
         )
         self.assertEqual(
             future_rollup[dc.Item.gown], AssetRollup(asset=dc.Item.gown, demand=42, sell=1005)
@@ -84,7 +84,7 @@ class TestAssetRollup(TestCase):
         rollup = aggregations.asset_rollup(
             today - timedelta(days=28), today,
             rollup_fn=lambda row: row.to_mayoral_category(),
-            use_ihme_projection=False
+            use_hospitalization_projection=False
         )
         self.assertEqual(rollup[dc.MayoralCategory.iso_gowns],
                          AssetRollup(asset=dc.MayoralCategory.iso_gowns, demand=20, sell=5))
