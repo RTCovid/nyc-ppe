@@ -108,6 +108,11 @@ class AggregationTable(tables.Table):
     sell = NumericalColumn(attrs={"th": {"class": "tooltip", "aria-label": "DCAS"}})
     make = NumericalColumn(attrs={"th": {"class": "tooltip", "aria-label": "EDC"}})
 
+    def render_projected_demand(self, value):
+        if value == 0:
+            return pretty_render_numeric(value)
+        return format_html('<span class="value-divider">~ </span>{}'.format(pretty_render_numeric(value)))
+
     def render_asset(self, value):
         href = f'/drilldown?category={value}'
         if isinstance(value, dc.MayoralCategory):
