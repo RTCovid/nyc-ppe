@@ -14,7 +14,7 @@
             <dt>{{day.grouper}}</dt>
 
             {% for delivery in day.list %}
-                <dd class="tooltip" aria-label="{{delivery.vendor}}">Receiving <span class="quantity">{{ delivery.quantity|pretty_num }}</span> – {{ delivery.description|default:"No description" }}</dd>
+                <dd class="tooltip" aria-label="{{delivery.vendor}}">Receiving <span class="quantity">{{ delivery.quantity|pretty_num }}</span> {{ delivery.item }} – {{ delivery.description|default:"No description" }}</dd>
             {% endfor %}
         {% if forloop.last %}</dl>{% endif %}
     {% endfor %}
@@ -25,7 +25,7 @@
         {% for purchase in purchases %}
         {% if purchase.unscheduled_quantity %}
         <li class="tooltip" aria-label="{{purchase.vendor}}">
-            Receiving {{purchase.unscheduled_quantity|pretty_num}} – {{purchase.description|default:"No description"}}
+            Receiving {{purchase.unscheduled_quantity|pretty_num}} {{ purchase.item }} – {{purchase.description|default:"No description"}}
         </li>
         {% endif %}
         {% endfor %}
