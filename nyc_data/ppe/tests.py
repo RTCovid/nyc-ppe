@@ -1,7 +1,8 @@
 import unittest
 from datetime import datetime, timedelta
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
+from django.urls import reverse
 
 from ppe import aggregations
 from ppe.aggregations import AssetRollup
@@ -115,3 +116,22 @@ class TestCategoryMappings(unittest.TestCase):
 
 class TestInventory(unittest.TestCase):
     pass
+
+@override_settings(LOCKDOWN_ENABLED=False)
+class TestViews(TestCase):
+    """Sanity that the views work at a basic level"""
+    def test_home(self):
+        response = self.client.get(reverse('index'))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'Current status', response.content)
+
+    def test_home_mayoral(self):
+        response = self.client.get(reverse('index'), {'rollup': 'mayoral'})
+        self.assertIn(b'Current status', response.content)
+        self.assertEqual(response.status_code, 200)
+
+    def test_drilldown(self):
+        response = self.client.get(reverse('drilldown'), {'category': 'Eye Protection', 'rollup': 'mayoral'})
+        self.assertIn(b'Incoming Supply', response.content)
+        self.assertEqual(response.status_code, 200)
+
