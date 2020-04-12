@@ -2,8 +2,8 @@ import os
 from pathlib import Path
 
 import xlsx_utils
-from ppe.data_import import MAPPINGS
 from ppe import data_import
+from ppe.data_import import ALL_MAPPINGS
 
 
 def run():
@@ -11,14 +11,13 @@ def run():
     xlsx_files = [f for f in private_data_dir.iterdir() if f.suffix == '.xlsx']
     print(f"Found {len(xlsx_files)} xlsx files in private-data")
     for file in xlsx_files:
-        possible_mappings = xlsx_utils.guess_mapping(file, MAPPINGS.values())
-        if len(possible_mappings) == 0:
-            print(f'No mapping found for {file}, ignoring')
-        elif len(possible_mappings) > 1:
-            print(f'Multiple mappings found for {file}. This is weird (ignoring)!')
-        else:
-            inferred_mapping = possible_mappings[0]
-            print(f'Importing {file} inferred to be {inferred_mapping}')
-            data_source = [src for (src, mapping) in MAPPINGS.items() if mapping == inferred_mapping][0]
-            data_import.full_import(file, data_source, overwrite_in_prog=True)
-
+        try:
+            print(f'---- Importing {file} ----')
+            import_obj = data_import.smart_import(file, 'Uploaded via CLI', overwrite_in_prog=True)
+            data_import.complete_import(import_obj)
+        except data_import.NoMappingForFileError:
+            print(f"{file} does not appear to be a format we recognize")
+        finally:
+            print(f'---- Import of {file} complete ----')
+            print()
+            print()

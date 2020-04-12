@@ -1,9 +1,12 @@
 import json
 from pathlib import Path
-from typing import NamedTuple, Any, Callable, List, Optional
+from typing import NamedTuple, Any, Callable, List, Optional, Set
 
 from django.core.serializers.json import DjangoJSONEncoder
 from openpyxl import load_workbook
+
+from ppe.data_mapping.types import DataFile
+from ppe.data_mapping.utils import ErrorCollector
 
 
 def XLSXDictReader(sheet):
@@ -19,12 +22,13 @@ def XLSXDictReader(sheet):
 class Mapping(NamedTuple):
     sheet_column_name: str
     obj_column_name: str
-    proc: Optional[Callable[[str], Any]] = None
+    proc: Optional[Callable[[str, ErrorCollector], Any]] = None
 
 
 class SheetMapping(NamedTuple):
+    data_file: DataFile
     sheet_name: str
-    mappings: List[Mapping]
+    mappings: Set[Mapping]
     include_raw: bool
     obj_constructor: Optional[Callable[[Any], 'ImportedRow']] = None
 
@@ -47,7 +51,7 @@ def guess_mapping(sheet: Path, possible_mappings: List[SheetMapping]):
     return final_mappings
 
 
-def import_xlsx(sheet: Path, sheet_mapping: SheetMapping):
+def import_xlsx(sheet: Path, sheet_mapping: SheetMapping, error_collector: ErrorCollector = lambda: ErrorCollector()):
     workbook = load_workbook(sheet)
     sheet = workbook[sheet_mapping.sheet_name]
     as_dicts = XLSXDictReader(sheet)
@@ -58,7 +62,7 @@ def import_xlsx(sheet: Path, sheet_mapping: SheetMapping):
         for mapping in sheet_mapping.mappings:
             item = row[mapping.sheet_column_name]
             if mapping.proc:
-                item = mapping.proc(item)
+                item = mapping.proc(item, error_collector)
             mapped_row[mapping.obj_column_name] = item
 
         if sheet_mapping.include_raw:
