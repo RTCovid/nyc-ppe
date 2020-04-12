@@ -37,3 +37,4 @@ class DataFile(str, Enum):
     PPE_ORDERINGCHARTS_DATE_XLSX = "edc_ppe_data"
     SUPPLIERS_PARTNERS_XLSX = "edc_suppliers_partners"
     INVENTORY = "inventory"
+    FACILITY_DELIVERIES = "facility_deliveries"

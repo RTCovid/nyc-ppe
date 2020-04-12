@@ -71,6 +71,8 @@ def parse_date(date: any, error_collector: ErrorCollector):
     else:
         return None
 
+def parse_int_or_zero(inp: str, error_collector: ErrorCollector):
+    return parse_int(inp, error_collector) or 0
 
 def parse_int(inp: str, error_collector: ErrorCollector):
     if isinstance(inp, int):
