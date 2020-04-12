@@ -83,8 +83,10 @@ class DataImport(models.Model):
         
         for k, objs in self.imported_objects().items():
             model_equality_cols = [field for field in k.equality_columns]
-            active_rows = [instance.comparable_object() for instance in active_objects.get(k) \
-                if k in active_objects.keys()]
+            if k in active_objects.keys():
+                active_rows = [instance.comparable_object() for instance in active_objects.get(k)]
+            else: 
+                active_rows = []
             candidate_rows = [instance.comparable_object() for instance in objs]
             new_objects[k] = [i for i in candidate_rows if i not in active_rows]
 
