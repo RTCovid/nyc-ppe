@@ -4,7 +4,7 @@ from typing import NamedTuple, Dict
 
 from django.contrib.postgres.fields import JSONField
 from django.db import models
-from django.db.models import Sum
+from django.db.models import Sum, Max
 
 import ppe.dataclasses as dc
 from ppe.data_mapping.types import DataFile
@@ -137,8 +137,17 @@ class Purchase(BaseModel):
 class Inventory(BaseModel):
     item = ChoiceField(dc.Item)
     quantity = models.IntegerField()
+    as_of = models.DateField()
 
     raw_data = JSONField()
+
+    @classmethod
+    def as_of_latest(cls):
+        return super().active().aggregate(Max('as_of'))['as_of__max']
+
+    @classmethod
+    def active(cls):
+        return super().active().filter(as_of=cls.as_of_latest())
 
 
 class ScheduledDelivery(BaseModel):

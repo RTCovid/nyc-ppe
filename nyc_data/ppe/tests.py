@@ -112,3 +112,6 @@ class TestCategoryMappings(unittest.TestCase):
     def test_display_names(self):
         for _, item in dc.Item.__members__.items():
             self.assertNotEqual(dc.ITEM_TO_DISPLAYNAME.get(item), None, f"No display name defined for {item}")
+
+class TestInventory(unittest.TestCase):
+    pass

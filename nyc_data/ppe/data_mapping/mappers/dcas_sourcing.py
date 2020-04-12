@@ -26,14 +26,16 @@ class SourcingRow(ImportedRow, NamedTuple):
         # return super().repr_no_raw()
         return repr_no_raw(self)
 
-    def sanity(self):
+    def sanity(self, error_collector: ErrorCollector):
         delivered_quantity = (self.delivery_day_1_quantity or 0) + (
                 self.delivery_day_2_quantity or 0
         )
         errors = []
         # lots of data doesn't have delivery dates.
-        # if delivered_quantity > self.quantity:
-        #    errors.append('Delivery > total')
+        if delivered_quantity > self.quantity:
+            error_collector.report_warning(
+                f'Claimed delivered quantity ({delivered_quantity}) > '
+                f'total quantity {self.quantity} for {self.item} from {self.vendor}')
         # if delivered_quantity < self.quantity:
         #    errors.append(f'Delivery < total {delivered_quantity} < {self.quantity}')
         if self.quantity is None:
@@ -41,7 +43,7 @@ class SourcingRow(ImportedRow, NamedTuple):
         return errors
 
     def to_objects(self, error_collector: ErrorCollector):
-        errors = self.sanity()
+        errors = self.sanity(error_collector)
         if errors:
             error_collector.report_error(f"Refusing to generate a data model for: {self}. Errors: {errors}")
             return []

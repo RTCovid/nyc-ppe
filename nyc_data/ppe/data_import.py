@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Optional, List
 
 import xlsx_utils
-from ppe.data_mapping.mappers import dcas_make, dcas_sourcing, inventory
+from ppe.data_mapping.mappers import dcas_make, dcas_sourcing, inventory, inventory_from_facilities
 from ppe.data_mapping.types import DataFile
 from ppe.data_mapping.utils import ErrorCollector
 from ppe.models import ImportStatus, DataImport
@@ -13,7 +13,7 @@ from xlsx_utils import import_xlsx
 ALL_MAPPINGS = [
     dcas_make.SUPPLIERS_AND_PARTNERS,
     dcas_sourcing.DCAS_DAILY_SOURCING,
-    inventory.INVENTORY
+    inventory_from_facilities.INVENTORY
 ]
 
 
