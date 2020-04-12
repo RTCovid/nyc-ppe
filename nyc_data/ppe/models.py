@@ -82,7 +82,7 @@ class DataImport(models.Model):
         new_objects = {}
         
         for k, objs in self.imported_objects().items():
-            model_equality_cols = [field for field in k.equality_columns]
+
             if k in active_objects.keys():
                 active_rows = [instance.comparable_object() for instance in active_objects.get(k)]
             else: 
