@@ -1,13 +1,15 @@
+import collections
 import datetime
 from dataclasses import dataclass
 from typing import Dict, Callable
 import json
 
 import django_tables2 as tables
+from django.db.models import Sum
 from django.utils.html import format_html
 
 import ppe.dataclasses as dc
-from ppe.models import ScheduledDelivery, Inventory, ImportStatus
+from ppe.models import ScheduledDelivery, Inventory, ImportStatus, FacilityDelivery
 
 # NY Forecast from https://covid19.healthdata.org/united-states-of-america/new-york
 HOSPITALIZATION = {}
@@ -74,8 +76,19 @@ def asset_rollup(
 
     return results
 
-def is_zero():
-  return self.donate == 0 and self.sell == 0 and self.make == 0 and self.inventory == 0
+def demand_for_period(time_start: datetime, time_end: datetime, rollup_fn):
+    """
+    Returns
+    :param time_start:
+    :param time_end:
+    :param rollup_fn:
+    :return: dict of rolledup item name -> demand over the period
+    """
+    demand_by_day = FacilityDelivery.active().filter(date__gte=time_start, date__lte=time_end).values('item').annotate(Sum('quantity'))
+    rollup = collections.defaultdict(lambda: 0)
+    for row in demand_by_day:
+        rollup[rollup_fn(dc.Item(row['item']))] += row['quantity__sum']
+    return rollup
 
 def add_demand_estimate(time_start: datetime,
                         time_end: datetime,
@@ -83,7 +96,8 @@ def add_demand_estimate(time_start: datetime,
                         rollup_fn,
                         use_hospitalization_projection=True):
     last_week = datetime.datetime.today() - datetime.timedelta(days=7)
-    last_week_rollup = asset_rollup(last_week, datetime.datetime.today(), rollup_fn=rollup_fn, estimate_demand=False)
+    last_weeks_demand = demand_for_period(last_week, datetime.datetime.today(), rollup_fn)
+    last_week_rollup = asset_rollup(time_start, time_end, rollup_fn, estimate_demand=False)
     scaling_factor = (time_end - time_start) / datetime.timedelta(days=7)
 
     # Get last week's total hospitalization
@@ -202,8 +216,8 @@ class AggregationTable(tables.Table):
 
             unit=unit,
             percent_str=percent_str,
-            neg_width=min(min(int(percent * 100), 0) * -1, 50),
-            pos_width=max(min(int(percent * 100), 50), 0),
+            neg_width=min(min(int(percent * 50), 0) * -1, 50),
+            pos_width=max(min(int(percent * 50), 50), 0),
             neg_delta=50 - min(min(int(percent * 100), 0) * -1, 50),
             pos_delta=50 - max(min(int(percent * 100), 50), 0),
         )
