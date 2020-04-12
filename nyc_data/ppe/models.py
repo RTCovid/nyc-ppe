@@ -68,7 +68,7 @@ class DataImport(models.Model):
 
         new_objects = {
             k: set(objs).difference(active_objects.get(k)) if k in active_objects.keys() else set(objs) \
-                for k, objs in self.imported_objects().items() 
+            for k, objs in self.imported_objects().items()
         }
 
         return UploadDelta(
@@ -83,12 +83,14 @@ class DataImport(models.Model):
         return {tpe: tpe.objects.prefetch_related('source').filter(source=self) for tpe in
                 [ScheduledDelivery, Inventory, Purchase]}
 
+
 class UploadDelta(NamedTuple):
     previous: DataImport
     active_stats: Dict[str, int]
     candidate_stats: Dict[str, int]
 
     new_objects: Dict[str, any]
+
 
 class BaseModel(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -166,6 +168,7 @@ class ScheduledDelivery(BaseModel):
             source=self.source.display()
         )
 
+
 class InboundReceipt(BaseModel):
     date_received = models.DateTimeField()
     supplier = ChoiceField(dc.Supplier)
@@ -175,14 +178,17 @@ class InboundReceipt(BaseModel):
     item_id = models.TextField()
     item = ChoiceField(dc.Item)
 
+
 class Facility(BaseModel):
     name = models.TextField()
     tpe = ChoiceField(dc.FacilityType)
+
 
 class FacilityDelivery(BaseModel):
     date = models.DateField()
     facility = models.ForeignKey(Facility, on_delete=models.CASCADE)
     item = ChoiceField(dc.Item)
+    quantity = models.IntegerField()
 
 
 class Hospital(BaseModel):

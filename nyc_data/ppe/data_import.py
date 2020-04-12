@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Optional, List
 
 import xlsx_utils
-from ppe.data_mapping.mappers import dcas_make, dcas_sourcing, inventory, inventory_from_facilities
+from ppe.data_mapping.mappers import dcas_make, dcas_sourcing, inventory, inventory_from_facilities, hospital_deliveries
 from ppe.data_mapping.types import DataFile
 from ppe.data_mapping.utils import ErrorCollector
 from ppe.models import ImportStatus, DataImport
@@ -13,7 +13,8 @@ from xlsx_utils import import_xlsx
 ALL_MAPPINGS = [
     dcas_make.SUPPLIERS_AND_PARTNERS,
     dcas_sourcing.DCAS_DAILY_SOURCING,
-    inventory_from_facilities.INVENTORY
+    inventory_from_facilities.INVENTORY,
+    hospital_deliveries.FACILITY_DELIVERIES
 ]
 
 
@@ -81,12 +82,16 @@ def import_data(path: Path, mappings: List[xlsx_utils.SheetMapping], uploaded_by
     data_import.save()
 
     for mapping in mappings:
-        data = import_xlsx(path, mapping, error_collector)
-        data = list(data)
-        for item in data:
-            for obj in item.to_objects(error_collector):
-                obj.source = data_import
-                obj.save()
+        try:
+            data = import_xlsx(path, mapping, error_collector)
+            data = list(data)
+            for item in data:
+                for obj in item.to_objects(error_collector):
+                    obj.source = data_import
+                    obj.save()
+        except Exception:
+            print(f'Failure importing {path}, mapping: {mapping.sheet_name}')
+            raise
 
     print(f"Errors: ")
     print(error_collector)
