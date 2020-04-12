@@ -86,10 +86,11 @@ def add_demand_estimate(time_start: datetime, time_end: datetime, rollup: Dict[s
     last_week = datetime.datetime.today() - datetime.timedelta(days=7)
 
     last_weeks_demand = demand_for_period(last_week, datetime.datetime.today(), rollup_fn)
+    last_week_rollup = asset_rollup(time_start, time_end, rollup_fn, estimate_demand=False)
     scaling_factor = (time_end - time_start) / datetime.timedelta(days=7)
     for k, rollup in rollup.items():
         # ignore donations
-        rollup.demand = int(last_weeks_demand[k] * scaling_factor)
+        rollup.demand = int((last_week_rollup[k].sell + last_week_rollup[k].make) * scaling_factor)
 
 
 def pretty_render_numeric(value):
