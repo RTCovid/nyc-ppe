@@ -82,7 +82,14 @@ class Upload(View):
 class Verify(View):
     def get(self, request, import_id):
         import_obj = DataImport.objects.get(id=import_id)
-        return render(request, "verify_upload.html", dict(import_id=import_id, delta=import_obj.compute_delta()))
+        #table = aggregations.AggregationTable(list(aggregation.values()))
+        #RequestConfig(request).configure(table)
+        context = {
+            "import_id": import_id,
+            "delta" : import_obj.compute_delta(),
+            #"aggregation" : table
+        }
+        return render(request, "verify_upload.html", context)
 
     def post(self, request, import_id):
         data_import.complete_import(DataImport.objects.get(id=import_id))
