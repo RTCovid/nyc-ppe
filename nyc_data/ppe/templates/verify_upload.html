@@ -55,11 +55,10 @@
         <button type="submit">Confirm</button>
     </form>
 
-    <form enctype="multipart/form-data" method="post" action="/cancel/{{ import_id }}/">
+    <form method="post" action="/cancel/{{ import_id }}/">
         {% csrf_token %}
         <input type="submit" value="Cancel current import in progress" />
     </form>
-    >>>>>>> 9fde89ca4dd51a02d1637558bbecaf283dfb704b
 </div>
 
 {% endblock %}
