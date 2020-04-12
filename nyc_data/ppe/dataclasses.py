@@ -2,7 +2,6 @@ from datetime import datetime
 from enum import Enum
 
 from dataclasses import dataclass
-from dataclasses_json import dataclass_json
 
 from typing import NamedTuple, Optional, List
 
@@ -78,7 +77,6 @@ class Delivery(NamedTuple):
     vendor: Optional[str] = None
 
 
-@dataclass_json
 @dataclass
 class Forecast:
     date: str
