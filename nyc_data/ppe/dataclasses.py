@@ -78,6 +78,7 @@ class Delivery(NamedTuple):
 
 class Purchase(NamedTuple):
     order_type: OrderType
+    vendor: str
 
     item: str
     description: str
