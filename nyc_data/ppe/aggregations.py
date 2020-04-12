@@ -116,7 +116,8 @@ def asset_rollup(
         time_start: datetime,
         time_end: datetime,
         rollup_fn: Callable[[dc.Item], any] = lambda x: x,
-        estimate_demand=True
+        estimate_demand=True,
+        use_ihme_projection=True
 ) -> Dict[str, AssetRollup]:
     relevant_deliveries = Delivery.objects.prefetch_related("purchase", "source").filter(
         delivery_date__gte=time_start, delivery_date__lte=time_end, source__status=ImportStatus.active
@@ -140,14 +141,19 @@ def asset_rollup(
         rollup.inventory += item.quantity
 
     if estimate_demand:
-        add_demand_estimate(time_start, time_end, results, rollup_fn)
+        add_demand_estimate(time_start, time_end, results, rollup_fn, use_ihme_projection)
 
     return results
 
 
-def add_demand_estimate(time_start: datetime, time_end: datetime, rollup: Dict[str, AssetRollup], rollup_fn):
+def add_demand_estimate(time_start: datetime,
+                        time_end: datetime,
+                        rollup: Dict[str, AssetRollup],
+                        rollup_fn,
+                        use_ihme_projection=True):
     last_week = datetime.datetime.today() - datetime.timedelta(days=7)
     last_week_rollup = asset_rollup(last_week, datetime.datetime.today(), rollup_fn=rollup_fn, estimate_demand=False)
+    scaling_factor = (time_end - time_start) / datetime.timedelta(days=7)
 
     # Get last week's total hospitalization
     total_hospitalization = 0
@@ -163,19 +169,22 @@ def add_demand_estimate(time_start: datetime, time_end: datetime, rollup: Dict[s
     for k, rollup in rollup.items():
         # ignore donations
         last_week_supply = last_week_rollup[k].sell + last_week_rollup[k].make
+        if use_ihme_projection:
+            # Per hospitalization demand
+            demand_per_patient_per_day = last_week_supply / total_hospitalization
 
-        # Per hospitalization demand
-        demand_per_patient_per_day = last_week_supply / total_hospitalization
-
-        # Add up the forecast demand for each day between time_start and time_end
-        rollup.demand = 0
-        date = time_start
-        while date <= time_end:
-            hospitalization = HOSPITALIZATION[date.strftime("%Y-%m-%d")]
-            if not hospitalization or hospitalization < ALL_BEDS_AVAILABLE:
-                hospitalization = ALL_BEDS_AVAILABLE
-            rollup.demand += demand_per_patient_per_day * hospitalization
-            date += datetime.timedelta(days=1)
+            # Add up the forecast demand for each day between time_start and time_end
+            rollup.demand = 0
+            date = time_start
+            while date <= time_end:
+                hospitalization = HOSPITALIZATION[date.strftime("%Y-%m-%d")]
+                if not hospitalization or hospitalization < ALL_BEDS_AVAILABLE:
+                    hospitalization = ALL_BEDS_AVAILABLE
+                rollup.demand += demand_per_patient_per_day * hospitalization
+                date += datetime.timedelta(days=1)
+            rollup.demand = int(rollup.demand)
+        else:
+            rollup.demand = int(last_week_supply * scaling_factor)
 
 
 def pretty_render_numeric(value):
