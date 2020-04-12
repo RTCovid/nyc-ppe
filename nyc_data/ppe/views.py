@@ -51,12 +51,21 @@ def drilldown(request):
         rollup = lambda x: x
         cat_display = dc.Item(category).display()
     drilldown_res = drilldown_result(category, rollup)
+    purchases = drilldown_res[0]
+    deliveries = drilldown_res[1]
+    #deliveries_next_three = datetime.now() + timedelta(days=3)
 
     context = {
         "asset_category": cat_display,
         # conversion to data class handles conversion to display names, etc.
-        "purchases": [p.to_dataclass() for p in drilldown_res[0]],
-        "deliveries": [d.to_dataclass() for d in drilldown_res[1]],
+        "purchases": [p.to_dataclass() for p in purchases],
+        "deliveries": [d.to_dataclass() for d in deliveries],
+        "deliveries_past" : sum([d.quantity for d in deliveries if d.delivery_date <= datetime.now().date()]),
+        "deliveries_next_three" : sum([d.quantity for d in deliveries if datetime.now().date() <= d.delivery_date <= datetime.now().date() + timedelta(days=3)]),
+        "deliveries_next_week" : sum([d.quantity for d in deliveries if datetime.now().date() <= d.delivery_date <= datetime.now().date() + timedelta(days=7)]),
+        "deliveries_next_thirty" : sum([d.quantity for d in deliveries if datetime.now().date() <= d.delivery_date <= datetime.now().date() + timedelta(days=30)]),
+        "scheduled_total" : sum([d.quantity for d in deliveries]),
+        "unscheduled_total" : sum([purch.unscheduled_quantity for purch in purchases if purch.unscheduled_quantity])
     }
     return render(request, "drilldown.html", context)
 
