@@ -4,7 +4,8 @@ RUN apt-get update && apt-get install -y \
     curl \
     wget \
     vim \
-    software-properties-common
+    software-properties-common \
+    postgresql-client
 
 RUN pip install pipenv
 
