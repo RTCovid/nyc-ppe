@@ -160,7 +160,7 @@ class Inventory(BaseModel):
     as_of = models.DateField()
 
     raw_data = JSONField()
-    equality_columns = ["raw_data"]
+
     def comparable_object(self):
         
         return { 
