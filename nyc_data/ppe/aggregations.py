@@ -99,14 +99,14 @@ class NumericalColumn(tables.Column):
 
 class AggregationTable(tables.Table):
     asset = tables.Column()
-    projected_demand = NumericalColumn(accessor="demand", verbose_name="Proj. Demand")
+    projected_demand = NumericalColumn(accessor="demand", verbose_name="Demand")
     balance = tables.Column(empty_values=(), order_by="percent_balance")
 
-    total = NumericalColumn(verbose_name="total supply")
-    inventory = NumericalColumn()
+    total = NumericalColumn(verbose_name="Supply")
+    inventory = NumericalColumn(attrs={"th": {"class": "tooltip", "aria-label": "MO Operations"}})
     donate = NumericalColumn()
-    sell = NumericalColumn()
-    make = NumericalColumn()
+    sell = NumericalColumn(attrs={"th": {"class": "tooltip", "aria-label": "DCAS"}})
+    make = NumericalColumn(attrs={"th": {"class": "tooltip", "aria-label": "EDC"}})
 
     def render_asset(self, value):
         href = f'/drilldown?category={value}'

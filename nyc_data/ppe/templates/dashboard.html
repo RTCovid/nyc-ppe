@@ -17,3 +17,21 @@
 {% block content %}
 {% render_table aggregations %}
 {% endblock %}
+
+{% block footer %}
+<dl>
+    <dt>Demand</dt>
+    <dd>A projected demand based on last week's supply.</dd>
+    <dt>Supply</dt>
+    <dd>The sum of inventory, purchasing (sell), and manufacturing (make) efforts.</dd>
+    <dt>Balance</dt>
+    <dd>The supply deficit or surplus compared to demand, both numerically and as a percentage.</dd>
+    <dt>Inventory</dt>
+    <dd>Daily inventory numbers from MO Operations.</dd>
+    <dt>Sell</dt>
+    <dd>Purchase orders for future deliveries from DCAS.</dd>
+    <dt>Make</dt>
+    <dd>Purchase orders for manufacturing, from EDC.</dd>
+</dl>
+
+{% endblock %}
