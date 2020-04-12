@@ -28,7 +28,7 @@ class AssetRollup:
 
     @property
     def percent_balance(self):
-        return self.total / (self.demand + 1) * (-1 if self.absolute_balance < 0 else 1)
+        return self.absolute_balance / (self.demand + 1)
 
 
 MAPPING = {dc.OrderType.Make: "make", dc.OrderType.Purchase: "sell"}
