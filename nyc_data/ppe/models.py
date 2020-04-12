@@ -4,6 +4,7 @@ from typing import NamedTuple, Dict
 
 from django.contrib.postgres.fields import JSONField
 from django.db import models
+from django.forms.models import model_to_dict
 
 import ppe.dataclasses as dc
 from ppe.data_mappings import DataSource
@@ -65,10 +66,8 @@ class DataImport(models.Model):
         else:
             active_objects = {}
 
-        new_objects = {
-            k: set(objs).difference(active_objects.get(k)) if k in active_objects.keys() else set(objs) \
-                for k, objs in self.imported_objects().items() 
-        }
+        
+        new_objects = self.get_new_objects(active_objects)
 
         return UploadDelta(
             previous=active_import,
@@ -77,7 +76,18 @@ class DataImport(models.Model):
             new_objects=new_objects
 
         )
+    def get_new_objects(self, active_objects):
+        
+        new_objects = {}
+        for k, objs in self.imported_objects().items():
 
+            model_equality_cols = [field for field in k.equality_columns]
+            active_rows = [model_to_dict(instance, fields=model_equality_cols) for instance in active_objects.get(k) \
+                if k in active_objects.keys()]
+            candidate_rows = [model_to_dict(instance, fields=model_equality_cols) for instance in objs]
+            new_objects[k] = [i for i in candidate_rows if i not in active_rows]
+
+        return new_objects
     def imported_objects(self):
         return {tpe: tpe.objects.prefetch_related('source').filter(source=self) for tpe in
                 [Delivery, Inventory, Purchase]}
@@ -113,8 +123,9 @@ class Purchase(BaseModel):
 
     vendor = models.TextField()
     cost = models.IntegerField(null=True)
-
     raw_data = JSONField()
+
+    equality_columns = ["raw_data"]
 
 
 class Inventory(BaseModel):
@@ -122,6 +133,7 @@ class Inventory(BaseModel):
     quantity = models.IntegerField()
 
     raw_data = JSONField()
+    equality_columns = ["raw_data"]
 
 
 class Delivery(BaseModel):
@@ -138,6 +150,9 @@ class Delivery(BaseModel):
             vendor=self.purchase.vendor,
             source=self.source.display()
         )
+
+    # this isn't sufficient. Need to add in item, or raw_data
+    equality_columns = ["quantity", "delivery_date"]
 
 
 class Hospital(BaseModel):
