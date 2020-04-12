@@ -130,7 +130,8 @@ class Purchase(BaseModel):
             description=self.description,
             quantity=self.quantity,
             unscheduled_quantity=self.unscheduled_quantity,
-            deliveries=self.deliveries.all()
+            deliveries=self.deliveries.all(),
+            vendor=self.vendor
         )
 
 
