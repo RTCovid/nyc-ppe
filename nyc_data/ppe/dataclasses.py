@@ -1,7 +1,8 @@
 from datetime import datetime
 from enum import Enum
 from typing import NamedTuple, Optional
-
+from dataclasses import dataclass
+from dataclasses_json import dataclass_json
 
 class MayoralCategory(str, Enum):
     eye_protection = "Eye Protection"
@@ -73,6 +74,16 @@ class Delivery(NamedTuple):
     # TODO: probably want to have source info structured
     source: str
     vendor: Optional[str] = None
+
+
+@dataclass_json
+@dataclass
+class Forecast:
+    date: str
+    demand: int
+    existing_supply: int
+    additional_supply: int
+    inventory: int
 
 ITEM_TO_DISPLAYNAME = {
     Item.faceshield: 'Face Shields',

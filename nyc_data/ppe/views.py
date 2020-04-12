@@ -2,12 +2,13 @@
 
 from datetime import datetime, timedelta
 
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django_tables2 import RequestConfig
 
 from ppe import aggregations, dataclasses as dc
 from ppe.drilldown import deliveries_for_item
+from ppe.optimization import generate_forecast
 
 
 # Create your views here.
@@ -49,3 +50,29 @@ def drilldown(request):
         "deliveries": [d.to_dataclass() for d in deliveries_for_item(category, rollup)]
     }
     return render(request, "drilldown.html", context)
+
+
+def supply_forecast(request):
+    category = request.GET.get('category')
+    if category is None:
+        return HttpResponse("Need an asset category param", status=400)
+
+    start_date = datetime.strptime(request.GET.get('start_date'), '%Y%m%d')  # e.g. 20200406
+    end_date = datetime.strptime(request.GET.get('end_date'), '%Y%m%d')  # e.g. 20200430
+    days = (end_date - start_date).days + 1
+
+    # TODO Get inventory on the start date
+    start_inventory = 0  # inventory available at the beginning of start date
+
+    # TODO Get demand forecast between start and end date
+    demand_forecast = []  # array of integers with size == days
+
+    # TODO Get known supply arriving between start and end date
+    known_supply = []  # array of integers with size == days
+
+    forecasts = generate_forecast(start_date,
+                                  start_inventory,
+                                  demand_forecast,
+                                  known_supply)
+    resp = [forecast.to_dict() for forecast in forecasts]
+    return JsonResponse(dict(category=category, forecast=resp))
