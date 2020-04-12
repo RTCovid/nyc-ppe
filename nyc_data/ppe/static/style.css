@@ -227,6 +227,21 @@ td:last-child {
     outline: none;
 }
 
+.upload dl {
+    list-style-type: none;
+}
+
+.upload dl:after {
+    clear: left;
+    content: "";
+    display: block;
+}
+
+.upload dl li {
+    float: left;
+    margin-right: 20px;
+}
+
 /* Rollup toggle */
 
 .toggle {

@@ -6,16 +6,44 @@
 
 {% block content %}
 <div class="upload">
-    Your upload replaces an upload made by {{ delta.previous.uploaded_by | default:"Unknown user" }} on {{ delta.previous.import_date }}
-    <br />
+    <div class="upload-details" style="width: 50%;">
+        <p>Replacing upload by:</p>
+        <ul>
+            <li>{{ delta.previous.uploaded_by | default:"Unknown user" }} on {{ delta.previous.import_date }}</li>
+        </ul>
+        <dl>
+            <li>
+                <dt>They uploaded:</dt>
+                {% for stat, val in delta.active_stats.items %}
+                    <dd><span class="upload-type">{{stat}}</span>: {{val}}</dd>
+                {% endfor %}
+            </li>
+            <li>
+                <dt>You uploaded:</dt>
+                {% for stat, val in delta.candidate_stats.items %}
+                    <dd><span class="upload-type">{{stat}}</span>: {{val}}</dd>
+                {% endfor %}
+            </li>
+        </dl>
 
-    They uploaded: {{ delta.active_stats }}<br />
-    You uploaded: {{ delta.candidate_stats }}<br />
+        <!-- <p>You added these new objects:</p>
+        {% for key, val in delta.new_objects.items %}
+            {% if forloop.first %}<ul>{% endif %}
+            <li><strong>{{key}}</strong>
+                {% for skey, sval in val.items %}
+                    {% if forloop.first %}<ul>{% endif %}
+                        <li>{{sval}}</li>
+                    {% if forloop.last %}</ul>{% endif %}
+                {% endfor %}
+            </li>
+            {% if forloop.last %}</ul>{% endif %}
+        {% endfor %} -->
 
-    You added these new objects: {{ delta.new_objects }}
+        <!-- {{delta.new_objects}} -->
+    </div>
     <form method="post" action="/verify/{{ import_id }}/">
         {% csrf_token %}
-        <input type="submit" value="Confirm Upload">
+        <button type="submit">Confirm</button>
     </form>
 </div>
 {% endblock %}
