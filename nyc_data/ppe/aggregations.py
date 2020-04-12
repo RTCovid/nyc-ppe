@@ -105,7 +105,7 @@ class AggregationTable(tables.Table):
     balance = tables.Column(empty_values=(), order_by="percent_balance")
 
     total = NumericalColumn(verbose_name="Supply")
-    inventory = NumericalColumn(attrs={"th": {"class": "tooltip", "aria-label": f"MO Operations"}})
+    inventory = NumericalColumn(attrs={"th": {"class": "tooltip", "aria-label": lambda: f"MO Operations current as of {Inventory.as_of_latest()}"}})
     donate = NumericalColumn()
     sell = NumericalColumn(attrs={"th": {"class": "tooltip", "aria-label": "DCAS"}})
     make = NumericalColumn(attrs={"th": {"class": "tooltip", "aria-label": "EDC"}})
