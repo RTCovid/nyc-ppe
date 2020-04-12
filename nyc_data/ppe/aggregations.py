@@ -176,8 +176,8 @@ class AggregationTable(tables.Table):
 
             unit=unit,
             percent_str=percent_str,
-            neg_width=min(min(int(percent * 100), 0) * -1, 50),
-            pos_width=max(min(int(percent * 100), 50), 0),
+            neg_width=min(min(int(percent * 50), 0) * -1, 50),
+            pos_width=max(min(int(percent * 50), 50), 0),
             neg_delta=50 - min(min(int(percent * 100), 0) * -1, 50),
             pos_delta=50 - max(min(int(percent * 100), 50), 0),
         )
