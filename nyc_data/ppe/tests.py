@@ -7,7 +7,7 @@ from ppe import aggregations
 from ppe.aggregations import AssetRollup
 from ppe.data_mappings import SourcingRow, DataSource
 import ppe.dataclasses as dc
-from ppe.models import DataImport, ImportStatus
+from ppe.models import DataImport, ImportStatus, Purchase
 
 
 class TestAssetRollup(TestCase):
@@ -22,6 +22,7 @@ class TestAssetRollup(TestCase):
             item=dc.Item.gown,
             quantity=1005,
             vendor="Gown Sellers Ltd",
+            description='Some gowns',
             delivery_day_1=datetime.now() - timedelta(days=5),
             delivery_day_1_quantity=5,
             delivery_day_2=datetime.now() + timedelta(days=1),
@@ -69,6 +70,36 @@ class TestAssetRollup(TestCase):
         finally:
             self.data_import.status = ImportStatus.active
             self.data_import.save()
+
+class TestUnscheduledDeliveries(unittest.TestCase):
+    def test_unscheduled_deliveries(self):
+        data_import = DataImport(
+            status=ImportStatus.active,
+            data_source=DataSource.EDC_PPE,
+            file_checksum='123'
+        )
+        data_import.save()
+        items = SourcingRow(
+            item=dc.Item.gown,
+            quantity=2000,
+            vendor="Gown Sellers Ltd",
+            description="Some gowns",
+            delivery_day_1=datetime.now() - timedelta(days=5),
+            delivery_day_1_quantity=5,
+            delivery_day_2=datetime.now() + timedelta(days=1),
+            delivery_day_2_quantity=1000,
+            raw_data={},
+        ).to_objects()
+
+        for item in items:
+            item.source = data_import
+            item.save()
+
+        purchase = Purchase.objects.filter(item=dc.Item.gown)
+        self.assertEqual(purchase.count(), 1)
+        self.assertEqual(purchase.first().unscheduled_quantity, 995)
+
+
 
 
 class TestCategoryMappings(unittest.TestCase):

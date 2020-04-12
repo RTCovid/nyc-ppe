@@ -4,6 +4,7 @@ from typing import NamedTuple, Dict
 
 from django.contrib.postgres.fields import JSONField
 from django.db import models
+from django.db.models import Sum
 
 import ppe.dataclasses as dc
 from ppe.data_mappings import DataSource
@@ -116,6 +117,22 @@ class Purchase(BaseModel):
 
     raw_data = JSONField()
 
+    # property so we can use it in templates
+    @property
+    def unscheduled_quantity(self):
+        total_scheduled = self.deliveries.aggregate(Sum('quantity'))['quantity__sum']
+        return self.quantity - (total_scheduled or 0)
+
+    def to_dataclass(self):
+        return dc.Purchase(
+            order_type=self.order_type,
+            item=dc.Item(self.item).display(),
+            description=self.description,
+            quantity=self.quantity,
+            unscheduled_quantity=self.unscheduled_quantity,
+            deliveries=self.deliveries.all()
+        )
+
 
 class Inventory(BaseModel):
     item = ChoiceField(dc.Item)
@@ -125,7 +142,7 @@ class Inventory(BaseModel):
 
 
 class Delivery(BaseModel):
-    purchase = models.ForeignKey(Purchase, on_delete=models.CASCADE)
+    purchase = models.ForeignKey(Purchase, on_delete=models.CASCADE, related_name='deliveries')
     delivery_date = models.DateField(null=True)
     quantity = models.IntegerField()
 

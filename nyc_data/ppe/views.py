@@ -8,8 +8,9 @@ from django.urls import reverse
 from django.views import View
 from django_tables2 import RequestConfig
 
-from ppe import aggregations, dataclasses as dc, forms, data_import
-from ppe.drilldown import deliveries_for_item
+from ppe import aggregations, dataclasses as dc
+from ppe import forms, data_import
+from ppe.drilldown import drilldown_result
 from ppe.models import DataImport
 
 
@@ -47,7 +48,7 @@ def drilldown(request):
     context = {
         "asset_category": cat_display,
         # conversion to data class handles conversion to display names, etc.
-        "deliveries": [d.to_dataclass() for d in deliveries_for_item(category, rollup)]
+        "purchases": [p.to_dataclass() for p in drilldown_result(category, rollup)]
     }
     return render(request, "drilldown.html", context)
 
