@@ -4,10 +4,10 @@ from typing import NamedTuple, Dict
 
 from django.contrib.postgres.fields import JSONField
 from django.db import models
-from django.db.models import Sum
+from django.db.models import Sum, Max
 
 import ppe.dataclasses as dc
-from ppe.data_mappings import DataSource
+from ppe.data_mapping.types import DataFile
 
 
 def enum2choices(enum):
@@ -30,7 +30,7 @@ class ImportStatus(str, Enum):
 class DataImport(models.Model):
     import_date = models.DateTimeField(auto_now_add=True, db_index=True)
     status = ChoiceField(ImportStatus)
-    data_source = ChoiceField(DataSource)
+    data_file = ChoiceField(DataFile)
 
     uploaded_by = models.TextField(blank=True)
     file_checksum = models.TextField()
@@ -40,8 +40,8 @@ class DataImport(models.Model):
     @classmethod
     def sanity(cls):
         # for each data_source, at most 1 active
-        for _, src in DataSource.__members__.items():
-            ct = DataImport.objects.filter(data_source=src, status=ImportStatus.active).count()
+        for _, src in DataFile.__members__.items():
+            ct = DataImport.objects.filter(data_file=src, status=ImportStatus.active).count()
             if ct > 1:
                 print(f'Something is weird, more than one active object for {src}')
                 return False
@@ -59,7 +59,7 @@ class DataImport(models.Model):
         if self.status != ImportStatus.candidate:
             raise Exception('Can only compute a delta on a candidate import')
 
-        active_import = DataImport.objects.filter(status=ImportStatus.active, data_source=self.data_source).first()
+        active_import = DataImport.objects.filter(status=ImportStatus.active, data_file=self.data_file).first()
 
         if active_import:
             active_objects = active_import.imported_objects()
@@ -81,7 +81,7 @@ class DataImport(models.Model):
 
     def imported_objects(self):
         return {tpe: tpe.objects.prefetch_related('source').filter(source=self) for tpe in
-                [Delivery, Inventory, Purchase]}
+                [ScheduledDelivery, Inventory, Purchase]}
 
 class UploadDelta(NamedTuple):
     previous: DataImport
@@ -130,18 +130,28 @@ class Purchase(BaseModel):
             description=self.description,
             quantity=self.quantity,
             unscheduled_quantity=self.unscheduled_quantity,
-            deliveries=self.deliveries.all()
+            deliveries=self.deliveries.all(),
+            vendor=self.vendor
         )
 
 
 class Inventory(BaseModel):
     item = ChoiceField(dc.Item)
     quantity = models.IntegerField()
+    as_of = models.DateField()
 
     raw_data = JSONField()
 
+    @classmethod
+    def as_of_latest(cls):
+        return super().active().aggregate(Max('as_of'))['as_of__max']
 
-class Delivery(BaseModel):
+    @classmethod
+    def active(cls):
+        return super().active().filter(as_of=cls.as_of_latest())
+
+
+class ScheduledDelivery(BaseModel):
     purchase = models.ForeignKey(Purchase, on_delete=models.CASCADE, related_name='deliveries')
     delivery_date = models.DateField(null=True)
     quantity = models.IntegerField()
@@ -155,6 +165,24 @@ class Delivery(BaseModel):
             vendor=self.purchase.vendor,
             source=self.source.display()
         )
+
+class InboundReceipt(BaseModel):
+    date_received = models.DateTimeField()
+    supplier = ChoiceField(dc.Supplier)
+    description = models.TextField()
+    quantity = models.IntegerField()
+    inbound_id = models.TextField()
+    item_id = models.TextField()
+    item = ChoiceField(dc.Item)
+
+class Facility(BaseModel):
+    name = models.TextField()
+    tpe = ChoiceField(dc.FacilityType)
+
+class FacilityDelivery(BaseModel):
+    date = models.DateField()
+    facility = models.ForeignKey(Facility, on_delete=models.CASCADE)
+    item = ChoiceField(dc.Item)
 
 
 class Hospital(BaseModel):

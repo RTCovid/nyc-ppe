@@ -1,25 +1,34 @@
 {% extends "base.html" %}
+{% load ppe_extras %}
 
 {% block titlebar %}
-<h2>Incoming supply for {{ asset_category }}</h2>
+<h2>{{ asset_category }}</h2>
 {% endblock %}
 
 {% block content %}
 <div class="incoming-supply">
+    <h2>Incoming Supply</h2>
+    {% regroup deliveries by delivery_date as date_list %}
+    {% for day in date_list %}
+        {% if forloop.first %}<dl>{% endif %}
+            <dt>{{day.grouper}}</dt>
+
+            {% for delivery in day.list %}
+                <dd class="tooltip" aria-label="{{delivery.vendor}}">Receiving <span class="quantity">{{ delivery.quantity|pretty_num }}</span> – {{ delivery.description|default:"No description" }}</dd>
+            {% endfor %}
+        {% if forloop.last %}</dl>{% endif %}
+    {% endfor %}
+
+
+    <h2>Unscheduled Supply</h2>
     <ul>
         {% for purchase in purchases %}
-        <li>
-            Receiving {{ purchase.quantity }} {{ purchase.item }} ({{ purchase.description }}). Unscheduled Quantity: {{ purchase.unscheduled_quantity }}
-            <ul>
-                {% for delivery in purchase.deliveries %}
-                <li>{{ delivery.quantity }} on {{ delivery.delivery_date }}</li>
-                {% endfor %}
-
-            </ul>
+        {% if purchase.unscheduled_quantity %}
+        <li class="tooltip" aria-label="{{purchase.vendor}}">
+            Receiving {{purchase.unscheduled_quantity|pretty_num}} – {{purchase.description|default:"No description"}}
         </li>
+        {% endif %}
         {% endfor %}
-
     </ul>
-
 </div>
 {% endblock %}

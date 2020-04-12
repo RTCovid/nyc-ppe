@@ -4,6 +4,16 @@ body {
   padding: 40px 0 0 0;
 }
 
+a, a:visited {
+    color: #0a5796;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #0a5796cc;
+    text-decoration: underline;
+}
+
 section.container {
     width: 80%;
     margin: 0 auto;
@@ -16,7 +26,7 @@ section.container {
     left: 0px;
     top: 0px;
 
-    background: #00B2FF;
+    background: #0a5796;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -46,7 +56,8 @@ section.container {
 }
 
 .upload-btn {
-    border-radius: 20px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
     background: #EEEEEE;
     font-size: 14px;
     text-decoration: none;
@@ -172,25 +183,24 @@ td:last-child {
 
 .divider {
     background: #c5b9b94a;
-    /* i have no idea why this works sorry */
-    padding-top: 16%;
-    padding-bottom: 16%;
+    padding-top: 16px;
+    padding-bottom: 16px;
     padding-left: 1px;
 }
 
 /* Lockdown form styles */
 
-.lockdown { 
+.lockdown, .upload { 
     display: flex;
     justify-content: center;
 }
 
-.lockdown form {
+.lockdown form, .upload form {
     display: inline-block;
     text-align: center;
 }
 
-.lockdown label {
+.lockdown label, .upload label {
     display: block;
     color: #aaa;
     font-size: 14px;
@@ -198,7 +208,7 @@ td:last-child {
     font-weight: 300;
 }
 
-.lockdown input {
+.lockdown input, .upload input {
     display: block;
     min-width: 250px;
     margin: 10px 0;
@@ -207,10 +217,10 @@ td:last-child {
     border-radius: 5px;
 }
 
-.lockdown button {
+.lockdown button, .upload button {
     display: inline-block;
     padding: 12px 50px;
-    background: #00B2FF;
+    background: #0a5796;
     font-size: 18px;
     font-weight: 300;
     color: #fff;
@@ -219,9 +229,24 @@ td:last-child {
     transition: all 0.2s cubic-bezier(0.2, 0.91, 0.85, 0.96) 0s;
 }
 
-.lockdown button:hover {
+.lockdown button:hover, .upload button:hover {
     box-shadow: rgba(0, 0, 0, 0.05) 0px 0px 0px 1px, rgba(0, 0, 0, 0.15) 0px 5px 10px;
     outline: none;
+}
+
+.upload dl {
+    list-style-type: none;
+}
+
+.upload dl:after {
+    clear: left;
+    content: "";
+    display: block;
+}
+
+.upload dl li {
+    float: left;
+    margin-right: 20px;
 }
 
 /* Rollup toggle */
@@ -312,31 +337,30 @@ section.footer {
     background: #0008;
     border-radius: 3px;
     opacity: 0;
-  }
+}
 
 .tooltip::before {
-  position: absolute;
-  z-index: 1000001;
-  display: none;
-  width: 0;
-  height: 0;
-  color: #0000;
-  pointer-events: none;
-  content: "";
-  border: 6px solid transparent;
-  opacity: 0;
-  top: 0;
-  left: 10%;
-  bottom: auto;
-  margin-right: -6px;
-  border-top-color: #0008;
+    position: absolute;
+    z-index: 1000001;
+    display: none;
+    width: 0;
+    height: 0;
+    color: #0000;
+    pointer-events: none;
+    content: "";
+    border: 6px solid transparent;
+    opacity: 0;
+    top: 0;
+    left: 15px;
+    bottom: auto;
+    margin-right: -6px;
+    border-top-color: #0008;
 }
 
 @keyframes tooltip-appear {
     from {
       opacity: 0;
-    }
-  
+    } 
     to {
       opacity: 1;
     }
@@ -350,4 +374,21 @@ section.footer {
     animation-fill-mode: forwards;
     animation-timing-function: ease-in;
 }
+
+/* Drilldown styles */
+
+.incoming-supply h2 {
+    font-weight: 300;
+}
+
+.incoming-supply dt {
+    float: left;
+    width: 150px;
+    color: #888;
+    text-transform: uppercase;
+}
+
+.incoming-supply dd {
+    margin-left: 150px;
+    margin-bottom: 10px;
 }

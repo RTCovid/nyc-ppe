@@ -1,12 +1,15 @@
 import unittest
 from datetime import datetime, timedelta
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
+from django.urls import reverse
 
 from ppe import aggregations
 from ppe.aggregations import AssetRollup
-from ppe.data_mappings import SourcingRow, DataSource
+from ppe.data_mapping.types import DataFile
+from ppe.data_mapping.mappers.dcas_sourcing import SourcingRow
 import ppe.dataclasses as dc
+from ppe.data_mapping.utils import ErrorCollector
 from ppe.models import DataImport, ImportStatus, Purchase
 
 
@@ -14,7 +17,7 @@ class TestAssetRollup(TestCase):
     def setUp(self) -> None:
         self.data_import = DataImport(
             status=ImportStatus.active,
-            data_source=DataSource.EDC_PPE,
+            data_file=DataFile.PPE_ORDERINGCHARTS_DATE_XLSX,
             file_checksum='123'
         )
         self.data_import.save()
@@ -28,7 +31,7 @@ class TestAssetRollup(TestCase):
             delivery_day_2=datetime.strptime('2020-04-12', '%Y-%m-%d') + timedelta(days=1),
             delivery_day_2_quantity=1000,
             raw_data={},
-        ).to_objects()
+        ).to_objects(ErrorCollector())
 
         for item in items:
             item.source = self.data_import
@@ -103,7 +106,7 @@ class TestUnscheduledDeliveries(unittest.TestCase):
     def test_unscheduled_deliveries(self):
         data_import = DataImport(
             status=ImportStatus.active,
-            data_source=DataSource.EDC_PPE,
+            data_file=DataFile.PPE_ORDERINGCHARTS_DATE_XLSX,
             file_checksum='123'
         )
         data_import.save()
@@ -117,7 +120,7 @@ class TestUnscheduledDeliveries(unittest.TestCase):
             delivery_day_2=datetime.strptime('2020-04-12', '%Y-%m-%d') + timedelta(days=1),
             delivery_day_2_quantity=1000,
             raw_data={},
-        ).to_objects()
+        ).to_objects(ErrorCollector())
 
         for item in items:
             item.source = data_import
@@ -138,3 +141,25 @@ class TestCategoryMappings(unittest.TestCase):
     def test_display_names(self):
         for _, item in dc.Item.__members__.items():
             self.assertNotEqual(dc.ITEM_TO_DISPLAYNAME.get(item), None, f"No display name defined for {item}")
+
+class TestInventory(unittest.TestCase):
+    pass
+
+@override_settings(LOCKDOWN_ENABLED=False)
+class TestViews(TestCase):
+    """Sanity that the views work at a basic level"""
+    def test_home(self):
+        response = self.client.get(reverse('index'))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'Current status', response.content)
+
+    def test_home_mayoral(self):
+        response = self.client.get(reverse('index'), {'rollup': 'mayoral'})
+        self.assertIn(b'Current status', response.content)
+        self.assertEqual(response.status_code, 200)
+
+    def test_drilldown(self):
+        response = self.client.get(reverse('drilldown'), {'category': 'Eye Protection', 'rollup': 'mayoral'})
+        self.assertIn(b'Incoming Supply', response.content)
+        self.assertEqual(response.status_code, 200)
+

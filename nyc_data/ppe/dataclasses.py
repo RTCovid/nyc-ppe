@@ -39,6 +39,8 @@ class Item(str, Enum):
     gown = "gown"
     gown_material = "gown_material"
     coveralls = "coveralls"
+    ponchos = "ponchos"
+    scrubs = "scrubs"
 
     n95_mask_non_surgical = "n95_mask"
     n95_mask_surgical = "n95_mask_surgical"
@@ -88,6 +90,7 @@ class Forecast:
 
 class Purchase(NamedTuple):
     order_type: OrderType
+    vendor: str
 
     item: str
     description: str
@@ -98,11 +101,29 @@ class Purchase(NamedTuple):
     deliveries: List[Delivery]
 
 
+class Supplier(str, Enum):
+    dcas_donations = 'dcas_donations'
+    dcas_procurement = 'dcas_procurement'
+    # stuff like CVD19 Supply, SNS, etc.
+    other = 'other'
+
+
+class FacilityType(str, Enum):
+    government = 'government'
+    hospital = 'hospital'
+    ems = 'ems'
+    nursing_home = 'nursing_home'
+    clinic = 'clinic'
+
+
 ITEM_TO_DISPLAYNAME = {
     Item.faceshield: 'Face Shields',
+
     Item.gown: 'Gowns',
     Item.gown_material: 'Gown Material',
     Item.coveralls: 'Coveralls',
+    Item.ponchos: 'Ponchos',
+    Item.scrubs: 'Scrubs',
 
     Item.n95_mask_non_surgical: 'Non-surgical n95 Masks',
     Item.n95_mask_surgical: 'Surgical n95 Masks',
@@ -127,9 +148,12 @@ ITEM_TO_DISPLAYNAME = {
 
 ITEM_TO_MAYORAL = {
     Item.faceshield: MayoralCategory.eye_protection,
+
     Item.gown: MayoralCategory.iso_gowns,
     Item.gown_material: MayoralCategory.uncategorized,
     Item.coveralls: MayoralCategory.other_ppe,
+    Item.ponchos: MayoralCategory.other_ppe,
+    Item.scrubs: MayoralCategory.other_ppe,
 
     Item.n95_mask_non_surgical: MayoralCategory.non_surgical_masks,
     Item.n95_mask_surgical: MayoralCategory.n95_masks,
