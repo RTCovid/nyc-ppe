@@ -121,12 +121,10 @@ def add_demand_estimate(time_start: datetime,
             # Add up the forecast demand for each day between time_start and time_end
             rollup.demand = 0
             date = time_start
-            total_hospitalization = 0
             while date <= time_end:
                 hospitalization = HOSPITALIZATION[date.strftime("%Y-%m-%d")]
                 if not hospitalization or hospitalization < ALL_BEDS_AVAILABLE:
                     hospitalization = ALL_BEDS_AVAILABLE
-                total_hospitalization += hospitalization
                 rollup.demand += demand_per_patient_per_day * hospitalization
                 date += datetime.timedelta(days=1)
             rollup.demand = int(rollup.demand)
