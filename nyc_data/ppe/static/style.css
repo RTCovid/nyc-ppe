@@ -50,7 +50,8 @@ section.container {
 }
 
 .upload-btn {
-    border-radius: 20px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
     background: #EEEEEE;
     font-size: 14px;
     text-decoration: none;
@@ -330,24 +331,24 @@ section.footer {
     background: #0008;
     border-radius: 3px;
     opacity: 0;
-  }
+}
 
 .tooltip::before {
-  position: absolute;
-  z-index: 1000001;
-  display: none;
-  width: 0;
-  height: 0;
-  color: #0000;
-  pointer-events: none;
-  content: "";
-  border: 6px solid transparent;
-  opacity: 0;
-  top: 0;
-  left: 10%;
-  bottom: auto;
-  margin-right: -6px;
-  border-top-color: #0008;
+    position: absolute;
+    z-index: 1000001;
+    display: none;
+    width: 0;
+    height: 0;
+    color: #0000;
+    pointer-events: none;
+    content: "";
+    border: 6px solid transparent;
+    opacity: 0;
+    top: 0;
+    left: 15px;
+    bottom: auto;
+    margin-right: -6px;
+    border-top-color: #0008;
 }
 
 @keyframes tooltip-appear {
@@ -366,4 +367,22 @@ section.footer {
     animation-duration: 1;
     animation-fill-mode: forwards;
     animation-timing-function: ease-in;
+}
+
+/* Drilldown styles */
+
+.incoming-supply h2 {
+    font-weight: 300;
+}
+
+.incoming-supply dt {
+    float: left;
+    width: 150px;
+    color: #888;
+    text-transform: uppercase;
+}
+
+.incoming-supply dd {
+    margin-left: 150px;
+    margin-bottom: 10px;
 }

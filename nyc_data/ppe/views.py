@@ -44,11 +44,13 @@ def drilldown(request):
     else:
         rollup = lambda x: x
         cat_display = dc.Item(category).display()
+    drilldown_res = drilldown_result(category, rollup)
 
     context = {
         "asset_category": cat_display,
         # conversion to data class handles conversion to display names, etc.
-        "purchases": [p.to_dataclass() for p in drilldown_result(category, rollup)]
+        "purchases": [p.to_dataclass() for p in drilldown_res[0]],
+        "deliveries": [d.to_dataclass() for d in drilldown_res[1]],
     }
     return render(request, "drilldown.html", context)
 
