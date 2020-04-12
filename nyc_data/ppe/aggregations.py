@@ -66,6 +66,8 @@ def asset_rollup(
 
     return results
 
+def is_zero():
+  return self.donate == 0 and self.sell == 0 and self.make == 0 and self.inventory == 0
 
 def add_demand_estimate(time_start: datetime, time_end: datetime, rollup: Dict[str, AssetRollup], rollup_fn):
     last_week = datetime.datetime.today() - datetime.timedelta(days=7)
