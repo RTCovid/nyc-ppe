@@ -6,7 +6,7 @@ import django_tables2 as tables
 from django.utils.html import format_html
 
 import ppe.dataclasses as dc
-from ppe.models import Delivery, Inventory, ImportStatus
+from ppe.models import ScheduledDelivery, Inventory, ImportStatus
 
 
 @dataclass
@@ -20,7 +20,7 @@ class AssetRollup:
 
     @property
     def total(self):
-        return self.donate + self.sell + self.make
+        return self.donate + self.sell + self.make + self.inventory
 
     @property
     def absolute_balance(self):
@@ -28,7 +28,7 @@ class AssetRollup:
 
     @property
     def percent_balance(self):
-        return self.total / (self.demand + 1) * (-1 if self.absolute_balance < 0 else 1)
+        return self.absolute_balance / (self.demand + 1)
 
 
 MAPPING = {dc.OrderType.Make: "make", dc.OrderType.Purchase: "sell"}
@@ -40,8 +40,8 @@ def asset_rollup(
         rollup_fn: Callable[[dc.Item], any] = lambda x: x,
         estimate_demand=True
 ) -> Dict[str, AssetRollup]:
-    relevant_deliveries = Delivery.objects.prefetch_related("purchase", "source").filter(
-        delivery_date__gte=time_start, delivery_date__lte=time_end, source__status=ImportStatus.active
+    relevant_deliveries = ScheduledDelivery.active().prefetch_related('purchase').filter(
+        delivery_date__gte=time_start, delivery_date__lte=time_end
     )
 
     results: Dict[str, AssetRollup] = {}
@@ -56,7 +56,7 @@ def asset_rollup(
             raise Exception(f"unexpected purchase type: `{tpe}`")
         setattr(rollup, param, getattr(rollup, param) + delivery.quantity)
 
-    inventory = Inventory.objects.prefetch_related("source").filter(source__status=ImportStatus.active)
+    inventory = Inventory.active()
     for item in inventory:
         rollup = results[rollup_fn(dc.Item(item.item))]
         rollup.inventory += item.quantity
@@ -66,6 +66,8 @@ def asset_rollup(
 
     return results
 
+def is_zero():
+  return self.donate == 0 and self.sell == 0 and self.make == 0 and self.inventory == 0
 
 def add_demand_estimate(time_start: datetime, time_end: datetime, rollup: Dict[str, AssetRollup], rollup_fn):
     last_week = datetime.datetime.today() - datetime.timedelta(days=7)
@@ -99,14 +101,19 @@ class NumericalColumn(tables.Column):
 
 class AggregationTable(tables.Table):
     asset = tables.Column()
-    projected_demand = NumericalColumn(accessor="demand")
+    projected_demand = NumericalColumn(accessor="demand", verbose_name="Demand")
     balance = tables.Column(empty_values=(), order_by="percent_balance")
 
-    total = NumericalColumn()
-    inventory = NumericalColumn()
+    total = NumericalColumn(verbose_name="Supply")
+    inventory = NumericalColumn(attrs={"th": {"class": "tooltip", "aria-label": f"MO Operations"}})
     donate = NumericalColumn()
-    sell = NumericalColumn()
-    make = NumericalColumn()
+    sell = NumericalColumn(attrs={"th": {"class": "tooltip", "aria-label": "DCAS"}})
+    make = NumericalColumn(attrs={"th": {"class": "tooltip", "aria-label": "EDC"}})
+
+    def render_projected_demand(self, value):
+        if value == 0:
+            return pretty_render_numeric(value)
+        return format_html('<span class="value-divider">~ </span>{}'.format(pretty_render_numeric(value)))
 
     def render_asset(self, value):
         href = f'/drilldown?category={value}'
@@ -181,7 +188,9 @@ class AggregationTable(tables.Table):
             'total',
             'balance',
             'inventory',
-            'donate',
             'sell',
             'make',
+        )
+        exclude = (
+            'donate',
         )

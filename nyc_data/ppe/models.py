@@ -4,10 +4,10 @@ from typing import NamedTuple, Dict
 
 from django.contrib.postgres.fields import JSONField
 from django.db import models
-from django.forms.models import model_to_dict
+from django.db.models import Sum, Max
 
 import ppe.dataclasses as dc
-from ppe.data_mappings import DataSource
+from ppe.data_mapping.types import DataFile
 
 
 def enum2choices(enum):
@@ -30,7 +30,7 @@ class ImportStatus(str, Enum):
 class DataImport(models.Model):
     import_date = models.DateTimeField(auto_now_add=True, db_index=True)
     status = ChoiceField(ImportStatus)
-    data_source = ChoiceField(DataSource)
+    data_file = ChoiceField(DataFile)
 
     uploaded_by = models.TextField(blank=True)
     file_checksum = models.TextField()
@@ -40,8 +40,8 @@ class DataImport(models.Model):
     @classmethod
     def sanity(cls):
         # for each data_source, at most 1 active
-        for _, src in DataSource.__members__.items():
-            ct = DataImport.objects.filter(data_source=src, status=ImportStatus.active).count()
+        for _, src in DataFile.__members__.items():
+            ct = DataImport.objects.filter(data_file=src, status=ImportStatus.active).count()
             if ct > 1:
                 print(f'Something is weird, more than one active object for {src}')
                 return False
@@ -59,7 +59,7 @@ class DataImport(models.Model):
         if self.status != ImportStatus.candidate:
             raise Exception('Can only compute a delta on a candidate import')
 
-        active_import = DataImport.objects.filter(status=ImportStatus.active, data_source=self.data_source).first()
+        active_import = DataImport.objects.filter(status=ImportStatus.active, data_file=self.data_file).first()
 
         if active_import:
             active_objects = active_import.imported_objects()
@@ -94,7 +94,7 @@ class DataImport(models.Model):
 
     def imported_objects(self):
         return {tpe: tpe.objects.prefetch_related('source').filter(source=self) for tpe in
-                [Delivery, Inventory, Purchase]}
+                [ScheduledDelivery, Inventory, Purchase]}
 
 class UploadDelta(NamedTuple):
     previous: DataImport
@@ -128,8 +128,6 @@ class Purchase(BaseModel):
     vendor = models.TextField()
     cost = models.IntegerField(null=True)
     raw_data = JSONField()
-
-    equality_columns = ["raw_data"]
     display_name = "Purchase"
 
     def comparable_object(self):
@@ -139,10 +137,27 @@ class Purchase(BaseModel):
             'quantity': self.quantity,
             'vendor' : self.vendor
         }
+    # property so we can use it in templates
+    @property
+    def unscheduled_quantity(self):
+        total_scheduled = self.deliveries.aggregate(Sum('quantity'))['quantity__sum']
+        return self.quantity - (total_scheduled or 0)
+
+    def to_dataclass(self):
+        return dc.Purchase(
+            order_type=self.order_type,
+            item=dc.Item(self.item).display(),
+            description=self.description,
+            quantity=self.quantity,
+            unscheduled_quantity=self.unscheduled_quantity,
+            deliveries=self.deliveries.all()
+        )
+
 
 class Inventory(BaseModel):
     item = ChoiceField(dc.Item)
     quantity = models.IntegerField()
+    as_of = models.DateField()
 
     raw_data = JSONField()
     equality_columns = ["raw_data"]
@@ -153,9 +168,17 @@ class Inventory(BaseModel):
         }
     display_name = "Inventory"
 
+    @classmethod
+    def as_of_latest(cls):
+        return super().active().aggregate(Max('as_of'))['as_of__max']
 
-class Delivery(BaseModel):
-    purchase = models.ForeignKey(Purchase, on_delete=models.CASCADE)
+    @classmethod
+    def active(cls):
+        return super().active().filter(as_of=cls.as_of_latest())
+
+
+class ScheduledDelivery(BaseModel):
+    purchase = models.ForeignKey(Purchase, on_delete=models.CASCADE, related_name='deliveries')
     delivery_date = models.DateField(null=True)
     quantity = models.IntegerField()
 
@@ -169,7 +192,6 @@ class Delivery(BaseModel):
             source=self.source.display()
         )
 
-    # this isn't sufficient. Need to add in item, or raw_data
     def comparable_object(self):
         
         return { 
@@ -177,8 +199,25 @@ class Delivery(BaseModel):
             'purchase': self.purchase.comparable_object()
         }
 
-    equality_columns = ["quantity", "delivery_date"]
     display_name = "Delivery"
+
+class InboundReceipt(BaseModel):
+    date_received = models.DateTimeField()
+    supplier = ChoiceField(dc.Supplier)
+    description = models.TextField()
+    quantity = models.IntegerField()
+    inbound_id = models.TextField()
+    item_id = models.TextField()
+    item = ChoiceField(dc.Item)
+
+class Facility(BaseModel):
+    name = models.TextField()
+    tpe = ChoiceField(dc.FacilityType)
+
+class FacilityDelivery(BaseModel):
+    date = models.DateField()
+    facility = models.ForeignKey(Facility, on_delete=models.CASCADE)
+    item = ChoiceField(dc.Item)
 
 
 class Hospital(BaseModel):

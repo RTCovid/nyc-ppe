@@ -1,12 +1,11 @@
 {% extends "base.html" %}
 
 {% block titlebar %}
-<h2>Upload data to the dashboard</h2>
+<h2>Upload Data</h2>
 {% endblock %}
 
 {% block content %}
 <div class="upload">
-    <h2>Upload a new spreadsheet</h2>
     {% if error != None %}
     Error! {{ error }}
     {% endif %}
@@ -21,7 +20,7 @@
     <form enctype="multipart/form-data" method="post" action="/upload/">
         {% csrf_token %}
         {{ form }}
-        <input type="submit" value="Submit">
+        <button type="submit">Submit</button>
     </form>
 </div>
 {% endblock %}

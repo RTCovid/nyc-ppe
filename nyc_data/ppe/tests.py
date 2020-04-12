@@ -5,16 +5,18 @@ from django.test import TestCase
 
 from ppe import aggregations
 from ppe.aggregations import AssetRollup
-from ppe.data_mappings import SourcingRow, DataSource
+from ppe.data_mapping.types import DataFile
+from ppe.data_mapping.mappers.dcas_sourcing import SourcingRow
 import ppe.dataclasses as dc
-from ppe.models import DataImport, ImportStatus
+from ppe.data_mapping.utils import ErrorCollector
+from ppe.models import DataImport, ImportStatus, Purchase
 
 
 class TestAssetRollup(TestCase):
     def setUp(self) -> None:
         self.data_import = DataImport(
             status=ImportStatus.active,
-            data_source=DataSource.EDC_PPE,
+            data_file=DataFile.PPE_ORDERINGCHARTS_DATE_XLSX,
             file_checksum='123'
         )
         self.data_import.save()
@@ -22,12 +24,13 @@ class TestAssetRollup(TestCase):
             item=dc.Item.gown,
             quantity=1005,
             vendor="Gown Sellers Ltd",
+            description='Some gowns',
             delivery_day_1=datetime.now() - timedelta(days=5),
             delivery_day_1_quantity=5,
             delivery_day_2=datetime.now() + timedelta(days=1),
             delivery_day_2_quantity=1000,
             raw_data={},
-        ).to_objects()
+        ).to_objects(ErrorCollector())
 
         for item in items:
             item.source = self.data_import
@@ -70,6 +73,36 @@ class TestAssetRollup(TestCase):
             self.data_import.status = ImportStatus.active
             self.data_import.save()
 
+class TestUnscheduledDeliveries(unittest.TestCase):
+    def test_unscheduled_deliveries(self):
+        data_import = DataImport(
+            status=ImportStatus.active,
+            data_file=DataFile.PPE_ORDERINGCHARTS_DATE_XLSX,
+            file_checksum='123'
+        )
+        data_import.save()
+        items = SourcingRow(
+            item=dc.Item.gown,
+            quantity=2000,
+            vendor="Gown Sellers Ltd",
+            description="Some gowns",
+            delivery_day_1=datetime.now() - timedelta(days=5),
+            delivery_day_1_quantity=5,
+            delivery_day_2=datetime.now() + timedelta(days=1),
+            delivery_day_2_quantity=1000,
+            raw_data={},
+        ).to_objects(ErrorCollector())
+
+        for item in items:
+            item.source = data_import
+            item.save()
+
+        purchase = Purchase.objects.filter(item=dc.Item.gown)
+        self.assertEqual(purchase.count(), 1)
+        self.assertEqual(purchase.first().unscheduled_quantity, 995)
+
+
+
 
 class TestCategoryMappings(unittest.TestCase):
     def test_category_to_mayoral(self):
@@ -79,3 +112,6 @@ class TestCategoryMappings(unittest.TestCase):
     def test_display_names(self):
         for _, item in dc.Item.__members__.items():
             self.assertNotEqual(dc.ITEM_TO_DISPLAYNAME.get(item), None, f"No display name defined for {item}")
+
+class TestInventory(unittest.TestCase):
+    pass

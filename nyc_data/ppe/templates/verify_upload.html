@@ -4,35 +4,62 @@
 <h2>Confirm your upload</h2>
 {% endblock %} {% block content %}
 <div class="upload">
-  <h2>Verify your upload</h2>
-  Your upload replaces an upload made by {{ delta.previous.uploaded_by |
-  default:"Unknown user" }} on {{ delta.previous.import_date }}
-  <br />
+    <div class="upload-details" style="width: 50%;">
+        <p>Replacing upload by:</p>
+        <ul>
+            <li>{{ delta.previous.uploaded_by | default:"Unknown user" }} on {{ delta.previous.import_date }}</li>
+        </ul>
+        <dl>
+            <li>
+                <dt>They uploaded:</dt>
+                {% for stat, val in delta.active_stats.items %}
+                <dd><span class="upload-type">{{stat}}</span>: {{val}}</dd>
+                {% endfor %}
+            </li>
+            <li>
+                <dt>You uploaded:</dt>
+                {% for stat, val in delta.candidate_stats.items %}
+                <dd><span class="upload-type">{{stat}}</span>: {{val}}</dd>
+                {% endfor %}
+            </li>
+        </dl>
 
-  They uploaded: {{ delta.active_stats }}<br />
-  You uploaded: {{ delta.candidate_stats }}<br />
+        <p>You added these new objects: </p>
+        {% for k, v in delta.new_objects.items %} {% if v|length > 0 %}
+        <h4>{{k.display_name}}</h4>
+        <!-- TODO: use custom tag? Django can't access attrs that begin with underscores, so can't use __name__ -->
+        <ul>
+            {% for new_obj in v %}
+            <li>{{new_obj}}</li>
+            {% endfor %}
+        </ul>
 
-  You added these new objects: <br />
-  {% for k, v in delta.new_objects.items %} {% if v|length > 0 %}
-  <h4>{{k.display_name}}</h4>
-  <!-- TODO: use custom tag? Django can't access attrs that begin with underscores, so can't use __name__ -->
-  <ul>
-    {% for new_obj in v %}
-    <li>{{new_obj}}</li>
-    {% endfor %}
-  </ul>
+        {% endif %} {% endfor %}
+        <!-- <p>You added these new objects:</p>
+        {% for key, val in delta.new_objects.items %}
+            {% if forloop.first %}<ul>{% endif %}
+            <li><strong>{{key}}</strong>
+                {% for skey, sval in val.items %}
+                    {% if forloop.first %}<ul>{% endif %}
+                        <li>{{sval}}</li>
+                    {% if forloop.last %}</ul>{% endif %}
+                {% endfor %}
+            </li>
+            {% if forloop.last %}</ul>{% endif %}
+        {% endfor %} -->
 
-  {% endif %} {% endfor %}
+        <!-- {{delta.new_objects}} -->
+    </div>
+    <form method="post" action="/verify/{{ import_id }}/">
+        {% csrf_token %}
+        <button type="submit">Confirm</button>
+    </form>
 
-  <form method="post" action="/verify/{{ import_id }}/">
-    {% csrf_token %}
-    <input type="submit" value="Confirm Upload" />
-  </form>
-
-  <form enctype="multipart/form-data" method="post" action="/cancel/{{ import_id }}/">
-    {% csrf_token %}
-    <input type="submit" value="Cancel current import in progress" />
-  </form>
+    <form enctype="multipart/form-data" method="post" action="/cancel/{{ import_id }}/">
+        {% csrf_token %}
+        <input type="submit" value="Cancel current import in progress" />
+    </form>
+    >>>>>>> 9fde89ca4dd51a02d1637558bbecaf283dfb704b
 </div>
 
 {% endblock %}

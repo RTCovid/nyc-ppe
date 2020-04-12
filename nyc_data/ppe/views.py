@@ -8,8 +8,9 @@ from django.urls import reverse
 from django.views import View
 from django_tables2 import RequestConfig
 
-from ppe import aggregations, dataclasses as dc, forms, data_import
-from ppe.drilldown import deliveries_for_item
+from ppe import aggregations, dataclasses as dc
+from ppe import forms, data_import
+from ppe.drilldown import drilldown_result
 from ppe.models import DataImport
 
 
@@ -18,16 +19,20 @@ def mayoral_rollup(row):
 
 
 def default(request):
-    if request.GET.get('rollup') == 'mayoral':
+    if request.GET.get('rollup', '') in ['mayoral', '', None]:
         aggregation = aggregations.asset_rollup(
             datetime.now(), datetime.now() + timedelta(days=30),
             mayoral_rollup
         )
-    else:
+    elif request.GET.get('rollup', '') in ['critical',]:
         aggregation = aggregations.asset_rollup(
             datetime.now(), datetime.now() + timedelta(days=30)
         )
-    table = aggregations.AggregationTable(list(aggregation.values()))
+
+    displayed_vals = ['donate', 'sell', 'make', 'inventory']
+    cleaned_aggregation = [rollup for rollup in list(aggregation.values()) if not all([getattr(rollup, val) == 0 for val in displayed_vals])]
+    
+    table = aggregations.AggregationTable(cleaned_aggregation)
     RequestConfig(request).configure(table)
     context = {"aggregations": table}
     return render(request, "dashboard.html", context)
@@ -43,11 +48,13 @@ def drilldown(request):
     else:
         rollup = lambda x: x
         cat_display = dc.Item(category).display()
+    drilldown_res = drilldown_result(category, rollup)
 
     context = {
         "asset_category": cat_display,
         # conversion to data class handles conversion to display names, etc.
-        "deliveries": [d.to_dataclass() for d in deliveries_for_item(category, rollup)]
+        "purchases": [p.to_dataclass() for p in drilldown_res[0]],
+        "deliveries": [d.to_dataclass() for d in drilldown_res[1]],
     }
     return render(request, "drilldown.html", context)
 
@@ -66,7 +73,7 @@ class Upload(View):
         form = forms.UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
             try:
-                import_obj = data_import.handle_upload(request.FILES['file'])
+                import_obj = data_import.handle_upload(request.FILES['file'], form.name)
                 return HttpResponseRedirect(reverse('verify', kwargs={"import_id": import_obj.id}))
             except data_import.ImportInProgressError as ex:
                 return render(request, "upload.html",
