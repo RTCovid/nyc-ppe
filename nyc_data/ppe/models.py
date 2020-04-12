@@ -78,16 +78,18 @@ class DataImport(models.Model):
         )
     def get_new_objects(self, active_objects):
         
-        new_objects = {}
-        for k, objs in self.imported_objects().items():
 
+        new_objects = {}
+        
+        for k, objs in self.imported_objects().items():
             model_equality_cols = [field for field in k.equality_columns]
-            active_rows = [model_to_dict(instance, fields=model_equality_cols) for instance in active_objects.get(k) \
+            active_rows = [instance.comparable_object() for instance in active_objects.get(k) \
                 if k in active_objects.keys()]
-            candidate_rows = [model_to_dict(instance, fields=model_equality_cols) for instance in objs]
+            candidate_rows = [instance.comparable_object() for instance in objs]
             new_objects[k] = [i for i in candidate_rows if i not in active_rows]
 
         return new_objects
+
     def imported_objects(self):
         return {tpe: tpe.objects.prefetch_related('source').filter(source=self) for tpe in
                 [Delivery, Inventory, Purchase]}
@@ -126,7 +128,15 @@ class Purchase(BaseModel):
     raw_data = JSONField()
 
     equality_columns = ["raw_data"]
+    display_name = "Purchase"
 
+    def comparable_object(self):
+        
+        return { 
+            'item': self.item,
+            'quantity': self.quantity,
+            'vendor' : self.vendor
+        }
 
 class Inventory(BaseModel):
     item = ChoiceField(dc.Item)
@@ -134,6 +144,12 @@ class Inventory(BaseModel):
 
     raw_data = JSONField()
     equality_columns = ["raw_data"]
+    def comparable_object(self):
+        
+        return { 
+            'raw_data': self.raw_data 
+        }
+    display_name = "Inventory"
 
 
 class Delivery(BaseModel):
@@ -152,7 +168,15 @@ class Delivery(BaseModel):
         )
 
     # this isn't sufficient. Need to add in item, or raw_data
+    def comparable_object(self):
+        
+        return { 
+            'delivery_date': self.delivery_date, 
+            'purchase': self.purchase.comparable_object()
+        }
+
     equality_columns = ["quantity", "delivery_date"]
+    display_name = "Delivery"
 
 
 class Hospital(BaseModel):
