@@ -38,8 +38,9 @@ class TestAssetRollup(TestCase):
             item.save()
 
     def test_rollup(self):
+        today = datetime(2020, 4, 12)
         rollup = aggregations.asset_rollup(
-            datetime.strptime('2020-04-12', '%Y-%m-%d') - timedelta(days=28), datetime.strptime('2020-04-12', '%Y-%m-%d')
+            today - timedelta(days=28), today
         )
         self.assertEqual(len(rollup), len(dc.Item))
         # demand of 20 = 5 in the last week * 4 weeks in the period
@@ -47,14 +48,13 @@ class TestAssetRollup(TestCase):
 
         # Turn of use of hospitalization projection
         rollup = aggregations.asset_rollup(
-            datetime.strptime('2020-04-12', '%Y-%m-%d') - timedelta(days=28),
-            datetime.strptime('2020-04-12', '%Y-%m-%d'),
+            today - timedelta(days=28), today,
             use_ihme_projection=False
         )
         self.assertEqual(rollup[dc.Item.gown], AssetRollup(asset=dc.Item.gown, demand=20, sell=5))
 
         future_rollup = aggregations.asset_rollup(
-            datetime.strptime('2020-04-12', '%Y-%m-%d') - timedelta(days=30), datetime.strptime('2020-04-12', '%Y-%m-%d') + timedelta(days=30)
+            today - timedelta(days=30), today + timedelta(days=30)
         )
         self.assertEqual(
             future_rollup[dc.Item.gown], AssetRollup(asset=dc.Item.gown, demand=58, sell=1005)
@@ -62,8 +62,7 @@ class TestAssetRollup(TestCase):
 
         # Turn of use of hospitalization projection
         future_rollup = aggregations.asset_rollup(
-            datetime.strptime('2020-04-12', '%Y-%m-%d') - timedelta(days=30),
-            datetime.strptime('2020-04-12', '%Y-%m-%d') + timedelta(days=30),
+            today - timedelta(days=30), today + timedelta(days=30),
             use_ihme_projection=False
         )
         self.assertEqual(
@@ -71,8 +70,9 @@ class TestAssetRollup(TestCase):
         )
 
     def test_mayoral_rollup(self):
+        today = datetime(2020, 4, 12)
         rollup = aggregations.asset_rollup(
-            datetime.strptime('2020-04-12', '%Y-%m-%d') - timedelta(days=28), datetime.strptime('2020-04-12', '%Y-%m-%d'),
+            today - timedelta(days=28), today,
             rollup_fn=lambda row: row.to_mayoral_category()
         )
         # no uncategorized items in the rollup
@@ -82,7 +82,7 @@ class TestAssetRollup(TestCase):
 
         # Turn of use of hospitalization projection
         rollup = aggregations.asset_rollup(
-            datetime.strptime('2020-04-12', '%Y-%m-%d') - timedelta(days=28), datetime.strptime('2020-04-12', '%Y-%m-%d'),
+            today - timedelta(days=28), today,
             rollup_fn=lambda row: row.to_mayoral_category(),
             use_ihme_projection=False
         )
@@ -91,11 +91,12 @@ class TestAssetRollup(TestCase):
 
 
     def test_only_aggregate_active_items(self):
+        today = datetime(2020, 4, 12)
         self.data_import.status = ImportStatus.replaced
         self.data_import.save()
         try:
             rollup = aggregations.asset_rollup(
-                datetime.strptime('2020-04-12', '%Y-%m-%d') - timedelta(days=28), datetime.strptime('2020-04-12', '%Y-%m-%d')
+                today - timedelta(days=28), today
             )
             self.assertEqual(rollup[dc.Item.gown], AssetRollup(asset=dc.Item.gown, demand=0, sell=0))
         finally:
