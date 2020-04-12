@@ -20,7 +20,7 @@ class AssetRollup:
 
     @property
     def total(self):
-        return self.donate + self.sell + self.make
+        return self.donate + self.sell + self.make + self.inventory
 
     @property
     def absolute_balance(self):
