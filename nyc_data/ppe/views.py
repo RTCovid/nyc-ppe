@@ -30,11 +30,8 @@ def default(request):
         )
 
     displayed_vals = ['donate', 'sell', 'make', 'inventory']
-    cleaned_aggregation = []
-    for rollup in list(aggregation.values()):
-        if not all([getattr(rollup, val) == 0 for val in displayed_vals]):
-            cleaned_aggregation.append(rollup)
-
+    cleaned_aggregation = [rollup for rollup in list(aggregation.values()) if not all([getattr(rollup, val) == 0 for val in displayed_vals])]
+    
     table = aggregations.AggregationTable(cleaned_aggregation)
     RequestConfig(request).configure(table)
     context = {"aggregations": table}
