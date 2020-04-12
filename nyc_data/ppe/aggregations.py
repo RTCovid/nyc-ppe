@@ -13,7 +13,7 @@ from ppe.models import Delivery, Inventory, ImportStatus
 HOSPITALIZATION = {}
 with open('../public-data/ihme_projection_new_york.json', 'r') as f:
     HOSPITALIZATION = json.load(f)
-ALL_BEDS_AVAILABLE = 13010
+ALL_BEDS_AVAILABLE = 20420
 
 
 @dataclass

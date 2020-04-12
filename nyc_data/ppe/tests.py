@@ -40,7 +40,7 @@ class TestAssetRollup(TestCase):
         )
         self.assertEqual(len(rollup), len(dc.Item))
         # demand of 20 = 5 in the last week * 4 weeks in the period
-        self.assertEqual(rollup[dc.Item.gown], AssetRollup(asset=dc.Item.gown, demand=17, sell=5))
+        self.assertEqual(rollup[dc.Item.gown], AssetRollup(asset=dc.Item.gown, demand=21, sell=5))
 
         # Turn of use of hospitalization projection
         rollup = aggregations.asset_rollup(
@@ -54,7 +54,7 @@ class TestAssetRollup(TestCase):
             datetime.strptime('2020-04-12', '%Y-%m-%d') - timedelta(days=30), datetime.strptime('2020-04-12', '%Y-%m-%d') + timedelta(days=30)
         )
         self.assertEqual(
-            future_rollup[dc.Item.gown], AssetRollup(asset=dc.Item.gown, demand=33, sell=1005)
+            future_rollup[dc.Item.gown], AssetRollup(asset=dc.Item.gown, demand=58, sell=1005)
         )
 
         # Turn of use of hospitalization projection
@@ -75,7 +75,7 @@ class TestAssetRollup(TestCase):
         # no uncategorized items in the rollup
         self.assertEqual(len(rollup), len(dc.MayoralCategory) - 1)
         self.assertEqual(rollup[dc.MayoralCategory.iso_gowns],
-                         AssetRollup(asset=dc.MayoralCategory.iso_gowns, demand=17, sell=5))
+                         AssetRollup(asset=dc.MayoralCategory.iso_gowns, demand=21, sell=5))
 
         # Turn of use of hospitalization projection
         rollup = aggregations.asset_rollup(
