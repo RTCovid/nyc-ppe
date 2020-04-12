@@ -59,12 +59,17 @@ class DataImport(models.Model):
             raise Exception('Can only compute a delta on a candidate import')
 
         active_import = DataImport.objects.filter(status=ImportStatus.active, data_source=self.data_source).first()
+
         if active_import:
             active_objects = active_import.imported_objects()
         else:
             active_objects = {}
 
-        new_objects = {k: set(objs).difference(active_objects.get(k)) for k, objs in self.imported_objects().items()}
+        new_objects = {
+            k: set(objs).difference(active_objects.get(k)) if k in active_objects.keys() else set(objs) \
+                for k, objs in self.imported_objects().items() 
+        }
+
         return UploadDelta(
             previous=active_import,
             active_stats={tpe.__name__: len(objs) for (tpe, objs) in active_objects.items()},
