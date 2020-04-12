@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block titlebar %}
+<h2>Confirm your upload</h2>
+{% endblock %}
+
+{% block content %}
+<div class="upload">
+    <h2>Verify your upload</h2>
+    Your upload replaces an upload made by {{ delta.previous.uploaded_by | default:"Unknown user" }} on {{ delta.previous.import_date }}
+    <br />
+
+    They uploaded: {{ delta.active_stats }}<br />
+    You uploaded: {{ delta.candidate_stats }}<br />
+
+    You added these new objects: {{ delta.new_objects }}
+    <form method="post" action="/verify/{{ import_id }}/">
+        {% csrf_token %}
+        <input type="submit" value="Confirm Upload">
+    </form>
+</div>
+{% endblock %}

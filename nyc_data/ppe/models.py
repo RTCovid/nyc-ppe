@@ -1,8 +1,10 @@
 import uuid
 from enum import Enum
+from typing import NamedTuple, Dict
 
 from django.contrib.postgres.fields import JSONField
 from django.db import models
+from django.db.models import Sum
 
 import ppe.dataclasses as dc
 from ppe.data_mappings import DataSource
@@ -22,6 +24,7 @@ class ImportStatus(str, Enum):
     active = "active"
     replaced = "replaced"
     candidate = "candidate"
+    cancelled = "cancelled"
 
 
 class DataImport(models.Model):
@@ -32,20 +35,60 @@ class DataImport(models.Model):
     uploaded_by = models.TextField(blank=True)
     file_checksum = models.TextField()
     file_name = models.TextField()
+    file = models.FileField
 
     @classmethod
     def sanity(cls):
         # for each data_source, at most 1 active
-        for _, src in DataSource.__members__.item():
+        for _, src in DataSource.__members__.items():
             ct = DataImport.objects.filter(data_source=src, status=ImportStatus.active).count()
             if ct > 1:
                 print(f'Something is weird, more than one active object for {src}')
                 return False
         return True
 
+    def cancel(self):
+        self.status = ImportStatus.cancelled
+
     def display(self):
         return f'File uploaded {self.import_date.strftime("%d/%m/%y")} by {self.uploaded_by or "unknown"}. Filename: {self.file_name}'
 
+    def compute_delta(self):
+        if not self.sanity():
+            raise Exception("Can't compute a delta. Something is horribly wrong in the DB")
+        if self.status != ImportStatus.candidate:
+            raise Exception('Can only compute a delta on a candidate import')
+
+        active_import = DataImport.objects.filter(status=ImportStatus.active, data_source=self.data_source).first()
+
+        if active_import:
+            active_objects = active_import.imported_objects()
+        else:
+            active_objects = {}
+
+        new_objects = {
+            k: set(objs).difference(active_objects.get(k)) if k in active_objects.keys() else set(objs) \
+                for k, objs in self.imported_objects().items() 
+        }
+
+        return UploadDelta(
+            previous=active_import,
+            active_stats={tpe.__name__: len(objs) for (tpe, objs) in active_objects.items()},
+            candidate_stats={tpe.__name__: len(objs) for (tpe, objs) in active_objects.items()},
+            new_objects=new_objects
+
+        )
+
+    def imported_objects(self):
+        return {tpe: tpe.objects.prefetch_related('source').filter(source=self) for tpe in
+                [Delivery, Inventory, Purchase]}
+
+class UploadDelta(NamedTuple):
+    previous: DataImport
+    active_stats: Dict[str, int]
+    candidate_stats: Dict[str, int]
+
+    new_objects: Dict[str, any]
 
 class BaseModel(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -74,6 +117,22 @@ class Purchase(BaseModel):
 
     raw_data = JSONField()
 
+    # property so we can use it in templates
+    @property
+    def unscheduled_quantity(self):
+        total_scheduled = self.deliveries.aggregate(Sum('quantity'))['quantity__sum']
+        return self.quantity - (total_scheduled or 0)
+
+    def to_dataclass(self):
+        return dc.Purchase(
+            order_type=self.order_type,
+            item=dc.Item(self.item).display(),
+            description=self.description,
+            quantity=self.quantity,
+            unscheduled_quantity=self.unscheduled_quantity,
+            deliveries=self.deliveries.all()
+        )
+
 
 class Inventory(BaseModel):
     item = ChoiceField(dc.Item)
@@ -83,7 +142,7 @@ class Inventory(BaseModel):
 
 
 class Delivery(BaseModel):
-    purchase = models.ForeignKey(Purchase, on_delete=models.CASCADE)
+    purchase = models.ForeignKey(Purchase, on_delete=models.CASCADE, related_name='deliveries')
     delivery_date = models.DateField(null=True)
     quantity = models.IntegerField()
 

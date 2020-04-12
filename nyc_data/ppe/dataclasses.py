@@ -1,8 +1,10 @@
 from datetime import datetime
 from enum import Enum
-from typing import NamedTuple, Optional
+
 from dataclasses import dataclass
 from dataclasses_json import dataclass_json
+
+from typing import NamedTuple, Optional, List
 
 class MayoralCategory(str, Enum):
     eye_protection = "Eye Protection"
@@ -84,6 +86,19 @@ class Forecast:
     existing_supply: int
     additional_supply: int
     inventory: int
+
+
+class Purchase(NamedTuple):
+    order_type: OrderType
+
+    item: str
+    description: str
+    quantity: int
+
+    unscheduled_quantity: int
+
+    deliveries: List[Delivery]
+
 
 ITEM_TO_DISPLAYNAME = {
     Item.faceshield: 'Face Shields',

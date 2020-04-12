@@ -7,9 +7,15 @@
 {% block content %}
 <div class="incoming-supply">
     <ul>
-        {% for delivery in deliveries %}
+        {% for purchase in purchases %}
         <li>
-            Receiving {{ delivery.quantity }} {{ delivery.item }} ({{ delivery.description }}) on {{ delivery.delivery_date }} from {{ delivery.vendor }} (source: {{ delivery.source }})
+            Receiving {{ purchase.quantity }} {{ purchase.item }} ({{ purchase.description }}). Unscheduled Quantity: {{ purchase.unscheduled_quantity }}
+            <ul>
+                {% for delivery in purchase.deliveries %}
+                <li>{{ delivery.quantity }} on {{ delivery.delivery_date }}</li>
+                {% endfor %}
+
+            </ul>
         </li>
         {% endfor %}
 

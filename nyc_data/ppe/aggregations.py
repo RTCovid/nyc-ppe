@@ -174,7 +174,7 @@ class AssetRollup:
 
     @property
     def total(self):
-        return self.donate + self.sell + self.make
+        return self.donate + self.sell + self.make + self.inventory
 
     @property
     def absolute_balance(self):
@@ -275,14 +275,14 @@ class NumericalColumn(tables.Column):
 
 class AggregationTable(tables.Table):
     asset = tables.Column()
-    projected_demand = NumericalColumn(accessor="demand")
+    projected_demand = NumericalColumn(accessor="demand", verbose_name="Demand")
     balance = tables.Column(empty_values=(), order_by="percent_balance")
 
-    total = NumericalColumn()
-    inventory = NumericalColumn()
+    total = NumericalColumn(verbose_name="Supply")
+    inventory = NumericalColumn(attrs={"th": {"class": "tooltip", "aria-label": "MO Operations"}})
     donate = NumericalColumn()
-    sell = NumericalColumn()
-    make = NumericalColumn()
+    sell = NumericalColumn(attrs={"th": {"class": "tooltip", "aria-label": "DCAS"}})
+    make = NumericalColumn(attrs={"th": {"class": "tooltip", "aria-label": "EDC"}})
 
     def render_asset(self, value):
         href = f'/drilldown?category={value}'
@@ -357,7 +357,9 @@ class AggregationTable(tables.Table):
             'total',
             'balance',
             'inventory',
-            'donate',
             'sell',
             'make',
+        )
+        exclude = (
+            'donate',
         )

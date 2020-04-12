@@ -13,12 +13,11 @@ Standard django stuff:
 python manage.py makemigrations
 python manage.py migrate
 python manage.py runserver 0.0.0.0:8000
-http://localhost:8000/ppe
 ```
+Then http://localhost:8000
 
 ## Import Data
 1. Create a directory called `private-data` at the repo root (automatically gitignored)
-2. Insert the PPE spreadsheet at `ppe_orders.xlsx`
-3. Insert the suppliers spreadsheet at `ppe_make.xlsx`
-3. `cd nyc_data`
+2. Copy in all your spreadsheets. Names don't matter!
+2. `docker-compose exec backend bash`
 3. `python manage.py runscript ppe_import`

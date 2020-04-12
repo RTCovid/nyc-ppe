@@ -9,7 +9,12 @@
         <strong>CONFIDENTIAL.</strong>&nbsp;DO NOT DISTRIBUTE WITHOUT AUTHORIZATION.
     </section>
     <section class="brand-bar container">
+        <div>
         NYC<b>PPE</b>
+        </div>
+        <div>
+        <a class="upload-btn" href="/upload">Upload new data</a>
+        </div>
     </section>
     <section class="title-bar">
         <section class="container">
@@ -19,6 +24,11 @@
     <section class="content container">
         {% block content %}{% endblock %}
     </section> 
+    <section class="footer">
+        <section class="container">
+            {% block footer %}{% endblock %}
+        </section>
+    </section>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.0/jquery.slim.min.js" integrity="sha256-MlusDLJIP1GRgLrOflUQtshyP0TwT/RHXsI1wWGnQhs=" crossorigin="anonymous"></script>
     <script src="{% static 'script.js' %}"></script>
 </body>
