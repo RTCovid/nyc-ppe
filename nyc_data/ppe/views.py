@@ -28,7 +28,14 @@ def default(request):
         aggregation = aggregations.asset_rollup(
             datetime.now(), datetime.now() + timedelta(days=30)
         )
-    table = aggregations.AggregationTable(list(aggregation.values()))
+
+    displayed_vals = ['donate', 'sell', 'make', 'inventory']
+    cleaned_aggregation = []
+    for rollup in list(aggregation.values()):
+        if not all([getattr(rollup, val) == 0 for val in displayed_vals]):
+            cleaned_aggregation.append(rollup)
+
+    table = aggregations.AggregationTable(cleaned_aggregation)
     RequestConfig(request).configure(table)
     context = {"aggregations": table}
     return render(request, "dashboard.html", context)
