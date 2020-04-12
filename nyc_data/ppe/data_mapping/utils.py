@@ -43,7 +43,13 @@ def asset_name_to_item(asset_name: str, error_collector: ErrorCollector) -> Item
         "Eyewear": Item.generic_eyeware,
         "Vents": Item.ventilators_full_service,
         "BiPAP Machines": Item.bipap_machines,
-        "Body Bags": Item.body_bags
+        "Body Bags": Item.body_bags,
+        "Face Masks": Item.mask_other,
+        "Post Mortem Bags": Item.body_bags,
+        "N95 Respirators": Item.n95_mask_surgical,
+        "BiPap": Item.bipap_machines,
+        "Misc": Item.ppe_other,
+        "Multipurpose PPE": Item.ppe_other
     }
     match = mapping.get(asset_name)
     if match is not None:
@@ -71,8 +77,10 @@ def parse_date(date: any, error_collector: ErrorCollector):
     else:
         return None
 
+
 def parse_int_or_zero(inp: str, error_collector: ErrorCollector):
     return parse_int(inp, error_collector) or 0
+
 
 def parse_int(inp: str, error_collector: ErrorCollector):
     if isinstance(inp, int):
