@@ -99,10 +99,10 @@ class NumericalColumn(tables.Column):
 
 class AggregationTable(tables.Table):
     asset = tables.Column()
-    projected_demand = NumericalColumn(accessor="demand")
+    projected_demand = NumericalColumn(accessor="demand", verbose_name="Proj. Demand")
     balance = tables.Column(empty_values=(), order_by="percent_balance")
 
-    total = NumericalColumn()
+    total = NumericalColumn(verbose_name="total supply")
     inventory = NumericalColumn()
     donate = NumericalColumn()
     sell = NumericalColumn()
@@ -181,7 +181,9 @@ class AggregationTable(tables.Table):
             'total',
             'balance',
             'inventory',
-            'donate',
             'sell',
             'make',
+        )
+        exclude = (
+            'donate',
         )
