@@ -85,6 +85,19 @@ class Purchase(NamedTuple):
 
     deliveries: List[Delivery]
 
+class Supplier(str, Enum):
+    dcas_donations = 'dcas_donations'
+    dcas_procurement = 'dcas_procurement'
+    # stuff like CVD19 Supply, SNS, etc.
+    other = 'other'
+
+class FacilityType(str, Enum):
+    government = 'government'
+    hospital = 'hospital'
+    ems = 'ems'
+    nursing_home = 'nursing_home'
+    clinic = 'clinic'
+
 ITEM_TO_DISPLAYNAME = {
     Item.faceshield: 'Face Shields',
     Item.gown: 'Gowns',

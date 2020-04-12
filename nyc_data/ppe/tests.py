@@ -5,8 +5,10 @@ from django.test import TestCase
 
 from ppe import aggregations
 from ppe.aggregations import AssetRollup
-from ppe.data_mappings import SourcingRow, DataSource
+from ppe.data_mapping.types import DataFile
+from ppe.data_mapping.mappers.dcas_sourcing import SourcingRow
 import ppe.dataclasses as dc
+from ppe.data_mapping.utils import ErrorCollector
 from ppe.models import DataImport, ImportStatus, Purchase
 
 
@@ -14,7 +16,7 @@ class TestAssetRollup(TestCase):
     def setUp(self) -> None:
         self.data_import = DataImport(
             status=ImportStatus.active,
-            data_source=DataSource.EDC_PPE,
+            data_file=DataFile.PPE_ORDERINGCHARTS_DATE_XLSX,
             file_checksum='123'
         )
         self.data_import.save()
@@ -28,7 +30,7 @@ class TestAssetRollup(TestCase):
             delivery_day_2=datetime.now() + timedelta(days=1),
             delivery_day_2_quantity=1000,
             raw_data={},
-        ).to_objects()
+        ).to_objects(ErrorCollector())
 
         for item in items:
             item.source = self.data_import
@@ -75,7 +77,7 @@ class TestUnscheduledDeliveries(unittest.TestCase):
     def test_unscheduled_deliveries(self):
         data_import = DataImport(
             status=ImportStatus.active,
-            data_source=DataSource.EDC_PPE,
+            data_file=DataFile.PPE_ORDERINGCHARTS_DATE_XLSX,
             file_checksum='123'
         )
         data_import.save()
@@ -89,7 +91,7 @@ class TestUnscheduledDeliveries(unittest.TestCase):
             delivery_day_2=datetime.now() + timedelta(days=1),
             delivery_day_2_quantity=1000,
             raw_data={},
-        ).to_objects()
+        ).to_objects(ErrorCollector())
 
         for item in items:
             item.source = data_import

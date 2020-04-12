@@ -73,7 +73,7 @@ class Upload(View):
         form = forms.UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
             try:
-                import_obj = data_import.handle_upload(request.FILES['file'])
+                import_obj = data_import.handle_upload(request.FILES['file'], form.name)
                 return HttpResponseRedirect(reverse('verify', kwargs={"import_id": import_obj.id}))
             except data_import.ImportInProgressError as ex:
                 return render(request, "upload.html",

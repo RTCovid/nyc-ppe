@@ -1,7 +1,7 @@
 import ppe.dataclasses as dc
 from datetime import datetime
 
-from ppe.models import Delivery, Purchase
+from ppe.models import ScheduledDelivery, Purchase
 from typing import List, Callable, NamedTuple
 
 
