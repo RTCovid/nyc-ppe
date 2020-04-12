@@ -1,22 +1,41 @@
-{% extends "base.html" %}
-
-{% block titlebar %}
+{% extends "base.html" %} {% block titlebar %}{% load render_table from
+django_tables2 %}
 <h2>Confirm your upload</h2>
-{% endblock %}
-
-{% block content %}
+{% endblock %} {% block content %}
 <div class="upload">
-    <h2>Verify your upload</h2>
-    Your upload replaces an upload made by {{ delta.previous.uploaded_by | default:"Unknown user" }} on {{ delta.previous.import_date }}
-    <br />
+  <h2>Verify your upload</h2>
+  Your upload replaces an upload made by {{ delta.previous.uploaded_by |
+  default:"Unknown user" }} on {{ delta.previous.import_date }}
+  <br />
 
-    They uploaded: {{ delta.active_stats }}<br />
-    You uploaded: {{ delta.candidate_stats }}<br />
+  They uploaded: {{ delta.active_stats }}<br />
+  You uploaded: {{ delta.candidate_stats }}<br />
 
-    You added these new objects: {{ delta.new_objects }}
-    <form method="post" action="/verify/{{ import_id }}/">
-        {% csrf_token %}
-        <input type="submit" value="Confirm Upload">
-    </form>
+  You added these new objects: <br />
+  {% for k, v in delta.new_objects.items %} {% if v|length > 0 %}
+  <h4>{{k.display_name}}</h4>
+  <!-- TODO: use custom tag? Django can't access attrs that begin with underscores, so can't use __name__ -->
+  <ul>
+    {% for new_obj in v %}
+    <li>{{new_obj}}</li>
+    {% endfor %}
+  </ul>
+
+  {% endif %} {% endfor %}
+
+  <form method="post" action="/verify/{{ import_id }}/">
+    {% csrf_token %}
+    <input type="submit" value="Confirm Upload" />
+  </form>
+
+  <form
+    enctype="multipart/form-data"
+    method="post"
+    action="/cancel/{{ import_id }}/"
+  >
+    {% csrf_token %}
+    <input type="submit" value="Cancel current import in progress" />
+  </form>
 </div>
+
 {% endblock %}
