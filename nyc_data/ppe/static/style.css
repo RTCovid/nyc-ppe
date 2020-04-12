@@ -6,6 +6,12 @@ body {
 
 a, a:visited {
     color: #0a5796;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #0a5796cc;
+    text-decoration: underline;
 }
 
 section.container {
