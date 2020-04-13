@@ -8,19 +8,20 @@
 {% block content %}
 <div class="incoming-supply">
     <div>
-    <h2>Current Inventory</h2>
-    <ul>
-        {%for item in inventory %}
-        <li>{{item.item|display_name}}: {{item.quantity|pretty_num}}</li>
-        {% endfor %}
-    </ul>
-    <!--<h3>Disbursed to facilities (hospitals, nursing homes, etc.) last 7 days</h3>
-    <ul>
-        {%for item, ct in facility_deliveries.items%}
-        <li>{{item|display_name}}: {{ct|pretty_num}}</li>
-        {% endfor %}
-    </ul>-->
-    <hr/></div>
+        <h2>Current Inventory</h2>
+        <ul>
+            {%for item in inventory %}
+            <li>{{item.item|display_name}}: {{item.quantity|pretty_num}}</li>
+            {% endfor %}
+        </ul>
+        <h4>Disbursed to facilities (hospitals, nursing homes, etc.) last 7 days</h4>
+        <ul>
+            {%for item, ct in facility_deliveries.items%}
+            <li>{{item|display_name}}: {{ct|pretty_num}}</li>
+            {% endfor %}
+        </ul>
+        <hr/>
+    </div>
 
     <div class="drilldown-detail supply-scheduled">
         <h2>Incoming Supply</h2>
