@@ -170,10 +170,10 @@ class AggregationTable(tables.Table):
 
     total = NumericalColumn(verbose_name="Supply", attrs={"th": {"class": "tooltip", "aria-label": "Sum of inventory, ordered, and made."}})
     inventory = NumericalColumn(attrs={
-        "th": {"class": "tooltip", "aria-label": lambda: f"MO Operations current as of {Inventory.as_of_latest()}"}})
+        "th": {"class": "tooltip", "aria-label": lambda: f"DOHMH [{Inventory.as_of_latest()}]"}})
     donate = NumericalColumn()
-    sell = NumericalColumn(verbose_name="Ordered", attrs={"th": {"class": "tooltip", "aria-label": "DCAS orders with delivery dates (not including already received items). Last Updated 4-12-2020"}})
-    make = NumericalColumn(verbose_name="Made", attrs={"th": {"class": "tooltip", "aria-label": "EDC scheduled future deliveries. Last updated 4-7-2020"}})
+    sell = NumericalColumn(verbose_name="Ordered", attrs={"th": {"class": "tooltip", "aria-label": "DCAS scheduled orders [2020-4-12]"}})
+    make = NumericalColumn(verbose_name="Made", attrs={"th": {"class": "tooltip", "aria-label": "EDC scheduled deliveries [2020-4-7]"}})
 
     def render_projected_demand(self, value):
         if value == 0:

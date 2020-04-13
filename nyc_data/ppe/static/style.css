@@ -280,6 +280,7 @@ button {
     color: #aaa;
     text-transform: uppercase;
     padding-right: 10px;
+    white-space: nowrap;
 }
 .toggle ul {
     margin: 0;
@@ -359,6 +360,9 @@ section.footer {
     opacity: 0;
 }
 
+th:last-child.tooltip::after {
+    left: auto; right: 0;
+}
 
 @keyframes tooltip-appear {
     from {
