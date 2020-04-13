@@ -3,3 +3,7 @@ build:
         web: Dockerfile
 run:
     web: pipenv run gunicorn -b 0.0.0.0:$PORT nyc_data.wsgi
+release:
+    image: web
+    command:
+        - pipenv run python manage.py migrate
