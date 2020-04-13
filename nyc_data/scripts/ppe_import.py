@@ -8,7 +8,7 @@ from ppe.data_import import ALL_MAPPINGS
 
 def run():
     private_data_dir = Path('../private-data')
-    xlsx_files = [f for f in private_data_dir.iterdir() if f.suffix == '.xlsx']
+    xlsx_files = [f for f in private_data_dir.iterdir() if f.suffix in {'.xlsx', '.csv'}]
     print(f"Found {len(xlsx_files)} xlsx files in private-data")
     for file in xlsx_files:
         try:
@@ -17,6 +17,8 @@ def run():
             data_import.complete_import(import_obj)
         except data_import.NoMappingForFileError:
             print(f"{file} does not appear to be a format we recognize")
+        except data_import.PartialFile:
+            print(f'{file} appears to have changed and does not match the format anymore')
         finally:
             print(f'---- Import of {file} complete ----')
             print()

@@ -81,7 +81,7 @@ class DataImport(models.Model):
 
     def imported_objects(self):
         return {tpe: tpe.objects.prefetch_related('source').filter(source=self) for tpe in
-                [ScheduledDelivery, Inventory, Purchase]}
+                [ScheduledDelivery, Inventory, Purchase, FacilityDelivery]}
 
 
 class UploadDelta(NamedTuple):
@@ -113,6 +113,8 @@ class Purchase(BaseModel):
     description = models.TextField(blank=True)
     quantity = models.IntegerField()
     unit = ChoiceField(dc.Unit, default=dc.Unit.each)
+
+    received_quantity = models.IntegerField(default=0)
 
     vendor = models.TextField()
     cost = models.IntegerField(null=True)

@@ -14,6 +14,10 @@ class ErrorCollector:
     def report_warning(self, warning: str):
         self.warnings.append(warning)
 
+    def dump(self):
+        print('\n'.join(set(self.errors)))
+        print('\n'.join(set(self.warnings)))
+
     def __repr__(self):
         return f'{len(self.errors)} errors and {len(self.warnings)} warnings'
 
@@ -49,9 +53,9 @@ def asset_name_to_item(asset_name: str, error_collector: ErrorCollector) -> Item
         "N95 Respirators": Item.n95_mask_surgical,
         "BiPap": Item.bipap_machines,
         "Misc": Item.ppe_other,
-        "Multipurpose PPE": Item.ppe_other
+        "Multipurpose PPE": Item.ppe_other,
     }
-    match = mapping.get(asset_name)
+    match = mapping.get(asset_name.strip())
     if match is not None:
         return match
     error_collector.report_warning(f"Unknown type: {asset_name}")

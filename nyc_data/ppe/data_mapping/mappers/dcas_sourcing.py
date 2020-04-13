@@ -9,6 +9,8 @@ from xlsx_utils import SheetMapping, Mapping
 
 
 class SourcingRow(ImportedRow, NamedTuple):
+    status: str
+
     item: Item
     description: str
     quantity: int
@@ -19,6 +21,8 @@ class SourcingRow(ImportedRow, NamedTuple):
 
     delivery_day_2: datetime
     delivery_day_2_quantity: int
+
+    received_quantity: int
 
     raw_data: Dict[str, any]
 
@@ -43,6 +47,9 @@ class SourcingRow(ImportedRow, NamedTuple):
         return errors
 
     def to_objects(self, error_collector: ErrorCollector):
+        if self.status != 'Completed':
+            return []
+
         errors = self.sanity(error_collector)
         if errors:
             error_collector.report_error(f"Refusing to generate a data model for: {self}. Errors: {errors}")
@@ -50,6 +57,7 @@ class SourcingRow(ImportedRow, NamedTuple):
         purchase = models.Purchase(
             item=self.item,
             quantity=self.quantity,
+            received_quantity=self.received_quantity,
             vendor=self.vendor,
             raw_data=self.raw_data,
             order_type=OrderType.Purchase,
@@ -76,44 +84,50 @@ class SourcingRow(ImportedRow, NamedTuple):
 
 
 DCAS_DAILY_SOURCING = SheetMapping(
-    sheet_name="Data - Daily DCAS Sourcing",
+    sheet_name=None,
     data_file=DataFile.PPE_ORDERINGCHARTS_DATE_XLSX,
     mappings={
         Mapping(
-            sheet_column_name="Type  Hierarchy - Critical Asset",
+            sheet_column_name="Critical Asset",
             obj_column_name="item",
             proc=asset_name_to_item,
         ),
         Mapping(
-            sheet_column_name='Type  Hierarchy - Description',
+            sheet_column_name='Description',
             obj_column_name='description',
         ),
         Mapping(
-            sheet_column_name="Sum of Total Ordered Individual Unit Qty",
+            sheet_column_name="Total Qty Ordered",
             obj_column_name="quantity",
             proc=parse_int,
         ),
         Mapping(
-            sheet_column_name="Expected Delivery Date Day 1",
+            sheet_column_name="Received Qty",
+            obj_column_name="received_quantity",
+            proc=parse_int
+        ),
+        Mapping(
+            sheet_column_name="Delivery 1 Week Of",
             obj_column_name="delivery_day_1",
             proc=parse_date,
         ),
         Mapping(
-            sheet_column_name="Sum of Vendor Delivery Day 1 Estimate LD Qty",
+            sheet_column_name="Delivery 1 Qty",
             obj_column_name="delivery_day_1_quantity",
             proc=parse_int,
         ),
         Mapping(
-            sheet_column_name="Expected Delivery Date Day 2",
+            sheet_column_name="Deliver 2 Week Of",
             obj_column_name="delivery_day_2",
             proc=parse_date,
         ),
         Mapping(
-            sheet_column_name="Vendor Delivery Day 2 Estimate LD Qty",
+            sheet_column_name="Delivery 2 Qty",
             obj_column_name="delivery_day_2_quantity",
             proc=parse_int,
         ),
-        Mapping(sheet_column_name="Type  Hierarchy - Vendor", obj_column_name="vendor"),
+        Mapping(sheet_column_name="Vendor", obj_column_name="vendor"),
+        Mapping(sheet_column_name="Status", obj_column_name="status"),
     },
     include_raw=True,
     obj_constructor=SourcingRow,
