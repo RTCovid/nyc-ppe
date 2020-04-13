@@ -62,9 +62,9 @@ section.container {
 
 .upload-btn {
     border: 1px solid #ddd;
-    border-radius: 5px;
-    background: #EEEEEE;
-    font-size: 14px;
+    border-radius: 20px;
+    background: #fff;
+    font-size: 16px;
     text-decoration: none;
     color: rgb(102, 102, 102);
     padding: 20px;
@@ -235,7 +235,7 @@ td:last-child {
     font-weight: 300;
     color: #fff;
     text-align: center;
-    border-radius: 50px;
+    border-radius: 20px;
     transition: all 0.2s cubic-bezier(0.2, 0.91, 0.85, 0.96) 0s;
 }
 
