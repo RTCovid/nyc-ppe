@@ -125,8 +125,8 @@ ITEM_TO_DISPLAYNAME = {
     Item.ponchos: 'Ponchos',
     Item.scrubs: 'Scrubs',
 
-    Item.n95_mask_non_surgical: 'Non-surgical n95 Masks',
-    Item.n95_mask_surgical: 'Surgical n95 Masks',
+    Item.n95_mask_non_surgical: 'Non-surgical N95 Masks',
+    Item.n95_mask_surgical: 'Surgical N95 Masks',
     Item.kn95_mask: 'KN95 Masks',
     Item.surgical_mask: 'Surgical Masks',
     Item.mask_other: 'Other Face Masks',
@@ -137,12 +137,12 @@ ITEM_TO_DISPLAYNAME = {
 
     Item.ventilators_full_service: 'Full Service Ventilators',
     Item.ventilators_non_full_service: 'Non Full Service Ventilators',
-    Item.bipap_machines: 'BiPap Machines',
+    Item.bipap_machines: 'BiPAP Machines',
 
     Item.ppe_other: 'Other PPE',
-    Item.unknown: 'Unknown',
+    Item.unknown: 'Other Assets',
 
-    Item.body_bags: 'Body bags'
+    Item.body_bags: 'Body Bags'
 
 }
 
