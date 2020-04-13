@@ -166,9 +166,9 @@ class NumericalColumn(tables.Column):
 class AggregationTable(tables.Table):
     asset = tables.Column()
     projected_demand = NumericalColumn(accessor="demand", verbose_name="Demand Proxy", attrs={"th": {"class": "tooltip", "aria-label": "Demand projected based on the previous 7 days of hospital deliveries & IMHE hospitalization model"}})
-    balance = tables.Column(empty_values=(), order_by="percent_balance")
+    balance = tables.Column(empty_values=(), order_by="percent_balance", attrs={"th": {"class": "tooltip", "aria-label": "Supply deficit or surplus against demand"}})
 
-    total = NumericalColumn(verbose_name="Supply")
+    total = NumericalColumn(verbose_name="Supply", attrs={"th": {"class": "tooltip", "aria-label": "Sum of inventory, ordered, and made."}})
     inventory = NumericalColumn(attrs={
         "th": {"class": "tooltip", "aria-label": lambda: f"MO Operations current as of {Inventory.as_of_latest()}"}})
     donate = NumericalColumn()
