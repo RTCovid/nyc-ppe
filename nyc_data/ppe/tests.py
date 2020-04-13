@@ -60,7 +60,7 @@ class TestAssetRollup(TestCase):
             today - timedelta(days=30), today + timedelta(days=30), use_delivery_as_demand=False
         )
         self.assertEqual(
-            future_rollup[dc.Item.gown], AssetRollup(asset=dc.Item.gown, demand=9797, sell=1005)
+            future_rollup[dc.Item.gown], AssetRollup(asset=dc.Item.gown, demand=48, sell=1005)
         )
 
         # Turn of use off hospitalization projection
@@ -70,7 +70,7 @@ class TestAssetRollup(TestCase):
             use_delivery_as_demand=False
         )
         self.assertEqual(
-            future_rollup[dc.Item.gown], AssetRollup(asset=dc.Item.gown, demand=8614, sell=1005)
+            future_rollup[dc.Item.gown], AssetRollup(asset=dc.Item.gown, demand=43, sell=1005)
         )
 
     def test_mayoral_rollup(self):

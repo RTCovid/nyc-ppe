@@ -101,16 +101,18 @@ def add_demand_estimate(time_start: datetime,
                         rollup_fn,
                         use_hospitalization_projection=True,
                         use_delivery_demand=False):
-    last_week = datetime.datetime.today() - datetime.timedelta(days=7)
-    if use_delivery_demand:
-        last_weeks_demand = demand_for_period(last_week, datetime.datetime.today(), rollup_fn)
-    else:
-        last_week_rollup = asset_rollup(time_start, time_end, rollup_fn, estimate_demand=False)
-        last_weeks_demand = {k: v.sell + v.make for k, v in last_week_rollup.items()}
-    scaling_factor = (time_end - time_start) / datetime.timedelta(days=7)
+
+    last_week_start = datetime.datetime.today() - datetime.timedelta(days=7)
+    last_week_end = last_week_start+datetime.timedelta(days=6)
+
+    # Get last week's demands
+    last_weeks_demand = get_total_demands(last_week_start, last_week_end, rollup_fn, use_delivery_demand)
+
+    # Calculate scaling factor (both time_start and time_end are inclusive)
+    scaling_factor = (time_end - time_start + datetime.timedelta(days=1)) / datetime.timedelta(days=7)
 
     # Get last week's total hospitalization
-    last_week_hospitalization = get_total_hospitalization(last_week, last_week+datetime.timedelta(days=6))
+    last_week_hospitalization = get_total_hospitalization(last_week_start, last_week_end)
 
     # Iterate through each category
     for k, rollup in rollup.items():
@@ -133,6 +135,19 @@ def add_demand_estimate(time_start: datetime,
         else:
             rollup.demand = int(last_week_supply * scaling_factor)
 
+
+def get_total_demands(time_start: datetime,
+                      time_end: datetime,
+                      rollup_fn,
+                      use_delivery_demand=False):
+
+    if use_delivery_demand:
+        total_demands = demand_for_period(time_start, time_end, rollup_fn)
+    else:
+        last_week_rollup = asset_rollup(time_start, time_end, rollup_fn, estimate_demand=False)
+        total_demands = {k: v.sell + v.make for k, v in last_week_rollup.items()}
+
+    return total_demands
 
 def get_total_hospitalization(time_start: datetime,
                               time_end: datetime):
