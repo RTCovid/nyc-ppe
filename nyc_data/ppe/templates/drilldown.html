@@ -32,9 +32,8 @@
                 <li><b>Next 3 days</b> {{deliveries_next_three|pretty_num}}</li>
                 <li><b>Next 7 days</b> {{deliveries_next_week|pretty_num}}</li>
                 <li><b>Next 30 days</b> {{deliveries_next_thirty|pretty_num}}</li>
-                <li><b>Total</b> {{scheduled_total|pretty_num}}</li>
-                <li><b>Unscheduled</b> {{unscheduled_total|pretty_num}}</li>
-                <li><b>Received</b> {{received_total|pretty_num}}</li>
+                <li><b>Total Scheduled</b> {{scheduled_total|pretty_num}}</li>
+                <li><b>Total Unscheduled</b> {{unscheduled_total|pretty_num}}</li>
             </ul>
         </div>
         {% regroup deliveries by delivery_date as date_list %}
@@ -46,7 +45,7 @@
                 {% for delivery in day.list %}
                 {% if not forloop.first %}
             <tr>{% endif %}
-                <td class="drilldown-deliveries-quantity"><span class="quantity">{{ delivery.quantity|pretty_num }} {{ delivery.item }}</span>
+                <td class="drilldown-deliveries-quantity"><span class="quantity">{{ delivery.quantity|pretty_num }} {{ delivery.purchase.item|display_name }}</span>
                 </td>
                 <td class="drilldown-deliveries-desc">{{ delivery.description|default:"No description" }}</td>
                 <td class="drilldown-deliveries-vendor">{{delivery.vendor}}</td>
@@ -64,7 +63,7 @@
     <h2>Unscheduled Supply (Total: {{ unscheduled_total | pretty_num }})</h2>
     <ul>
         {% for purchase in purchases %}
-        {% if purchase.unscheduled_quantity %}
+        {% if purchase.unscheduled_quantity > 0 and purchase.quantity != purchase.received_quantity %}
         <li class="tooltip" aria-label="{{purchase.vendor}}">
             Receiving {{purchase.unscheduled_quantity|pretty_num}} {{ purchase.item }} –
             {{purchase.description|default:"No description"}}

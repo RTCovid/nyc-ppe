@@ -57,13 +57,15 @@ def drilldown(request):
     inventory = drilldown_res.inventory
     # deliveries_next_three = datetime.now() + timedelta(days=3)
 
+    past_deliveries = sum([d.quantity for d in deliveries if d.delivery_date <= datetime.now().date()])
+    received_deliveries = sum([p.received_quantity or 0 for p in purchases])
     context = {
         "asset_category": cat_display,
         # conversion to data class handles conversion to display names, etc.
-        "purchases": [p.to_dataclass() for p in purchases],
-        "deliveries": [d.to_dataclass() for d in deliveries],
+        "purchases": purchases,
+        "deliveries": deliveries,
         "inventory": inventory,
-        "deliveries_past": sum([d.quantity for d in deliveries if d.delivery_date <= datetime.now().date()]),
+        "deliveries_past": past_deliveries + received_deliveries,
         "deliveries_next_three": sum([d.quantity for d in deliveries if
                                       datetime.now().date() <= d.delivery_date <= datetime.now().date() + timedelta(
                                           days=3)]),
@@ -75,7 +77,6 @@ def drilldown(request):
                                            days=30)]),
         "scheduled_total": sum([d.quantity for d in deliveries]),
         "unscheduled_total": sum([purch.unscheduled_quantity for purch in purchases if purch.unscheduled_quantity]),
-        "received_total": sum([p.received_quantity or 0 for p in purchases]),
         "facility_deliveries": {k: v for k, v in
                                 aggregations.demand_for_period(datetime.now().date() - timedelta(days=7),
                                                                datetime.now().date(), lambda x: x).items() if
