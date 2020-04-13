@@ -7,7 +7,7 @@ import xlsx_utils
 from ppe.data_mapping.mappers import dcas_make, dcas_sourcing, inventory, inventory_from_facilities, hospital_deliveries
 from ppe.data_mapping.types import DataFile
 from ppe.data_mapping.utils import ErrorCollector
-from ppe.models import ImportStatus, DataImport
+from ppe.models import ImportStatus, DataImport, InboundReceipt, FacilityDelivery
 from xlsx_utils import import_xlsx
 
 ALL_MAPPINGS = [
@@ -85,10 +85,17 @@ def import_data(path: Path, mappings: List[xlsx_utils.SheetMapping], uploaded_by
         try:
             data = import_xlsx(path, mapping, error_collector)
             data = list(data)
+            deliveries = []
             for item in data:
                 for obj in item.to_objects(error_collector):
                     obj.source = data_import
-                    obj.save()
+                    if isinstance(obj, FacilityDelivery):
+                        deliveries.append(obj)
+                    else:
+                        obj.save()
+
+            FacilityDelivery.objects.bulk_create(deliveries)
+
         except Exception:
             print(f'Failure importing {path}, mapping: {mapping.sheet_name}')
             raise

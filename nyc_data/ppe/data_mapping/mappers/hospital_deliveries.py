@@ -51,7 +51,7 @@ item_mappings = [
 ]
 
 FACILITY_DELIVERIES = SheetMapping(
-    sheet_name='Facility Deliveries',
+    sheet_name='Facility Deliveries Summarized',
     data_file=DataFile.FACILITY_DELIVERIES,
     mappings={
         Mapping(
