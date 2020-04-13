@@ -37,7 +37,7 @@ class NoMappingForFileError(DataImportError):
     pass
 
 
-class MultipleMappingsForFileError(DataImportError):
+class PartialFile(DataImportError):
     pass
 
 
@@ -46,7 +46,7 @@ class ImportInProgressError(DataImportError):
         self.import_id = import_id
 
 
-def smart_import(path: Path, uploader_name: str, overwrite_in_prog: bool=False) -> DataImport:
+def smart_import(path: Path, uploader_name: str, overwrite_in_prog: bool = False) -> DataImport:
     possible_mappings = xlsx_utils.guess_mapping(path, ALL_MAPPINGS)
     if len(possible_mappings) == 0:
         raise NoMappingForFileError()
@@ -55,6 +55,9 @@ def smart_import(path: Path, uploader_name: str, overwrite_in_prog: bool=False) 
 
 def import_data(path: Path, mappings: List[xlsx_utils.SheetMapping], uploaded_by: Optional[str] = None,
                 overwrite_in_prog=False):
+    df = mappings[0].data_file
+    if len([m for m in ALL_MAPPINGS if m.data_file == df]) != len(mappings):
+        raise PartialFile('Importing a file, but only got one of the expected sheets')
     error_collector = ErrorCollector()
     data_file = {mapping.data_file for mapping in mappings}
     if len(data_file) != 1:
@@ -95,13 +98,14 @@ def import_data(path: Path, mappings: List[xlsx_utils.SheetMapping], uploaded_by
                         obj.save()
 
             FacilityDelivery.objects.bulk_create(deliveries)
+            print(FacilityDelivery.active().count())
 
         except Exception:
             print(f'Failure importing {path}, mapping: {mapping.sheet_name}')
             raise
 
     print(f"Errors: ")
-    print(error_collector)
+    error_collector.dump()
     return data_import
 
 
