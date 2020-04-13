@@ -37,8 +37,11 @@ RAW_DATA = "raw_data"
 
 
 def guess_mapping(sheet: Path, possible_mappings: List[SheetMapping]):
-    workbook = load_workbook(sheet)
-    possible_mappings = [m for m in possible_mappings if m.sheet_name in workbook.sheetnames]
+    if sheet.suffix ==  '.xlsx':     
+        workbook = load_workbook(sheet)
+        possible_mappings = [m for m in possible_mappings if m.sheet_name in workbook.sheetnames]
+    else:
+        possible_mappings = []
 
     final_mappings = []
     for mapping in possible_mappings:

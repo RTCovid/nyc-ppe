@@ -15,13 +15,13 @@
             <li>
                 <dt>They uploaded:</dt>
                 {% for stat, val in delta.active_stats.items %}
-                    <dd><span class="upload-type">{{stat}}</span>: {{val}}</dd>
+                <dd><span class="upload-type">{{stat}}</span>: {{val}}</dd>
                 {% endfor %}
             </li>
             <li>
                 <dt>You uploaded:</dt>
                 {% for stat, val in delta.candidate_stats.items %}
-                    <dd><span class="upload-type">{{stat}}</span>: {{val}}</dd>
+                <dd><span class="upload-type">{{stat}}</span>: {{val}}</dd>
                 {% endfor %}
             </li>
         </dl>
@@ -44,6 +44,10 @@
     <form method="post" action="/verify/{{ import_id }}/">
         {% csrf_token %}
         <button type="submit">Confirm</button>
+    </form>
+    <form method="post" action="/cancel/{{ import_id }}/">
+        {% csrf_token %}
+        <input type="submit" value="Cancel" />
     </form>
 </div>
 {% endblock %}
