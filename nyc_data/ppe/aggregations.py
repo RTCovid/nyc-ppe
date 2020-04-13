@@ -147,12 +147,15 @@ def pretty_render_numeric(value):
 
 
 def split_value_unit(value):
-    if abs(value) > 1_000_000:
+    if abs(value) >= 1_000_000:
         return f'{value / 1_000_000:.1f}', 'M'
-    elif abs(value) > 1_000:
-        return f'{value / 1_000:.1f}', 'K'
+    elif abs(value) >= 1_000:
+        if value % 1000 == 0:
+            return value // 1000, 'K'
+        else:
+            return f'{value / 1_000:.1f}', 'K'
     else:
-        return value, ''
+        return str(value), ''
 
 
 class NumericalColumn(tables.Column):

@@ -6,7 +6,7 @@ from ppe.dataclasses import Item
 register = template.Library()
 
 def pretty_num(value):
-    (value, unit) = split_value_unit(float(value))
+    (value, unit) = split_value_unit(value)
     return f'{value}{unit}'
 
 def display_name(value):
