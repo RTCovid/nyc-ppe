@@ -383,14 +383,55 @@ section.footer {
     font-weight: 300;
 }
 
-.incoming-supply dt {
-    float: left;
-    width: 150px;
-    color: #888;
-    text-transform: uppercase;
+.drilldown-deliveries th, .drilldown-deliveries td {
+    white-space: normal;
+    padding: 0 20px 5px 0;
+    vertical-align: top;
 }
 
-.incoming-supply dd {
-    margin-left: 150px;
-    margin-bottom: 10px;
+.drilldown-deliveries th {
+    color: #888;
+    text-transform: uppercase;
+    font-weight: inherit;
+    white-space: nowrap;
+    margin-bottom: 20px;
+}
+
+.drilldown-deliveries {
+    font-size: 14px;
+    font-weight: 300;
+}
+
+.drilldown-deliveries-desc {
+    width: 40%;
+}
+
+.incoming-rollup {
+    display: flex;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 20px;
+}
+
+.incoming-rollup p {
+    color: #888;
+    font-size: 14px;
+}
+
+.incoming-rollup ul {
+    list-style-type: none;
+    display: flex;
+}
+
+.incoming-rollup li {
+    padding-right: 20px;
+    font-size: 24px;
+    font-weight: 300;
+}
+
+.incoming-rollup li b {
+    display: block;
+    text-transform: uppercase;
+    font-weight: 300;
+    color: #888;
+    font-size: 14px;
 }

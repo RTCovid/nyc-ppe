@@ -15,28 +15,34 @@
     </ul>
     <hr />
 
-    <h2>Incoming Supply (Total Scheduled: {{scheduled_total|pretty_num}})</h2>
-    <p>Scheduled for delivery in:</p>
-    <ul>
-        <li><b>Past:</b> {{deliveries_past|pretty_num}}</li>
-        <li><b>Next 3 days:</b> {{deliveries_next_three|pretty_num}}</li>
-        <li><b>Next 7 days:</b> {{deliveries_next_week|pretty_num}}</li>
-        <li><b>Next 30 days:</b> {{deliveries_next_thirty|pretty_num}}</li>
-    </ul>
-    {% regroup deliveries by delivery_date as date_list %}
-    {% for day in date_list %}
-    {% if forloop.first %}<dl>{% endif %}
-        <dt>{{day.grouper}}</dt>
-
-        {% for delivery in day.list %}
-        <dd class="tooltip" aria-label="{{delivery.vendor}}">Receiving <span
-                class="quantity">{{ delivery.quantity|pretty_num }}</span> {{ delivery.item }} –
-            {{ delivery.description|default:"No description" }}</dd>
+    <div class="drilldown-detail supply-scheduled">
+        <h2>Incoming Supply</h2>
+        <div class="incoming-rollup">
+            <p>Scheduled for delivery in:</p>
+            <ul>
+                <li><b>Past</b> {{deliveries_past|pretty_num}}</li>
+                <li><b>Next 3 days</b> {{deliveries_next_three|pretty_num}}</li>
+                <li><b>Next 7 days</b> {{deliveries_next_week|pretty_num}}</li>
+                <li><b>Next 30 days</b> {{deliveries_next_thirty|pretty_num}}</li>
+                <li><b>Total</b> {{scheduled_total|pretty_num}}</li>
+                <li><b>Unscheduled</b> {{unscheduled_total|pretty_num}}</li>
+            </ul>
+        </div>
+        {% regroup deliveries by delivery_date as date_list %}
+        {% for day in date_list %}
+            {% if forloop.first %}<table class="drilldown-deliveries">{% endif %}
+                <tr><th rowspan="{{day.list|length}}">{{day.grouper}}</th>
+                    {% for delivery in day.list %}
+                        {% if not forloop.first %}<tr>{% endif %}
+                        <td class="drilldown-deliveries-quantity"><span class="quantity">{{ delivery.quantity|pretty_num }} {{ delivery.item }}</span></td>
+                        <td class="drilldown-deliveries-desc">{{ delivery.description|default:"No description" }}</td>
+                        <td class="drilldown-deliveries-vendor">{{delivery.vendor}}</td>
+                        {% if not forloop.last %}</tr>{% endif %}
+                    {% endfor %}
+                </tr>
+            {% if forloop.last %}</table>{% endif %}
         {% endfor %}
-        {% if forloop.last %}</dl>{% endif %}
-    {% endfor %}
-
-    <hr />
+    </div>
 
     <h2>Unscheduled Supply (Total: {{ unscheduled_total | pretty_num }})</h2>
     <ul>
