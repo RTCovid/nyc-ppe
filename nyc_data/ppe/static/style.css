@@ -169,6 +169,11 @@ td:last-child {
     color: #CE4C23;
 }
 
+.error {
+    text-align: center;
+    display: block   
+}
+
 .balance-bar-red {
     background: #CE4C23;
 }
