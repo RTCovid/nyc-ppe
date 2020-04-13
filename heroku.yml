@@ -6,4 +6,4 @@ run:
 release:
     image: web
     command:
-        - pipenv run python manage.py migrate
+        - python manage.py migrate
