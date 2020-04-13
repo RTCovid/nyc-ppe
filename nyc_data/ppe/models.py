@@ -74,7 +74,7 @@ class DataImport(models.Model):
         return UploadDelta(
             previous=active_import,
             active_stats={tpe.__name__: len(objs) for (tpe, objs) in active_objects.items()},
-            candidate_stats={tpe.__name__: len(objs) for (tpe, objs) in active_objects.items()},
+            candidate_stats={tpe.__name__: len(objs) for (tpe, objs) in self.imported_objects().items()},
             new_objects=new_objects
 
         )

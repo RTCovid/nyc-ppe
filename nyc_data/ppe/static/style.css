@@ -40,6 +40,11 @@ section.container {
     color: #FFFFFF;
 }
 
+.standard-button {
+    cursor: pointer;
+
+}
+
 .brand-bar {
     height: 80px;
     display: flex;
@@ -232,6 +237,15 @@ td:last-child {
     text-align: center;
     border-radius: 50px;
     transition: all 0.2s cubic-bezier(0.2, 0.91, 0.85, 0.96) 0s;
+}
+
+button {
+    cursor: pointer;
+}
+
+.upload button.cancel {
+    background: #fff;
+    color: #0a5796;
 }
 
 .lockdown button:hover, .upload button:hover {
