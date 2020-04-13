@@ -47,6 +47,8 @@ def guess_mapping(sheet: Path, possible_mappings: List[SheetMapping]):
         col_names = [m.sheet_column_name for m in mapping.mappings]
         if all(col_name in first_row for col_name in col_names):
             final_mappings.append(mapping)
+        else:
+            raise Exception('Sheetname matches but column names do not')
 
     return final_mappings
 

@@ -52,11 +52,13 @@ def drilldown(request):
         cat_display = dc.Item(category).display()
     drilldown_res = drilldown_result(category, rollup)
 
+    import pdb; pdb.set_trace()
     context = {
         "asset_category": cat_display,
         # conversion to data class handles conversion to display names, etc.
-        "purchases": [p.to_dataclass() for p in drilldown_res[0]],
-        "deliveries": [d.to_dataclass() for d in drilldown_res[1]],
+        "purchases": [p.to_dataclass() for p in drilldown_res.purchases],
+        "deliveries": [d.to_dataclass() for d in drilldown_res.scheduled_deliveries],
+        "inventory": [i for i in drilldown_res.inventory]
     }
     return render(request, "drilldown.html", context)
 

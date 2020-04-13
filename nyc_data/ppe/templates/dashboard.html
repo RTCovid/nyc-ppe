@@ -21,7 +21,8 @@
 {% block footer %}
 <dl>
     <dt>Demand</dt>
-    <dd>A projected demand based on last week's supply.</dd>
+    <dd>A proxy for future demand, calculated by considering the previous 7 days deliveries to hospitals,
+        extrapolated using the IMHE model for projected to project future hospitalizations.</dd>
     <dt>Supply</dt>
     <dd>The sum of inventory, purchasing (sell), and manufacturing (make) efforts.</dd>
     <dt>Balance</dt>
