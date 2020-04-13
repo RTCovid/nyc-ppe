@@ -301,6 +301,7 @@ button {
     text-decoration: none;
     padding: 10px 20px;
     border: 1px solid #ddd;
+    white-space: nowrap;
 }
 .toggle li.active a {
     color: #fff;
