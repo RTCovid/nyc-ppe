@@ -57,7 +57,6 @@ def drilldown(request):
     inventory = drilldown_res.inventory
     # deliveries_next_three = datetime.now() + timedelta(days=3)
 
-    past_deliveries = sum([d.quantity for d in deliveries if d.delivery_date <= datetime.now().date()])
     received_deliveries = sum([p.received_quantity or 0 for p in purchases])
     context = {
         "asset_category": cat_display,
@@ -65,7 +64,7 @@ def drilldown(request):
         "purchases": purchases,
         "deliveries": deliveries,
         "inventory": inventory,
-        "deliveries_past": past_deliveries + received_deliveries,
+        "deliveries_past": received_deliveries,
         "deliveries_next_three": sum([d.quantity for d in deliveries if
                                       datetime.now().date() <= d.delivery_date <= datetime.now().date() + timedelta(
                                           days=3)]),

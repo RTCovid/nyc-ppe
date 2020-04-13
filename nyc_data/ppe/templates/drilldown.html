@@ -28,12 +28,12 @@
         <div class="incoming-rollup">
             <p>Scheduled for delivery in:</p>
             <ul>
-                <li><b>Past</b> {{deliveries_past|pretty_num}}</li>
                 <li><b>Next 3 days</b> {{deliveries_next_three|pretty_num}}</li>
                 <li><b>Next 7 days</b> {{deliveries_next_week|pretty_num}}</li>
                 <li><b>Next 30 days</b> {{deliveries_next_thirty|pretty_num}}</li>
                 <li><b>Total Scheduled</b> {{scheduled_total|pretty_num}}</li>
                 <li><b>Total Unscheduled</b> {{unscheduled_total|pretty_num}}</li>
+                <li><b>Total Received (all time)</b> {{deliveries_past|pretty_num}}</li>
             </ul>
         </div>
         {% regroup deliveries by delivery_date as date_list %}
