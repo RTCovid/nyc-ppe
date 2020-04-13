@@ -153,13 +153,13 @@ class NumericalColumn(tables.Column):
 
 class AggregationTable(tables.Table):
     asset = tables.Column()
-    projected_demand = NumericalColumn(accessor="demand", verbose_name="Demand")
+    projected_demand = NumericalColumn(accessor="demand", verbose_name="Proxy Demand", attrs={"th": {"class": "tooltip", "aria-label": "Based on the last week of supply and projection of need."}})
     balance = tables.Column(empty_values=(), order_by="percent_balance")
 
     total = NumericalColumn(verbose_name="Supply")
     inventory = NumericalColumn(attrs={"th": {"class": "tooltip", "aria-label": lambda: f"MO Operations current as of {Inventory.as_of_latest()}"}})
     donate = NumericalColumn()
-    sell = NumericalColumn(attrs={"th": {"class": "tooltip", "aria-label": "DCAS"}})
+    sell = NumericalColumn(verbose_name="Purchased", attrs={"th": {"class": "tooltip", "aria-label": "DCAS"}})
     make = NumericalColumn(attrs={"th": {"class": "tooltip", "aria-label": "EDC"}})
 
     def render_projected_demand(self, value):
