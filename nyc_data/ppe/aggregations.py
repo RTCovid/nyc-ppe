@@ -110,14 +110,7 @@ def add_demand_estimate(time_start: datetime,
     scaling_factor = (time_end - time_start) / datetime.timedelta(days=7)
 
     # Get last week's total hospitalization
-    last_week_hospitalization = 0
-    for n in range(7):
-        date = last_week + datetime.timedelta(days=n)
-        hospitalization = HOSPITALIZATION[date.strftime("%Y-%m-%d")]
-        # Use All Beds Available as baseline
-        if not hospitalization or hospitalization < ALL_BEDS_AVAILABLE:
-            hospitalization = ALL_BEDS_AVAILABLE
-        last_week_hospitalization += hospitalization
+    last_week_hospitalization = get_total_hospitalization(last_week, last_week+datetime.timedelta(days=6))
 
     # Iterate through each category
     for k, rollup in rollup.items():
@@ -139,6 +132,22 @@ def add_demand_estimate(time_start: datetime,
             rollup.demand = int(rollup.demand)
         else:
             rollup.demand = int(last_week_supply * scaling_factor)
+
+
+def get_total_hospitalization(time_start: datetime,
+                              time_end: datetime):
+
+    total_hospitalization = 0
+    date = time_start
+    while date <= time_end:
+        hospitalization = HOSPITALIZATION[date.strftime("%Y-%m-%d")]
+        # Use All Beds Available as baseline
+        if not hospitalization or hospitalization < ALL_BEDS_AVAILABLE:
+            hospitalization = ALL_BEDS_AVAILABLE
+        total_hospitalization += hospitalization
+        date += datetime.timedelta(days=1)
+
+    return total_hospitalization
 
 
 def pretty_render_numeric(value):
