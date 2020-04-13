@@ -26,14 +26,15 @@ def default(request):
             datetime.now(), datetime.now() + timedelta(days=30),
             mayoral_rollup
         )
-    elif request.GET.get('rollup', '') in ['critical',]:
+    elif request.GET.get('rollup', '') in ['critical', ]:
         aggregation = aggregations.asset_rollup(
             datetime.now(), datetime.now() + timedelta(days=30)
         )
 
     displayed_vals = ['donate', 'sell', 'make', 'inventory']
-    cleaned_aggregation = [rollup for rollup in list(aggregation.values()) if not all([getattr(rollup, val) == 0 for val in displayed_vals])]
-    
+    cleaned_aggregation = [rollup for rollup in list(aggregation.values()) if
+                           not all([getattr(rollup, val) == 0 for val in displayed_vals])]
+
     table = aggregations.AggregationTable(cleaned_aggregation)
     RequestConfig(request).configure(table)
     context = {"aggregations": table}
@@ -54,7 +55,7 @@ def drilldown(request):
     purchases = drilldown_res.purchases
     deliveries = drilldown_res.scheduled_deliveries
     inventory = drilldown_res.inventory
-    #deliveries_next_three = datetime.now() + timedelta(days=3)
+    # deliveries_next_three = datetime.now() + timedelta(days=3)
 
     context = {
         "asset_category": cat_display,
@@ -62,12 +63,24 @@ def drilldown(request):
         "purchases": [p.to_dataclass() for p in purchases],
         "deliveries": [d.to_dataclass() for d in deliveries],
         "inventory": inventory,
-        "deliveries_past" : sum([d.quantity for d in deliveries if d.delivery_date <= datetime.now().date()]),
-        "deliveries_next_three" : sum([d.quantity for d in deliveries if datetime.now().date() <= d.delivery_date <= datetime.now().date() + timedelta(days=3)]),
-        "deliveries_next_week" : sum([d.quantity for d in deliveries if datetime.now().date() <= d.delivery_date <= datetime.now().date() + timedelta(days=7)]),
-        "deliveries_next_thirty" : sum([d.quantity for d in deliveries if datetime.now().date() <= d.delivery_date <= datetime.now().date() + timedelta(days=30)]),
-        "scheduled_total" : sum([d.quantity for d in deliveries]),
-        "unscheduled_total" : sum([purch.unscheduled_quantity for purch in purchases if purch.unscheduled_quantity])
+        "deliveries_past": sum([d.quantity for d in deliveries if d.delivery_date <= datetime.now().date()]),
+        "deliveries_next_three": sum([d.quantity for d in deliveries if
+                                      datetime.now().date() <= d.delivery_date <= datetime.now().date() + timedelta(
+                                          days=3)]),
+        "deliveries_next_week": sum([d.quantity for d in deliveries if
+                                     datetime.now().date() <= d.delivery_date <= datetime.now().date() + timedelta(
+                                         days=7)]),
+        "deliveries_next_thirty": sum([d.quantity for d in deliveries if
+                                       datetime.now().date() <= d.delivery_date <= datetime.now().date() + timedelta(
+                                           days=30)]),
+        "scheduled_total": sum([d.quantity for d in deliveries]),
+        "unscheduled_total": sum([purch.unscheduled_quantity for purch in purchases if purch.unscheduled_quantity]),
+        "received_total": sum([p.received_quantity or 0 for p in purchases]),
+        "facility_deliveries": {k: v for k, v in
+                                aggregations.demand_for_period(datetime.now().date() - timedelta(days=7),
+                                                               datetime.now().date(), lambda x: x).items() if
+                                rollup(k) == category}
+
     }
     return render(request, "drilldown.html", context)
 
@@ -131,6 +144,7 @@ class Verify(View):
     def post(self, request, import_id):
         data_import.complete_import(DataImport.objects.get(id=import_id))
         return HttpResponseRedirect(reverse('index'))
+
 
 class CancelImport(View):
     def post(self, request, import_id):
