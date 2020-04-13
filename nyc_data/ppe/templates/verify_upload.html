@@ -41,13 +41,15 @@
 
         <!-- {{delta.new_objects}} -->
     </div>
-    <form method="post" action="/verify/{{ import_id }}/">
-        {% csrf_token %}
-        <button type="submit">Confirm</button>
-    </form>
-    <form method="post" action="/cancel/{{ import_id }}/">
-        {% csrf_token %}
-        <input type="submit" value="Cancel" />
-    </form>
+    <div>
+        <form method="post" action="/verify/{{ import_id }}/">
+            {% csrf_token %}
+            <button type="submit" class="standard-button">Confirm</button>
+        </form>
+        <form method="post" action="/cancel/{{ import_id }}/">
+            {% csrf_token %}
+            <button class="cancel" type="submit" value="Cancel">Cancel</button>
+        </form>
+    </div>
 </div>
 {% endblock %}
