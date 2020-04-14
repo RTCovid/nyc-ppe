@@ -41,9 +41,11 @@ class DataImport(models.Model):
     def sanity(cls):
         # for each data_source, at most 1 active
         for _, src in DataFile.__members__.items():
-            ct = DataImport.objects.filter(data_file=src, status=ImportStatus.active).count()
+            ct = DataImport.objects.filter(
+                data_file=src, status=ImportStatus.active
+            ).count()
             if ct > 1:
-                print(f'Something is weird, more than one active object for {src}')
+                print(f"Something is weird, more than one active object for {src}")
                 return False
         return True
 
@@ -55,11 +57,15 @@ class DataImport(models.Model):
 
     def compute_delta(self):
         if not self.sanity():
-            raise Exception("Can't compute a delta. Something is horribly wrong in the DB")
+            raise Exception(
+                "Can't compute a delta. Something is horribly wrong in the DB"
+            )
         if self.status != ImportStatus.candidate:
-            raise Exception('Can only compute a delta on a candidate import')
+            raise Exception("Can only compute a delta on a candidate import")
 
-        active_import = DataImport.objects.filter(status=ImportStatus.active, data_file=self.data_file).first()
+        active_import = DataImport.objects.filter(
+            status=ImportStatus.active, data_file=self.data_file
+        ).first()
 
         if active_import:
             active_objects = active_import.imported_objects()
@@ -67,21 +73,35 @@ class DataImport(models.Model):
             active_objects = {}
 
         new_objects = {
-            k: set(objs).difference(active_objects.get(k)) if k in active_objects.keys() else set(objs) \
+            k: set(objs).difference(active_objects.get(k))
+            if k in active_objects.keys()
+            else set(objs)
             for k, objs in self.imported_objects().items()
         }
 
         return UploadDelta(
             previous=active_import,
-            active_stats={tpe.__name__: len(objs) for (tpe, objs) in active_objects.items()},
-            candidate_stats={tpe.__name__: len(objs) for (tpe, objs) in self.imported_objects().items()},
-            new_objects=new_objects
-
+            active_stats={
+                tpe.__name__: len(objs) for (tpe, objs) in active_objects.items()
+            },
+            candidate_stats={
+                tpe.__name__: len(objs)
+                for (tpe, objs) in self.imported_objects().items()
+            },
+            new_objects=new_objects,
         )
 
     def imported_objects(self):
-        return {tpe: tpe.objects.prefetch_related('source').filter(source=self) for tpe in
-                [ScheduledDelivery, Inventory, Purchase, FacilityDelivery, Demand]}
+        return {
+            tpe: tpe.objects.prefetch_related("source").filter(source=self)
+            for tpe in [
+                ScheduledDelivery,
+                Inventory,
+                Purchase,
+                FacilityDelivery,
+                Demand,
+            ]
+        }
 
 
 class UploadDelta(NamedTuple):
@@ -100,7 +120,9 @@ class BaseModel(models.Model):
 
     @classmethod
     def active(cls):
-        return cls.objects.prefetch_related('source').filter(source__status=ImportStatus.active)
+        return cls.objects.prefetch_related("source").filter(
+            source__status=ImportStatus.active
+        )
 
     def check_cached(self, field):
         """
@@ -113,9 +135,11 @@ class BaseModel(models.Model):
         :param field: field name (string)
         :return:
         """
-        cached = getattr(self.__class__, field).field.get_cached_value(self, default=None)
+        cached = getattr(self.__class__, field).field.get_cached_value(
+            self, default=None
+        )
         if cached is None:
-            print(f'Warning: {field} not cached on {self}')
+            print(f"Warning: {field} not cached on {self}")
         return getattr(self, field)
 
     class Meta:
@@ -143,7 +167,9 @@ class Purchase(BaseModel):
         if self.received_quantity == self.quantity:
             return 0
         else:
-            total_scheduled = self.deliveries.aggregate(Sum('quantity'))['quantity__sum']
+            total_scheduled = self.deliveries.aggregate(Sum("quantity"))[
+                "quantity__sum"
+            ]
             return self.quantity - (total_scheduled or 0)
 
     def to_dataclass(self):
@@ -154,7 +180,7 @@ class Purchase(BaseModel):
             quantity=self.quantity,
             unscheduled_quantity=self.unscheduled_quantity,
             deliveries=self.deliveries.all(),
-            vendor=self.vendor
+            vendor=self.vendor,
         )
 
 
@@ -167,7 +193,7 @@ class Inventory(BaseModel):
 
     @classmethod
     def as_of_latest(cls):
-        return super().active().aggregate(Max('as_of'))['as_of__max']
+        return super().active().aggregate(Max("as_of"))["as_of__max"]
 
     @classmethod
     def active(cls):
@@ -175,21 +201,23 @@ class Inventory(BaseModel):
 
 
 class ScheduledDelivery(BaseModel):
-    purchase = models.ForeignKey(Purchase, on_delete=models.CASCADE, related_name='deliveries')
+    purchase = models.ForeignKey(
+        Purchase, on_delete=models.CASCADE, related_name="deliveries"
+    )
     delivery_date = models.DateField(null=True)
     quantity = models.IntegerField()
 
     @property
     def item(self):
-        return self.check_cached('purchase').item
+        return self.check_cached("purchase").item
 
     @property
     def description(self):
-        return self.check_cached('purchase').description
+        return self.check_cached("purchase").description
 
     @property
     def vendor(self):
-        return self.check_cached('purchase').vendor
+        return self.check_cached("purchase").vendor
 
     def to_dataclass(self):
         return dc.Delivery(
@@ -198,7 +226,7 @@ class ScheduledDelivery(BaseModel):
             delivery_date=self.delivery_date,
             quantity=self.quantity,
             vendor=self.purchase.vendor,
-            source=self.source.display()
+            source=self.source.display(),
         )
 
 
@@ -226,6 +254,7 @@ class FacilityDelivery(BaseModel):
 
 class Demand(BaseModel):
     """Real demand data from NYC"""
+
     item = ChoiceField(dc.Item)
     demand = models.IntegerField()
     # both start and end are inclusive

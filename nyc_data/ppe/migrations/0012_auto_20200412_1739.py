@@ -7,19 +7,29 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('ppe', '0011_auto_20200412_1658'),
+        ("ppe", "0011_auto_20200412_1658"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='inventory',
-            name='as_of',
-            field=models.DateField(default=datetime.datetime(2020, 4, 12, 17, 39, 33, 978840)),
+            model_name="inventory",
+            name="as_of",
+            field=models.DateField(
+                default=datetime.datetime(2020, 4, 12, 17, 39, 33, 978840)
+            ),
             preserve_default=False,
         ),
         migrations.AlterField(
-            model_name='dataimport',
-            name='data_file',
-            field=models.TextField(choices=[('PPE_ORDERINGCHARTS_DATE_XLSX', 'PPE_ORDERINGCHARTS_DATE_XLSX'), ('SUPPLIERS_PARTNERS_XLSX', 'SUPPLIERS_PARTNERS_XLSX'), ('INVENTORY', 'INVENTORY'), ('FACILITY_DELIVERIES', 'FACILITY_DELIVERIES')], default=None),
+            model_name="dataimport",
+            name="data_file",
+            field=models.TextField(
+                choices=[
+                    ("PPE_ORDERINGCHARTS_DATE_XLSX", "PPE_ORDERINGCHARTS_DATE_XLSX"),
+                    ("SUPPLIERS_PARTNERS_XLSX", "SUPPLIERS_PARTNERS_XLSX"),
+                    ("INVENTORY", "INVENTORY"),
+                    ("FACILITY_DELIVERIES", "FACILITY_DELIVERIES"),
+                ],
+                default=None,
+            ),
         ),
     ]

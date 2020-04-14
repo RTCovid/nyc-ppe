@@ -27,7 +27,9 @@ def env(k, default=None):
 ENVIRONMENT = env("ENVIRONMENT", "local")
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "2a0nl@yj7^!3ri!w((qw@ounn+gxpmrwz$22+bu%0i8owv3$e#")
+SECRET_KEY = os.environ.get(
+    "DJANGO_SECRET_KEY", "2a0nl@yj7^!3ri!w((qw@ounn+gxpmrwz$22+bu%0i8owv3$e#"
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = ENVIRONMENT == "local"
@@ -45,23 +47,21 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
     "django_extensions",
     "lockdown",
-
     "ppe",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    'lockdown.middleware.LockdownMiddleware',
+    "lockdown.middleware.LockdownMiddleware",
 ]
 
 DJANGO_TABLES2_TEMPLATE = "django_tables2/semantic.html"
@@ -71,7 +71,7 @@ ROOT_URLCONF = "nyc_data.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [os.path.join(BASE_DIR, 'templates')],
+        "DIRS": [os.path.join(BASE_DIR, "templates")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -137,4 +137,4 @@ STATIC_URL = "/static/"
 
 # Third party config
 
-LOCKDOWN_PASSWORDS = (os.environ.get('LOCKDOWN_PASSWORD','opensesame'))
+LOCKDOWN_PASSWORDS = os.environ.get("LOCKDOWN_PASSWORD", "opensesame")

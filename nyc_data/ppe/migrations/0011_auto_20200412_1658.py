@@ -5,13 +5,11 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ('ppe', '0010_auto_20200412_1539'),
+        ("ppe", "0010_auto_20200412_1539"),
     ]
 
     operations = [
         migrations.RenameField(
-            model_name='dataimport',
-            old_name='data_source',
-            new_name='data_file'
+            model_name="dataimport", old_name="data_source", new_name="data_file"
         ),
     ]

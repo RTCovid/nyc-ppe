@@ -8,9 +8,7 @@ import uuid
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('ppe', '0008_auto_20200411_1643'),
+        ("ppe", "0008_auto_20200411_1643"),
     ]
 
-    operations = [
-        migrations.RenameModel('Delivery', 'ScheduledDelivery')
-    ]
+    operations = [migrations.RenameModel("Delivery", "ScheduledDelivery")]

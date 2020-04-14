@@ -8,29 +8,79 @@ import uuid
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('ppe', '0015_purchase_received_quantity'),
+        ("ppe", "0015_purchase_received_quantity"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='dataimport',
-            name='data_file',
-            field=models.TextField(choices=[('PPE_ORDERINGCHARTS_DATE_XLSX', 'PPE_ORDERINGCHARTS_DATE_XLSX'), ('SUPPLIERS_PARTNERS_XLSX', 'SUPPLIERS_PARTNERS_XLSX'), ('INVENTORY', 'INVENTORY'), ('FACILITY_DELIVERIES', 'FACILITY_DELIVERIES'), ('HOSPITAL_DEMANDS', 'HOSPITAL_DEMANDS')], default=None),
+            model_name="dataimport",
+            name="data_file",
+            field=models.TextField(
+                choices=[
+                    ("PPE_ORDERINGCHARTS_DATE_XLSX", "PPE_ORDERINGCHARTS_DATE_XLSX"),
+                    ("SUPPLIERS_PARTNERS_XLSX", "SUPPLIERS_PARTNERS_XLSX"),
+                    ("INVENTORY", "INVENTORY"),
+                    ("FACILITY_DELIVERIES", "FACILITY_DELIVERIES"),
+                    ("HOSPITAL_DEMANDS", "HOSPITAL_DEMANDS"),
+                ],
+                default=None,
+            ),
         ),
         migrations.CreateModel(
-            name='Demand',
+            name="Demand",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True, db_index=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('item', models.TextField(choices=[('faceshield', 'faceshield'), ('gown', 'gown'), ('gown_material', 'gown_material'), ('coveralls', 'coveralls'), ('ponchos', 'ponchos'), ('scrubs', 'scrubs'), ('n95_mask_non_surgical', 'n95_mask_non_surgical'), ('n95_mask_surgical', 'n95_mask_surgical'), ('kn95_mask', 'kn95_mask'), ('surgical_mask', 'surgical_mask'), ('mask_other', 'mask_other'), ('goggles', 'goggles'), ('generic_eyeware', 'generic_eyeware'), ('gloves', 'gloves'), ('ventilators_full_service', 'ventilators_full_service'), ('ventilators_non_full_service', 'ventilators_non_full_service'), ('bipap_machines', 'bipap_machines'), ('ppe_other', 'ppe_other'), ('unknown', 'unknown'), ('body_bags', 'body_bags')], default=None)),
-                ('demand', models.IntegerField()),
-                ('start_date', models.DateField()),
-                ('end_date', models.DateField()),
-                ('source', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='ppe.DataImport')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True, db_index=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "item",
+                    models.TextField(
+                        choices=[
+                            ("faceshield", "faceshield"),
+                            ("gown", "gown"),
+                            ("gown_material", "gown_material"),
+                            ("coveralls", "coveralls"),
+                            ("ponchos", "ponchos"),
+                            ("scrubs", "scrubs"),
+                            ("n95_mask_non_surgical", "n95_mask_non_surgical"),
+                            ("n95_mask_surgical", "n95_mask_surgical"),
+                            ("kn95_mask", "kn95_mask"),
+                            ("surgical_mask", "surgical_mask"),
+                            ("mask_other", "mask_other"),
+                            ("goggles", "goggles"),
+                            ("generic_eyeware", "generic_eyeware"),
+                            ("gloves", "gloves"),
+                            ("ventilators_full_service", "ventilators_full_service"),
+                            (
+                                "ventilators_non_full_service",
+                                "ventilators_non_full_service",
+                            ),
+                            ("bipap_machines", "bipap_machines"),
+                            ("ppe_other", "ppe_other"),
+                            ("unknown", "unknown"),
+                            ("body_bags", "body_bags"),
+                        ],
+                        default=None,
+                    ),
+                ),
+                ("demand", models.IntegerField()),
+                ("start_date", models.DateField()),
+                ("end_date", models.DateField()),
+                (
+                    "source",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="ppe.DataImport"
+                    ),
+                ),
             ],
-            options={
-                'abstract': False,
-            },
+            options={"abstract": False,},
         ),
     ]

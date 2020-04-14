@@ -16,9 +16,7 @@ def truncate_tables(apps, schema_editor):
 
 class Migration(migrations.Migration):
     dependencies = [
-        ('ppe', '0005_auto_20200410_1635'),
+        ("ppe", "0005_auto_20200410_1635"),
     ]
 
-    operations = [
-        migrations.RunPython(truncate_tables)
-    ]
+    operations = [migrations.RunPython(truncate_tables)]

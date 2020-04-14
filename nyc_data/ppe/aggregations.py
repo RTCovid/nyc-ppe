@@ -10,15 +10,23 @@ from django.db.models import Sum
 from django.utils.html import format_html
 
 import ppe.dataclasses as dc
-from ppe.models import ScheduledDelivery, Inventory, ImportStatus, FacilityDelivery, Demand
+from ppe.models import (
+    ScheduledDelivery,
+    Inventory,
+    ImportStatus,
+    FacilityDelivery,
+    Demand,
+)
 
 # NY Forecast from https://covid19.healthdata.org/united-states-of-america/new-york
 HOSPITALIZATION = {}
-with open('../public-data/hospitalization_projection_new_york.json', 'r') as f:
+with open("../public-data/hospitalization_projection_new_york.json", "r") as f:
     HOSPITALIZATION = json.load(f)
 ALL_BEDS_AVAILABLE = 20420
-DEMAND_MESSAGE = "Demand projected based on the previous 7 days of hospital deliveries " \
-                 "& https://covidactnow.org/ hospitalization model"
+DEMAND_MESSAGE = (
+    "Demand projected based on the previous 7 days of hospital deliveries "
+    "& https://covidactnow.org/ hospitalization model"
+)
 
 
 class DemandCalculationConfig(NamedTuple):
@@ -33,9 +41,9 @@ class DemandSrc(str, Enum):
 
     def display(self):
         if self == DemandSrc.past_deliveries:
-            return 'previous deliveries'
+            return "previous deliveries"
         elif self == DemandSrc.real_demand:
-            return 'demand information'
+            return "demand information"
 
 
 @dataclass
@@ -60,7 +68,7 @@ class AssetRollup:
     def percent_balance(self):
         return self.absolute_balance / (self.demand + 1)
 
-    def __add__(self, other: 'AssetRollup'):
+    def __add__(self, other: "AssetRollup"):
         return AssetRollup(
             asset=self.asset,
             demand=self.demand + other.demand,
@@ -76,32 +84,39 @@ class AssetRollup:
             as_list = sorted([d.display() for d in self.demand_src])
             return f'Demand from {" and ".join(as_list)}'
         else:
-            return 'No demand data available'
+            return "No demand data available"
 
 
 MAPPING = {dc.OrderType.Make: "make", dc.OrderType.Purchase: "sell"}
 
 
 def asset_rollup(
-        time_start: datetime,
-        time_end: datetime,
-        use_hospitalization_projection=True,
-        use_real_demand=True,
-        rollup_fn: Callable[[dc.Item], str] = lambda x: x
+    time_start: datetime,
+    time_end: datetime,
+    use_hospitalization_projection=True,
+    use_real_demand=True,
+    rollup_fn: Callable[[dc.Item], str] = lambda x: x,
 ):
-    return _asset_rollup(time_start, time_end,
-                         DemandCalculationConfig(use_real_demand,
-                                                 use_hospitalization_projection=use_hospitalization_projection,
-                                                 rollup_fn=rollup_fn))
+    return _asset_rollup(
+        time_start,
+        time_end,
+        DemandCalculationConfig(
+            use_real_demand,
+            use_hospitalization_projection=use_hospitalization_projection,
+            rollup_fn=rollup_fn,
+        ),
+    )
 
 
 def _asset_rollup(
-        time_start: datetime,
-        time_end: datetime,
-        demand_calculation_config: DemandCalculationConfig,
+    time_start: datetime,
+    time_end: datetime,
+    demand_calculation_config: DemandCalculationConfig,
 ) -> Dict[str, AssetRollup]:
-    relevant_deliveries = ScheduledDelivery.active().prefetch_related('purchase').filter(
-        delivery_date__gte=time_start, delivery_date__lte=time_end
+    relevant_deliveries = (
+        ScheduledDelivery.active()
+        .prefetch_related("purchase")
+        .filter(delivery_date__gte=time_start, delivery_date__lte=time_end)
     )
 
     results: Dict[dc.Item, AssetRollup] = {}
@@ -141,11 +156,15 @@ def deliveries_for_period(time_start: datetime, time_end: datetime):
     :param rollup_fn:
     :return: dict of rolledup item name -> demand over the period
     """
-    demand_by_day = FacilityDelivery.active().filter(date__gte=time_start, date__lte=time_end).values('item').annotate(
-        Sum('quantity'))
+    demand_by_day = (
+        FacilityDelivery.active()
+        .filter(date__gte=time_start, date__lte=time_end)
+        .values("item")
+        .annotate(Sum("quantity"))
+    )
     rollup = collections.defaultdict(lambda: 0)
     for row in demand_by_day:
-        rollup[row['item']] += row['quantity__sum']
+        rollup[row["item"]] += row["quantity__sum"]
     return rollup
 
 
@@ -175,21 +194,30 @@ class Period(NamedTuple):
         return self.end - self.start
 
 
-def compute_scaling_factor(past_period: Period, projection_period: Period,
-                           demand_calculation_config: DemandCalculationConfig) -> float:
+def compute_scaling_factor(
+    past_period: Period,
+    projection_period: Period,
+    demand_calculation_config: DemandCalculationConfig,
+) -> float:
     if demand_calculation_config.use_hospitalization_projection:
         # Get last week'ks total hospitalization
-        past_period_hospitalization = get_total_hospitalization(past_period.start, past_period.end)
-        projection_period_hospitalization = get_total_hospitalization(projection_period.start, projection_period.end)
+        past_period_hospitalization = get_total_hospitalization(
+            past_period.start, past_period.end
+        )
+        projection_period_hospitalization = get_total_hospitalization(
+            projection_period.start, projection_period.end
+        )
         return projection_period_hospitalization / past_period_hospitalization
     else:
         return projection_period.inclusive_length() / past_period.inclusive_length()
 
 
-def add_demand_estimate(time_start: datetime,
-                        time_end: datetime,
-                        asset_rollup: Dict[dc.Item, AssetRollup],
-                        demand_calculation_config: DemandCalculationConfig):
+def add_demand_estimate(
+    time_start: datetime,
+    time_end: datetime,
+    asset_rollup: Dict[dc.Item, AssetRollup],
+    demand_calculation_config: DemandCalculationConfig,
+):
     last_week_start = datetime.datetime.today() - datetime.timedelta(days=7)
     last_week_end = last_week_start + datetime.timedelta(days=6)
 
@@ -201,10 +229,14 @@ def add_demand_estimate(time_start: datetime,
         # Start with by computing a fallback based on delivery data
         asset_deliveries = last_weeks_deliveries.get(k)
         if asset_deliveries is not None:
-            asset_rollup.demand = int(asset_deliveries * compute_scaling_factor(
-                past_period=Period(last_week_start, last_week_end),
-                projection_period=Period(time_start, time_end),
-                demand_calculation_config=demand_calculation_config))
+            asset_rollup.demand = int(
+                asset_deliveries
+                * compute_scaling_factor(
+                    past_period=Period(last_week_start, last_week_end),
+                    projection_period=Period(time_start, time_end),
+                    demand_calculation_config=demand_calculation_config,
+                )
+            )
             asset_rollup.demand_src = {DemandSrc.past_deliveries}
 
         # If desired & it exists, compute a calculation based on actual demand
@@ -212,16 +244,17 @@ def add_demand_estimate(time_start: datetime,
             demand_for_asset = real_demand.get(k)
             if demand_for_asset is not None:
                 scaling_factor = compute_scaling_factor(
-                    past_period=Period(demand_for_asset.start_date, demand_for_asset.end_date),
+                    past_period=Period(
+                        demand_for_asset.start_date, demand_for_asset.end_date
+                    ),
                     projection_period=Period(time_start, time_end),
-                    demand_calculation_config=demand_calculation_config
+                    demand_calculation_config=demand_calculation_config,
                 )
                 asset_rollup.demand = int(demand_for_asset.demand * scaling_factor)
                 asset_rollup.demand_src = {DemandSrc.real_demand}
 
 
-def get_total_hospitalization(time_start: datetime,
-                              time_end: datetime) -> float:
+def get_total_hospitalization(time_start: datetime, time_end: datetime) -> float:
     total_hospitalization = 0
     date = time_start
     while date <= time_end:
@@ -237,19 +270,21 @@ def get_total_hospitalization(time_start: datetime,
 
 def pretty_render_numeric(value):
     (value, unit) = split_value_unit(value)
-    return format_html('<span class="value">{}</span><span class="unit">{}</span>', value, unit)
+    return format_html(
+        '<span class="value">{}</span><span class="unit">{}</span>', value, unit
+    )
 
 
 def split_value_unit(value):
     if abs(value) >= 1_000_000:
-        return f'{value / 1_000_000:.1f}', 'M'
+        return f"{value / 1_000_000:.1f}", "M"
     elif abs(value) >= 1_000:
         if value % 1000 == 0:
-            return value // 1000, 'K'
+            return value // 1000, "K"
         else:
-            return f'{value / 1_000:.1f}', 'K'
+            return f"{value / 1_000:.1f}", "K"
     else:
-        return str(value), ''
+        return str(value), ""
 
 
 class NumericalColumn(tables.Column):
@@ -259,82 +294,122 @@ class NumericalColumn(tables.Column):
 
 class AggregationTable(tables.Table):
     asset = tables.Column()
-    projected_demand = NumericalColumn(accessor="demand",
-                                       verbose_name="Demand Proxy",
-                                       attrs={
-                                           "th": {"class": "tooltip",
-                                                  "aria-label": DEMAND_MESSAGE},
-                                           "td": {"class": "tooltip",
-                                                  "aria-label": lambda record: record.demand_src_display()}
-                                       },
-                                       )
-    balance = tables.Column(empty_values=(), order_by="percent_balance", attrs={
-        "th": {"class": "tooltip", "aria-label": "Supply deficit or surplus against demand"}})
+    projected_demand = NumericalColumn(
+        accessor="demand",
+        verbose_name="Demand Proxy",
+        attrs={
+            "th": {"class": "tooltip", "aria-label": DEMAND_MESSAGE},
+            "td": {
+                "class": "tooltip",
+                "aria-label": lambda record: record.demand_src_display(),
+            },
+        },
+    )
+    balance = tables.Column(
+        empty_values=(),
+        order_by="percent_balance",
+        attrs={
+            "th": {
+                "class": "tooltip",
+                "aria-label": "Supply deficit or surplus against demand",
+            }
+        },
+    )
 
-    total = NumericalColumn(verbose_name="Supply",
-                            attrs={"th": {"class": "tooltip", "aria-label": "Sum of inventory, ordered, and made."}})
-    inventory = NumericalColumn(attrs={
-        "th": {"class": "tooltip", "aria-label": lambda: f"DOHMH [{Inventory.as_of_latest()}]"}})
+    total = NumericalColumn(
+        verbose_name="Supply",
+        attrs={
+            "th": {
+                "class": "tooltip",
+                "aria-label": "Sum of inventory, ordered, and made.",
+            }
+        },
+    )
+    inventory = NumericalColumn(
+        attrs={
+            "th": {
+                "class": "tooltip",
+                "aria-label": lambda: f"DOHMH [{Inventory.as_of_latest()}]",
+            }
+        }
+    )
     donate = NumericalColumn()
-    sell = NumericalColumn(verbose_name="Ordered",
+    sell = NumericalColumn(
+        verbose_name="Ordered",
+        attrs={
+            "th": {
+                "class": "tooltip",
+                "aria-label": "DCAS scheduled orders [2020-4-12]",
+            }
+        },
+    )
 
-                           attrs={"th": {"class": "tooltip", "aria-label": "DCAS scheduled orders [2020-4-12]"}})
-
-    make = NumericalColumn(verbose_name="Made",
-                           attrs={"th": {"class": "tooltip", "aria-label": "EDC scheduled deliveries [2020-4-7]"}})
+    make = NumericalColumn(
+        verbose_name="Made",
+        attrs={
+            "th": {
+                "class": "tooltip",
+                "aria-label": "EDC scheduled deliveries [2020-4-12]",
+            }
+        },
+    )
 
     def render_projected_demand(self, value):
         if value == 0:
             return pretty_render_numeric(value)
-        return format_html('<span class="value-divider">~ </span>{}'.format(pretty_render_numeric(value)))
+        return format_html(
+            '<span class="value-divider">~ </span>{}'.format(
+                pretty_render_numeric(value)
+            )
+        )
 
     def render_asset(self, value):
-        href = f'/drilldown?category={value}'
+        href = f"/drilldown?category={value}"
         if isinstance(value, dc.MayoralCategory):
-            href += '&rollup=mayoral'
-        return format_html('<a href="{href}">{display_name}', href=href, display_name=value.display())
+            href += "&rollup=mayoral"
+        return format_html(
+            '<a href="{href}">{display_name}', href=href, display_name=value.display()
+        )
 
     def render_balance(self, record: AssetRollup):
         absolute = record.absolute_balance
         percent = record.percent_balance
         value, unit = split_value_unit(absolute)
-        percent_str = f'{int(percent * 100)}'
+        percent_str = f"{int(percent * 100)}"
         if percent * 100 > 500:
-            percent_str = '>500'
-        color_class = ''
-        if percent < -.2:
-            color_class = 'red'
+            percent_str = ">500"
+        color_class = ""
+        if percent < -0.2:
+            color_class = "red"
         elif percent < 0:
-            color_class = 'yellow'
+            color_class = "yellow"
         else:
-            color_class = 'gray'
+            color_class = "gray"
 
         # for some reason the whitespace keeps showing up in the HTML
         # so confused.
         return format_html(
             '<div style="width: 230px; display: flex; justify-content: space-between">'
-            '<span>'  # start numeric
-            '<span>'
+            "<span>"  # start numeric
+            "<span>"
             '<span class="value balance-col {color_class}">{value}</span><span class="unit">{unit}</span>'
-            '</span>'
+            "</span>"
             '&nbsp;<span class="value-divider">/</span>&nbsp;'
             '<span><span class="value {color_class} balance-col">{percent_str}</span><span class="unit">%</span></span>'
-            '</span>'
-            '</span>'  # end numeric
-            '<span >'  # start balance bar
+            "</span>"
+            "</span>"  # end numeric
+            "<span >"  # start balance bar
             '<span style="padding-left: {neg_delta}px">'
             '<span class="balance-bar-{color_class}" style="padding-left: {neg_width}px"></span>'
-            '</span>'
+            "</span>"
             '<span class="divider"></span>'
             '<span style="padding-right: {pos_delta}px">'
             '<span class="balance-bar-{color_class}" style="padding-left: {pos_width}px"></span>'
-            '</span>'
-            '</span>'  # end balance bar
-            '</div>',
-
+            "</span>"
+            "</span>"  # end balance bar
+            "</div>",
             color_class=color_class,
             value=value,
-
             unit=unit,
             percent_str=percent_str,
             neg_width=min(min(int(percent * 50), 0) * -1, 50),
@@ -354,16 +429,14 @@ class AggregationTable(tables.Table):
         # """
 
     class Meta:
-        order_by = ('balance',)
+        order_by = ("balance",)
         sequence = (
-            'asset',
-            'projected_demand',
-            'total',
-            'balance',
-            'inventory',
-            'sell',
-            'make',
+            "asset",
+            "projected_demand",
+            "total",
+            "balance",
+            "inventory",
+            "sell",
+            "make",
         )
-        exclude = (
-            'donate',
-        )
+        exclude = ("donate",)
