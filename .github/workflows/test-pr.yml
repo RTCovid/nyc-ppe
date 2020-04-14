@@ -10,4 +10,4 @@ jobs:
       - name: start everything
         run: docker-compose up -d && sleep 20
       - name: Test
-        run: docker-compose exec backend python manage.py test
+        run: docker exec nyc-ppe_backend_1 python manage.py test
