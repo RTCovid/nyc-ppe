@@ -193,6 +193,13 @@ class FacilityDelivery(BaseModel):
     quantity = models.IntegerField()
 
 
+class WeeklyDemand(BaseModel):
+    item = models.TextField()
+    demand = models.IntegerField()
+    week_start_date = models.DateField()
+    week_end_date = models.DateField()
+
+
 class Hospital(BaseModel):
     # TODO: need to figure out what resolution is needed. Could bring in the full geocoding hospital
     # model from covidhospitalstatus

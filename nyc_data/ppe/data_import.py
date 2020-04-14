@@ -4,17 +4,18 @@ from pathlib import Path
 from typing import Optional, List
 
 import xlsx_utils
-from ppe.data_mapping.mappers import dcas_make, dcas_sourcing, inventory, inventory_from_facilities, hospital_deliveries
+from ppe.data_mapping.mappers import dcas_make, dcas_sourcing, inventory, inventory_from_facilities, hospital_deliveries, hospital_demands
 from ppe.data_mapping.types import DataFile
 from ppe.data_mapping.utils import ErrorCollector
-from ppe.models import ImportStatus, DataImport, InboundReceipt, FacilityDelivery
+from ppe.models import ImportStatus, DataImport, InboundReceipt, FacilityDelivery, WeeklyDemand
 from xlsx_utils import import_xlsx
 
 ALL_MAPPINGS = [
     dcas_make.SUPPLIERS_AND_PARTNERS,
     dcas_sourcing.DCAS_DAILY_SOURCING,
     inventory_from_facilities.INVENTORY,
-    hospital_deliveries.FACILITY_DELIVERIES
+    hospital_deliveries.FACILITY_DELIVERIES,
+    hospital_demands.WEEKLY_DEMANDS
 ]
 
 
@@ -89,6 +90,7 @@ def import_data(path: Path, mappings: List[xlsx_utils.SheetMapping], uploaded_by
             data = import_xlsx(path, mapping, error_collector)
             data = list(data)
             deliveries = []
+            demands = []
             for item in data:
                 for obj in item.to_objects(error_collector):
                     obj.source = data_import
