@@ -17,6 +17,8 @@ HOSPITALIZATION = {}
 with open('../public-data/hospitalization_projection_new_york.json', 'r') as f:
     HOSPITALIZATION = json.load(f)
 ALL_BEDS_AVAILABLE = 20420
+DEMAND_MESSAGE = "Demand projected based on the previous 7 days of hospital deliveries " \
+                 "& https://covidactnow.org/ hospitalization model"
 
 
 class DemandCalculationConfig(NamedTuple):
@@ -261,7 +263,7 @@ class AggregationTable(tables.Table):
                                        verbose_name="Demand Proxy",
                                        attrs={
                                            "th": {"class": "tooltip",
-                                                  "aria-label": "Demand projected based on the previous 7 days of hospital deliveries & IMHE hospitalization model"},
+                                                  "aria-label": DEMAND_MESSAGE},
                                            "td": {"class": "tooltip",
                                                   "aria-label": lambda record: record.demand_src_display()}
                                        },

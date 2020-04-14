@@ -1,14 +1,15 @@
-import os
 from pathlib import Path
 
-import xlsx_utils
 from ppe import data_import
-from ppe.data_import import ALL_MAPPINGS
 
 
-def run():
-    private_data_dir = Path('../private-data')
-    xlsx_files = [f for f in private_data_dir.iterdir() if f.suffix in {'.xlsx', '.csv'}]
+def run(path=None):
+    if path is None:
+        private_data_dir = Path('../private-data')
+        xlsx_files = [f for f in private_data_dir.iterdir() if f.suffix in {'.xlsx', '.csv'}]
+    else:
+        xlsx_files = [Path(path)]
+
     print(f"Found {len(xlsx_files)} xlsx files in private-data")
     for file in xlsx_files:
         try:

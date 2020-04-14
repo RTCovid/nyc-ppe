@@ -7,53 +7,69 @@
 
 {% block content %}
 <div class="incoming-supply">
-    <h2>Current Inventory</h2>
-    <ul>
-    {%for item in inventory %}
-        <li>{{item.item|display_name}}: {{item.quantity|pretty_num}}</li>
-    {% endfor %}
-    </ul>
-    <hr />
+    <div>
+        <h2>Current Inventory</h2>
+        <ul>
+            {%for item in inventory %}
+            <li>{{item.item|display_name}}: {{item.quantity|pretty_num}}</li>
+            {% endfor %}
+        </ul>
+        <h4>Disbursed to facilities (hospitals, nursing homes, etc.) last 7 days</h4>
+        <ul>
+            {%for item, ct in facility_deliveries.items%}
+            <li>{{item|display_name}}: {{ct|pretty_num}}</li>
+            {% endfor %}
+        </ul>
+        <hr/>
+    </div>
 
     <div class="drilldown-detail supply-scheduled">
         <h2>Incoming Supply</h2>
         <div class="incoming-rollup">
             <p>Scheduled for delivery in:</p>
             <ul>
-                <li><b>Past</b> {{deliveries_past|pretty_num}}</li>
                 <li><b>Next 3 days</b> {{deliveries_next_three|pretty_num}}</li>
                 <li><b>Next 7 days</b> {{deliveries_next_week|pretty_num}}</li>
                 <li><b>Next 30 days</b> {{deliveries_next_thirty|pretty_num}}</li>
-                <li><b>Total</b> {{scheduled_total|pretty_num}}</li>
-                <li><b>Unscheduled</b> {{unscheduled_total|pretty_num}}</li>
+                <li><b>Total Scheduled</b> {{scheduled_total|pretty_num}}</li>
+                <li><b>Total Unscheduled</b> {{unscheduled_total|pretty_num}}</li>
+                <li><b>Total Received (all time)</b> {{deliveries_past|pretty_num}}</li>
             </ul>
         </div>
         {% regroup deliveries by delivery_date as date_list %}
         {% for day in date_list %}
-            {% if forloop.first %}<table class="drilldown-deliveries">{% endif %}
-                <tr><th rowspan="{{day.list|length}}">{{day.grouper}}</th>
-                    {% for delivery in day.list %}
-                        {% if not forloop.first %}<tr>{% endif %}
-                        <td class="drilldown-deliveries-quantity"><span class="quantity">{{ delivery.quantity|pretty_num }} {{ delivery.item }}</span></td>
-                        <td class="drilldown-deliveries-desc">{{ delivery.description|default:"No description" }}</td>
-                        <td class="drilldown-deliveries-vendor">{{delivery.vendor}}</td>
-                        {% if not forloop.last %}</tr>{% endif %}
-                    {% endfor %}
-                </tr>
-            {% if forloop.last %}</table>{% endif %}
+        {% if forloop.first %}
+        <table class="drilldown-deliveries">{% endif %}
+            <tr class="drilldown-newday">
+                <th rowspan="{{day.list|length}}">{{day.grouper}}</th>
+                {% for delivery in day.list %}
+                {% if not forloop.first %}
+            <tr>{% endif %}
+                <td class="drilldown-deliveries-quantity"><span class="quantity">{{ delivery.quantity|pretty_num }} {{ delivery.purchase.item|display_name }}</span>
+                </td>
+                <td class="drilldown-deliveries-desc">{{ delivery.description|default:"No description" }}</td>
+                <td class="drilldown-deliveries-vendor">{{delivery.vendor}}</td>
+                {% if not forloop.last %}
+            </tr>
+            {% endif %}
+            {% endfor %}
+            </tr>
         {% endfor %}
+            <tr class="drilldown-newday"><td colspan="4"></td></tr>
+            <tr>
+                <th rowspan="100">Unscheduled</th>
+                {% for purchase in purchases %}
+                    {% if purchase.unscheduled_quantity > 0 and purchase.quantity != purchase.received_quantity %}
+                    {% if not forloop.first %}<tr>{% endif %}
+                        <td class="drilldown-deliveries-quantity"><span class="quantity">{{ purchase.unscheduled_quantity|pretty_num }} {{ purchase.item|display_name }}</span>
+                        </td>
+                        <td class="drilldown-deliveries-desc">{{ purchase.description|default:"No description" }}</td>
+                        <td class="drilldown-deliveries-vendor">{{purchase.vendor}}</td>
+                    {% if not forloop.last %}</tr>{% endif %}
+                    {% endif %}
+                {% endfor %}
+            </tr>
+        </table>
     </div>
-
-    <h2>Unscheduled Supply (Total: {{ unscheduled_total | pretty_num }})</h2>
-    <ul>
-        {% for purchase in purchases %}
-        {% if purchase.unscheduled_quantity %}
-        <li class="tooltip" aria-label="{{purchase.vendor}}">
-            Receiving {{purchase.unscheduled_quantity|pretty_num}} {{ purchase.item }} –
-            {{purchase.description|default:"No description"}}
-        </li>
-        {% endif %}
-        {% endfor %}
-    </ul>
 </div>
 {% endblock %}
