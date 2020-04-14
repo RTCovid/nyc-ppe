@@ -40,7 +40,7 @@ RAW_DATA = "raw_data"
 def guess_mapping(sheet: Path, possible_mappings: List[SheetMapping]):
     workbook = None
     if sheet.suffix == '.xlsx':
-        workbook = load_workbook(sheet)
+        workbook = load_workbook(sheet, data_only=True)
         possible_mappings = [m for m in possible_mappings if m.sheet_name in workbook.sheetnames]
     elif sheet.suffix == '.csv':
         possible_mappings = [m for m in possible_mappings if m.sheet_name is None]
@@ -57,12 +57,10 @@ def guess_mapping(sheet: Path, possible_mappings: List[SheetMapping]):
 
                 try:
                     reader = csv.DictReader(csvfile)
-                    for row in reader:
-                        print(row)
                     first_row = next(reader)
-                except Exception:
 
-                    raise data_import.CsvImportError('message for messages sake')
+                except Exception as exc:
+                    raise data_import.CsvImportError('Error reading in CSV file')
 
         col_names = [m.sheet_column_name for m in mapping.mappings]
         if all(col_name in first_row for col_name in col_names):
