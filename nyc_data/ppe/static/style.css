@@ -402,6 +402,10 @@ th:last-child.tooltip::after {
     margin-bottom: 20px;
 }
 
+.drilldown-deliveries tr.drilldown-newday td, .drilldown-deliveries tr.drilldown-newday th {
+    padding-top: 20px;
+}
+
 .drilldown-deliveries {
     font-size: 14px;
     font-weight: 300;
@@ -415,6 +419,7 @@ th:last-child.tooltip::after {
     display: flex;
     border-bottom: 1px solid #eee;
     margin-bottom: 20px;
+    padding-bottom: 10px;
 }
 
 .incoming-rollup p {

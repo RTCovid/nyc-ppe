@@ -4,17 +4,18 @@ from pathlib import Path
 from typing import Optional, List
 
 import xlsx_utils
-from ppe.data_mapping.mappers import dcas_make, dcas_sourcing, inventory, inventory_from_facilities, hospital_deliveries
+from ppe.data_mapping.mappers import dcas_make, dcas_sourcing, inventory, inventory_from_facilities, hospital_deliveries, hospital_demands
 from ppe.data_mapping.types import DataFile
 from ppe.data_mapping.utils import ErrorCollector
-from ppe.models import ImportStatus, DataImport, InboundReceipt, FacilityDelivery
+from ppe.models import ImportStatus, DataImport, InboundReceipt, FacilityDelivery, Demand
 from xlsx_utils import import_xlsx
 
 ALL_MAPPINGS = [
     dcas_make.SUPPLIERS_AND_PARTNERS,
     dcas_sourcing.DCAS_DAILY_SOURCING,
     inventory_from_facilities.INVENTORY,
-    hospital_deliveries.FACILITY_DELIVERIES
+    hospital_deliveries.FACILITY_DELIVERIES,
+    hospital_demands.WEEKLY_DEMANDS
 ]
 
 
@@ -26,6 +27,7 @@ def handle_upload(f, uploader_name: str) -> DataImport:
     with tempfile.NamedTemporaryFile('w+b', delete=False, suffix=f.name) as upload_target:
         for chunk in f.chunks():
             upload_target.write(chunk)
+        upload_target.flush()
         return smart_import(Path(upload_target.name), uploader_name)
 
 
@@ -91,6 +93,7 @@ def import_data(path: Path, mappings: List[xlsx_utils.SheetMapping], uploaded_by
             data = import_xlsx(path, mapping, error_collector)
             data = list(data)
             deliveries = []
+            demands = []
             for item in data:
                 for obj in item.to_objects(error_collector):
                     obj.source = data_import
@@ -100,7 +103,6 @@ def import_data(path: Path, mappings: List[xlsx_utils.SheetMapping], uploaded_by
                         obj.save()
 
             FacilityDelivery.objects.bulk_create(deliveries)
-            print(FacilityDelivery.active().count())
 
         except Exception:
             print(f'Failure importing {path}, mapping: {mapping.sheet_name}')

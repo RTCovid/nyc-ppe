@@ -17,14 +17,15 @@ from ppe.optimization import generate_forecast
 
 
 def mayoral_rollup(row):
-    return row.to_mayoral_category()
+    return dc.Item(row).to_mayoral_category()
 
 
 def default(request):
     if request.GET.get('rollup', '') in ['mayoral', '', None]:
         aggregation = aggregations.asset_rollup(
-            datetime.now(), datetime.now() + timedelta(days=30),
-            mayoral_rollup
+            time_start=datetime.now(),
+            time_end=datetime.now() + timedelta(days=30),
+            rollup_fn=mayoral_rollup
         )
     elif request.GET.get('rollup', '') in ['critical', ]:
         aggregation = aggregations.asset_rollup(
@@ -67,18 +68,18 @@ def drilldown(request):
         "deliveries_past": received_deliveries,
         "deliveries_next_three": sum([d.quantity for d in deliveries if
                                       datetime.now().date() <= d.delivery_date <= datetime.now().date() + timedelta(
-                                          days=3)]),
+                                          days=2)]),
         "deliveries_next_week": sum([d.quantity for d in deliveries if
                                      datetime.now().date() <= d.delivery_date <= datetime.now().date() + timedelta(
-                                         days=7)]),
+                                         days=6)]),
         "deliveries_next_thirty": sum([d.quantity for d in deliveries if
                                        datetime.now().date() <= d.delivery_date <= datetime.now().date() + timedelta(
-                                           days=30)]),
+                                           days=29)]),
         "scheduled_total": sum([d.quantity for d in deliveries]),
         "unscheduled_total": sum([purch.unscheduled_quantity for purch in purchases if purch.unscheduled_quantity]),
         "facility_deliveries": {k: v for k, v in
-                                aggregations.demand_for_period(datetime.now().date() - timedelta(days=7),
-                                                               datetime.now().date(), lambda x: x).items() if
+                                aggregations.deliveries_for_period(datetime.now().date() - timedelta(days=6),
+                                                               datetime.now().date()).items() if
                                 rollup(k) == category}
 
     }

@@ -1,0 +1,13 @@
+name: Docker Compose Actions Workflow
+on: push
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build the images
+        run: docker-compose build
+      - name: start everything
+        run: docker-compose up -d && sleep 20
+      - name: Test
+        run: docker exec nyc-ppe_backend_1 python manage.py test
