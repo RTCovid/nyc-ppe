@@ -102,6 +102,22 @@ class BaseModel(models.Model):
     def active(cls):
         return cls.objects.prefetch_related('source').filter(source__status=ImportStatus.active)
 
+    def check_cached(self, field):
+        """
+        Helper wrapper to log a warning if a related field isn't cached
+        Usage:
+
+            def item(self):
+                self.check_cached('purchase').item
+
+        :param field: field name (string)
+        :return:
+        """
+        cached = getattr(self.__class__, field).field.get_cached_value(self, default=None)
+        if cached is None:
+            print(f'Warning: {field} not cached on {self}')
+        return getattr(self, field)
+
     class Meta:
         abstract = True
 
@@ -124,8 +140,11 @@ class Purchase(BaseModel):
     # property so we can use it in templates
     @property
     def unscheduled_quantity(self):
-        total_scheduled = self.deliveries.aggregate(Sum('quantity'))['quantity__sum']
-        return self.quantity - (total_scheduled or 0)
+        if self.received_quantity == self.quantity:
+            return 0
+        else:
+            total_scheduled = self.deliveries.aggregate(Sum('quantity'))['quantity__sum']
+            return self.quantity - (total_scheduled or 0)
 
     def to_dataclass(self):
         return dc.Purchase(
@@ -159,6 +178,19 @@ class ScheduledDelivery(BaseModel):
     purchase = models.ForeignKey(Purchase, on_delete=models.CASCADE, related_name='deliveries')
     delivery_date = models.DateField(null=True)
     quantity = models.IntegerField()
+
+
+    @property
+    def item(self):
+        return self.check_cached('purchase').item
+
+    @property
+    def description(self):
+        return self.check_cached('purchase').description
+
+    @property
+    def vendor(self):
+        return self.check_cached('purchase').vendor
 
     def to_dataclass(self):
         return dc.Delivery(

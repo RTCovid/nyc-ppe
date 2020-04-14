@@ -76,7 +76,7 @@ def guess_mapping(sheet: Path, possible_mappings: List[SheetMapping]):
 
 def import_xlsx(sheet: Path, sheet_mapping: SheetMapping, error_collector: ErrorCollector = lambda: ErrorCollector()):
     if sheet_mapping.sheet_name is not None:
-        workbook = load_workbook(sheet)
+        workbook = load_workbook(sheet, data_only=True)
         sheet = workbook[sheet_mapping.sheet_name]
         as_dicts = XLSXDictReader(sheet)
     else:
