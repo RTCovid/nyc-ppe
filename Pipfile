@@ -17,6 +17,10 @@ gunicorn = "*"
 dj-database-url = "*"
 whitenoise = "*"
 ortools = "*"
+black = "*"
 
 [requires]
 python_version = "3.8"
+
+[pipenv]
+allow_prereleases = true

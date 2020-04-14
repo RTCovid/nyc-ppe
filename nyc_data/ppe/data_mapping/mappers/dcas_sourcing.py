@@ -3,7 +3,12 @@ from typing import NamedTuple, Dict
 
 from ppe import models
 from ppe.data_mapping.types import ImportedRow, repr_no_raw, DataFile
-from ppe.data_mapping.utils import asset_name_to_item, parse_int, parse_date, ErrorCollector
+from ppe.data_mapping.utils import (
+    asset_name_to_item,
+    parse_int,
+    parse_date,
+    ErrorCollector,
+)
 from ppe.dataclasses import Item, OrderType
 from xlsx_utils import SheetMapping, Mapping
 
@@ -32,14 +37,15 @@ class SourcingRow(ImportedRow, NamedTuple):
 
     def sanity(self, error_collector: ErrorCollector):
         delivered_quantity = (self.delivery_day_1_quantity or 0) + (
-                self.delivery_day_2_quantity or 0
+            self.delivery_day_2_quantity or 0
         )
         errors = []
         # lots of data doesn't have delivery dates.
         if delivered_quantity > self.quantity:
             error_collector.report_warning(
-                f'Claimed delivered quantity ({delivered_quantity}) > '
-                f'total quantity {self.quantity} for {self.item} from {self.vendor}')
+                f"Claimed delivered quantity ({delivered_quantity}) > "
+                f"total quantity {self.quantity} for {self.item} from {self.vendor}"
+            )
         # if delivered_quantity < self.quantity:
         #    errors.append(f'Delivery < total {delivered_quantity} < {self.quantity}')
         if self.quantity is None:
@@ -47,12 +53,14 @@ class SourcingRow(ImportedRow, NamedTuple):
         return errors
 
     def to_objects(self, error_collector: ErrorCollector):
-        if self.status != 'Completed':
+        if self.status != "Completed":
             return []
 
         errors = self.sanity(error_collector)
         if errors:
-            error_collector.report_error(f"Refusing to generate a data model for: {self}. Errors: {errors}")
+            error_collector.report_error(
+                f"Refusing to generate a data model for: {self}. Errors: {errors}"
+            )
             return []
         purchase = models.Purchase(
             item=self.item,
@@ -61,7 +69,7 @@ class SourcingRow(ImportedRow, NamedTuple):
             vendor=self.vendor,
             raw_data=self.raw_data,
             order_type=OrderType.Purchase,
-            description=self.description
+            description=self.description,
         )
         deliveries = []
         for day in [1, 2]:
@@ -92,10 +100,7 @@ DCAS_DAILY_SOURCING = SheetMapping(
             obj_column_name="item",
             proc=asset_name_to_item,
         ),
-        Mapping(
-            sheet_column_name='Description',
-            obj_column_name='description',
-        ),
+        Mapping(sheet_column_name="Description", obj_column_name="description",),
         Mapping(
             sheet_column_name="Total Qty Ordered",
             obj_column_name="quantity",
@@ -104,7 +109,7 @@ DCAS_DAILY_SOURCING = SheetMapping(
         Mapping(
             sheet_column_name="Received Qty",
             obj_column_name="received_quantity",
-            proc=parse_int
+            proc=parse_int,
         ),
         Mapping(
             sheet_column_name="Delivery 1 Week Of",

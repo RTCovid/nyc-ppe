@@ -15,9 +15,7 @@ class InventoryRow(ImportedRow, NamedTuple):
     def to_objects(self, error_collector):
         return [
             models.Inventory(
-                item=self.item,
-                raw_data=self.raw_data,
-                quantity=self.quantity,
+                item=self.item, raw_data=self.raw_data, quantity=self.quantity,
             )
         ]
 
@@ -26,20 +24,14 @@ class InventoryRow(ImportedRow, NamedTuple):
 
 
 INVENTORY = SheetMapping(
-    sheet_name='InventoryHand',
+    sheet_name="InventoryHand",
     data_file=DataFile.INVENTORY,
     mappings={
         Mapping(
-            sheet_column_name="Item",
-            obj_column_name="item",
-            proc=asset_name_to_item,
+            sheet_column_name="Item", obj_column_name="item", proc=asset_name_to_item,
         ),
-        Mapping(
-            sheet_column_name="CITY",
-            obj_column_name="quantity",
-            proc=parse_int
-        )
+        Mapping(sheet_column_name="CITY", obj_column_name="quantity", proc=parse_int),
     },
     include_raw=True,
-    obj_constructor=InventoryRow
+    obj_constructor=InventoryRow,
 )

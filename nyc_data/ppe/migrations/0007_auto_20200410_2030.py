@@ -6,93 +6,107 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
     dependencies = [
-        ('ppe', '0006_auto_20200410_1635'),
+        ("ppe", "0006_auto_20200410_1635"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='DataImport',
+            name="DataImport",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('import_date', models.DateTimeField()),
-                ('status',
-                 models.TextField(choices=[('active', 'active'), ('replaced', 'replaced'), ('candidate', 'candidate')],
-                                  default=None)),
-                ('data_source', models.TextField(
-                    choices=[('EDC_PPE', 'EDC_PPE'), ('EDC_MAKE', 'EDC_MAKE'), ('INVENTORY', 'INVENTORY')],
-                    default=None)),
-                ('uploaded_by', models.TextField(blank=True)),
-                ('file_checksum', models.TextField()),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("import_date", models.DateTimeField()),
+                (
+                    "status",
+                    models.TextField(
+                        choices=[
+                            ("active", "active"),
+                            ("replaced", "replaced"),
+                            ("candidate", "candidate"),
+                        ],
+                        default=None,
+                    ),
+                ),
+                (
+                    "data_source",
+                    models.TextField(
+                        choices=[
+                            ("EDC_PPE", "EDC_PPE"),
+                            ("EDC_MAKE", "EDC_MAKE"),
+                            ("INVENTORY", "INVENTORY"),
+                        ],
+                        default=None,
+                    ),
+                ),
+                ("uploaded_by", models.TextField(blank=True)),
+                ("file_checksum", models.TextField()),
             ],
         ),
-        migrations.RemoveField(
-            model_name='delivery',
-            name='data_source',
-        ),
-        migrations.RemoveField(
-            model_name='delivery',
-            name='replaced',
-        ),
-        migrations.RemoveField(
-            model_name='hospital',
-            name='data_source',
-        ),
-        migrations.RemoveField(
-            model_name='hospital',
-            name='replaced',
-        ),
-        migrations.RemoveField(
-            model_name='inventory',
-            name='data_source',
-        ),
-        migrations.RemoveField(
-            model_name='inventory',
-            name='replaced',
-        ),
-        migrations.RemoveField(
-            model_name='need',
-            name='data_source',
-        ),
-        migrations.RemoveField(
-            model_name='need',
-            name='replaced',
-        ),
-        migrations.RemoveField(
-            model_name='purchase',
-            name='data_source',
-        ),
-        migrations.RemoveField(
-            model_name='purchase',
-            name='replaced',
-        ),
+        migrations.RemoveField(model_name="delivery", name="data_source",),
+        migrations.RemoveField(model_name="delivery", name="replaced",),
+        migrations.RemoveField(model_name="hospital", name="data_source",),
+        migrations.RemoveField(model_name="hospital", name="replaced",),
+        migrations.RemoveField(model_name="inventory", name="data_source",),
+        migrations.RemoveField(model_name="inventory", name="replaced",),
+        migrations.RemoveField(model_name="need", name="data_source",),
+        migrations.RemoveField(model_name="need", name="replaced",),
+        migrations.RemoveField(model_name="purchase", name="data_source",),
+        migrations.RemoveField(model_name="purchase", name="replaced",),
         migrations.AddField(
-            model_name='delivery',
-            name='source',
-            field=models.ForeignKey(default=None, on_delete=django.db.models.deletion.CASCADE, to='ppe.DataImport'),
+            model_name="delivery",
+            name="source",
+            field=models.ForeignKey(
+                default=None,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="ppe.DataImport",
+            ),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='hospital',
-            name='source',
-            field=models.ForeignKey(default=None, on_delete=django.db.models.deletion.CASCADE, to='ppe.DataImport'),
+            model_name="hospital",
+            name="source",
+            field=models.ForeignKey(
+                default=None,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="ppe.DataImport",
+            ),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='inventory',
-            name='source',
-            field=models.ForeignKey(default=None, on_delete=django.db.models.deletion.CASCADE, to='ppe.DataImport'),
+            model_name="inventory",
+            name="source",
+            field=models.ForeignKey(
+                default=None,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="ppe.DataImport",
+            ),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='need',
-            name='source',
-            field=models.ForeignKey(default=None, on_delete=django.db.models.deletion.CASCADE, to='ppe.DataImport'),
+            model_name="need",
+            name="source",
+            field=models.ForeignKey(
+                default=None,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="ppe.DataImport",
+            ),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='purchase',
-            name='source',
-            field=models.ForeignKey(default=None, on_delete=django.db.models.deletion.CASCADE, to='ppe.DataImport'),
+            model_name="purchase",
+            name="source",
+            field=models.ForeignKey(
+                default=None,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="ppe.DataImport",
+            ),
             preserve_default=False,
         ),
     ]
