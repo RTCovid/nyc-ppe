@@ -48,10 +48,6 @@ class InventoryRow(ImportedRow, NamedTuple):
                 quantity=self.gowns,
             ),
             Inventory(
-                item=Item.gown,
-                quantity=self.gowns,
-            ),
-            Inventory(
                 item=Item.ponchos,
                 quantity=self.ponchos,
             ),
