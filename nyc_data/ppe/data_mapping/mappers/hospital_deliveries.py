@@ -9,7 +9,9 @@ from xlsx_utils import SheetMapping, Mapping
 
 
 class DeliveryRow(ImportedRow):
-    def __init__(self, date, facility_type: str, facility_name: str, raw_data, **kwargs):
+    def __init__(
+        self, date, facility_type: str, facility_name: str, raw_data, **kwargs
+    ):
         self.date = date
         self.facility_type = facility_type
         self.facility_name = facility_name
@@ -29,45 +31,50 @@ class DeliveryRow(ImportedRow):
         for item_name, qt in self.items.items():
             item = utils.asset_name_to_item(item_name, error_collector)
             if item == Item.unknown:
-                print(f'need mapping for: {item_name}')
-            objs.append(FacilityDelivery(
-                date=self.date,
-                facility=facility,
-                item=item,
-                quantity=qt
-            ))
+                print(f"need mapping for: {item_name}")
+            objs.append(
+                FacilityDelivery(
+                    date=self.date, facility=facility, item=item, quantity=qt
+                )
+            )
         return objs
 
 
-sheet_columns = ['N95 Respirators', 'Face Masks', 'Eyewear', 'Gloves', 'Gowns', 'Vents', 'Post Mortem Bags', 'BiPap',
-                 'Coveralls', 'Multipurpose PPE', 'Misc']
+sheet_columns = [
+    "N95 Respirators",
+    "Face Masks",
+    "Eyewear",
+    "Gloves",
+    "Gowns",
+    "Vents",
+    "Post Mortem Bags",
+    "BiPap",
+    "Coveralls",
+    "Multipurpose PPE",
+    "Misc",
+]
 
 item_mappings = [
     Mapping(
         sheet_column_name=column,
         obj_column_name=column,  # .lower().replace(' ', '_'),
-        proc=parse_int_or_zero
-    ) for column in sheet_columns
+        proc=parse_int_or_zero,
+    )
+    for column in sheet_columns
 ]
 
 FACILITY_DELIVERIES = SheetMapping(
-    sheet_name='Facility Deliveries Summarized',
+    sheet_name="Facility Deliveries Summarized",
     data_file=DataFile.FACILITY_DELIVERIES,
     mappings={
+        Mapping(sheet_column_name="Date", obj_column_name="date", proc=parse_date),
         Mapping(
-            sheet_column_name='Date',
-            obj_column_name='date',
-            proc=parse_date
+            sheet_column_name="Facility or Network Name",
+            obj_column_name="facility_name",
         ),
-        Mapping(
-            sheet_column_name='Facility or Network Name',
-            obj_column_name='facility_name',
-        ),
-        Mapping(
-            sheet_column_name='Facility Type',
-            obj_column_name='facility_type'
-        ),
-        *item_mappings
-    }, obj_constructor=DeliveryRow,
-    include_raw=True
+        Mapping(sheet_column_name="Facility Type", obj_column_name="facility_type"),
+        *item_mappings,
+    },
+    obj_constructor=DeliveryRow,
+    include_raw=True,
 )

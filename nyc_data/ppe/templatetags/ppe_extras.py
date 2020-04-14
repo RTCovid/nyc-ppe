@@ -5,12 +5,15 @@ from ppe.dataclasses import Item
 
 register = template.Library()
 
+
 def pretty_num(value):
     (value, unit) = split_value_unit(value)
-    return f'{value}{unit}'
+    return f"{value}{unit}"
+
 
 def display_name(value):
     return Item(value).display()
 
-register.filter('pretty_num', pretty_num)
-register.filter('display_name', display_name)
+
+register.filter("pretty_num", pretty_num)
+register.filter("display_name", display_name)

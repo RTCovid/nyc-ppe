@@ -6,24 +6,24 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('ppe', '0007_auto_20200410_2030'),
+        ("ppe", "0007_auto_20200410_2030"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='dataimport',
-            name='file_name',
-            field=models.TextField(default='unknown'),
+            model_name="dataimport",
+            name="file_name",
+            field=models.TextField(default="unknown"),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='purchase',
-            name='description',
+            model_name="purchase",
+            name="description",
             field=models.TextField(blank=True),
         ),
         migrations.AlterField(
-            model_name='dataimport',
-            name='import_date',
+            model_name="dataimport",
+            name="import_date",
             field=models.DateTimeField(auto_now_add=True, db_index=True),
         ),
     ]

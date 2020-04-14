@@ -31,7 +31,7 @@ class SheetMapping(NamedTuple):
     sheet_name: Optional[str]  # None for CSV
     mappings: Set[Mapping]
     include_raw: bool
-    obj_constructor: Optional[Callable[[Any], 'ImportedRow']] = None
+    obj_constructor: Optional[Callable[[Any], "ImportedRow"]] = None
 
 
 RAW_DATA = "raw_data"
@@ -52,27 +52,37 @@ def guess_mapping(sheet: Path, possible_mappings: List[SheetMapping]):
         if mapping.sheet_name is not None and workbook:
             sheet = workbook[mapping.sheet_name]
             first_row = next(XLSXDictReader(sheet))
-        else:
-            with open(sheet) as csvfile:
 
-                try:
-                    reader = csv.DictReader(csvfile)
-                    first_row = next(reader)
-
-                except Exception as exc:
-                    raise data_import.CsvImportError('Error reading in CSV file')
+            with open(sheet, "r", encoding="utf16") as csvfile:
+                text = csvfile.read()
+            try:
+                reader = csv.DictReader(text.splitlines())
+                first_row = next(reader)
+            except Exception as exc:
+                raise data_import.CsvImportError('Error reading in CSV file')
 
         col_names = [m.sheet_column_name for m in mapping.mappings]
         if all(col_name in first_row for col_name in col_names):
             final_mappings.append(mapping)
         elif mapping.sheet_name is not None:
-            print('We expected: ', set(col_names).difference(first_row.keys()), 'we found: ', first_row.keys())
-            raise Exception(f'Sheetname matches but column names do not {sheet} {mapping.data_file}')
+            print(
+                "We expected: ",
+                set(col_names).difference(first_row.keys()),
+                "we found: ",
+                first_row.keys(),
+            )
+            raise Exception(
+                f"Sheetname matches but column names do not {sheet} {mapping.data_file}"
+            )
 
     return final_mappings
 
 
-def import_xlsx(sheet: Path, sheet_mapping: SheetMapping, error_collector: ErrorCollector = lambda: ErrorCollector()):
+def import_xlsx(
+    sheet: Path,
+    sheet_mapping: SheetMapping,
+    error_collector: ErrorCollector = lambda: ErrorCollector(),
+):
     if sheet_mapping.sheet_name is not None:
         workbook = load_workbook(sheet, data_only=True)
         sheet = workbook[sheet_mapping.sheet_name]

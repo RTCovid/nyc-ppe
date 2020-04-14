@@ -3,7 +3,12 @@ from typing import NamedTuple, Dict, Optional
 
 from ppe import models
 from ppe.data_mapping.types import ImportedRow, repr_no_raw, DataFile
-from ppe.data_mapping.utils import parse_date, asset_name_to_item, parse_int, ErrorCollector
+from ppe.data_mapping.utils import (
+    parse_date,
+    asset_name_to_item,
+    parse_int,
+    ErrorCollector,
+)
 from ppe.dataclasses import Item, OrderType
 from xlsx_utils import SheetMapping, Mapping
 
@@ -30,7 +35,9 @@ class MakeRow(ImportedRow, NamedTuple):
     def to_objects(self, error_collector: ErrorCollector):
         errors = self.sanity()
         if errors:
-            error_collector.report_error(f"Refusing to generate a data model for: {self}. Errors: {errors}")
+            error_collector.report_error(
+                f"Refusing to generate a data model for: {self}. Errors: {errors}"
+            )
             return []
         purchase = models.Purchase(
             item=self.item,
@@ -55,9 +62,7 @@ class MakeRow(ImportedRow, NamedTuple):
 
         delivery = [
             models.ScheduledDelivery(
-                purchase=purchase,
-                delivery_date=date,
-                quantity=self.quantity,
+                purchase=purchase, delivery_date=date, quantity=self.quantity,
             )
             for date in dates
         ]

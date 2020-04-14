@@ -15,11 +15,11 @@ class ErrorCollector:
         self.warnings.append(warning)
 
     def dump(self):
-        print('\n'.join(set(self.errors)))
-        print('\n'.join(set(self.warnings)))
+        print("\n".join(set(self.errors)))
+        print("\n".join(set(self.warnings)))
 
     def __repr__(self):
-        return f'{len(self.errors)} errors and {len(self.warnings)} warnings'
+        return f"{len(self.errors)} errors and {len(self.warnings)} warnings"
 
 
 def asset_name_to_item(asset_name: str, error_collector: ErrorCollector) -> Item:
@@ -96,5 +96,7 @@ def parse_int(inp: str, error_collector: ErrorCollector):
         return int(inp)
     except ValueError:
         # Maybe there's a unit or some other crap
-        error_collector.report_error(f"Can't parse {inp}. Returning None for now [TODO]")
+        error_collector.report_error(
+            f"Can't parse {inp}. Returning None for now [TODO]"
+        )
         return None

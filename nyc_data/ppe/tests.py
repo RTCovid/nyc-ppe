@@ -11,7 +11,14 @@ from ppe.data_mapping.mappers.dcas_sourcing import SourcingRow
 from ppe.data_mapping.mappers.hospital_demands import DemandRow
 import ppe.dataclasses as dc
 from ppe.data_mapping.utils import ErrorCollector
-from ppe.models import DataImport, ImportStatus, Purchase, Inventory, FacilityDelivery, Facility
+from ppe.models import (
+    DataImport,
+    ImportStatus,
+    Purchase,
+    Inventory,
+    FacilityDelivery,
+    Facility,
+)
 
 
 class TestAssetRollup(TestCase):
@@ -19,56 +26,56 @@ class TestAssetRollup(TestCase):
         self.data_import = DataImport(
             status=ImportStatus.active,
             data_file=DataFile.PPE_ORDERINGCHARTS_DATE_XLSX,
-            file_checksum='123'
+            file_checksum="123",
         )
         self.data_import.save()
         items = SourcingRow(
             item=dc.Item.gown,
             quantity=1005,
             vendor="Gown Sellers Ltd",
-            description='Some gowns',
-            delivery_day_1=datetime.strptime('2020-04-12', '%Y-%m-%d') - timedelta(days=5),
+            description="Some gowns",
+            delivery_day_1=datetime.strptime("2020-04-12", "%Y-%m-%d")
+            - timedelta(days=5),
             delivery_day_1_quantity=5,
-            status='Completed',
+            status="Completed",
             received_quantity=0,
-            delivery_day_2=datetime.strptime('2020-04-12', '%Y-%m-%d') + timedelta(days=1),
+            delivery_day_2=datetime.strptime("2020-04-12", "%Y-%m-%d")
+            + timedelta(days=1),
             delivery_day_2_quantity=1000,
             raw_data={},
         ).to_objects(ErrorCollector())
 
         inventory = [
-            Inventory(item=dc.Item.gown,
-                      quantity=100,
-                      as_of=datetime(year=2020, day=11, month=4),
-                      raw_data={},
-                      ),
+            Inventory(
+                item=dc.Item.gown,
+                quantity=100,
+                as_of=datetime(year=2020, day=11, month=4),
+                raw_data={},
+            ),
             # this one is old and should be superceded
-            Inventory(item=dc.Item.gown,
-                      quantity=200,
-                      as_of=datetime(year=2020, day=10, month=4),
-                      raw_data={},
-                      )
-
+            Inventory(
+                item=dc.Item.gown,
+                quantity=200,
+                as_of=datetime(year=2020, day=10, month=4),
+                raw_data={},
+            ),
         ]
 
-        f = Facility(
-            name="Generic Hospital",
-            tpe=dc.FacilityType.hospital
-        )
+        f = Facility(name="Generic Hospital", tpe=dc.FacilityType.hospital)
         items.append(f)
         deliveries = [
             FacilityDelivery(
                 date=datetime(year=2020, day=10, month=4),
                 quantity=1234,
                 facility=f,
-                item=dc.Item.gown
+                item=dc.Item.gown,
             ),
             FacilityDelivery(
                 date=datetime(year=2020, day=10, month=4),
                 quantity=123,
                 facility=f,
-                item=dc.Item.faceshield
-            )
+                item=dc.Item.faceshield,
+            ),
         ]
         items += deliveries
 
@@ -81,8 +88,8 @@ class TestAssetRollup(TestCase):
         items = DemandRow(
             item=dc.Item.gown,
             demand=2457000,
-            week_start_date=datetime.strptime('2020-04-11', '%Y-%m-%d'),
-            week_end_date=datetime.strptime('2020-04-17', '%Y-%m-%d'),
+            week_start_date=datetime.strptime("2020-04-11", "%Y-%m-%d"),
+            week_end_date=datetime.strptime("2020-04-17", "%Y-%m-%d"),
             raw_data={},
         ).to_objects(ErrorCollector())
         for item in items:
@@ -91,65 +98,79 @@ class TestAssetRollup(TestCase):
 
     def test_rollup(self):
         today = datetime(2020, 4, 12)
-        rollup = aggregations.asset_rollup(
-            today - timedelta(days=27), today
-        )
+        rollup = aggregations.asset_rollup(today - timedelta(days=27), today)
         self.assertEqual(len(rollup), len(dc.Item))
         # demand of 20 = 5 in the last week * 4 weeks in the period
-        self.assertEqual(rollup[dc.Item.gown],
-                         AssetRollup(asset=dc.Item.gown,
-                                     inventory=100,
-                                     demand_src={DemandSrc.real_demand},
-                                     demand=7654622,
-                                     sell=5))
+        self.assertEqual(
+            rollup[dc.Item.gown],
+            AssetRollup(
+                asset=dc.Item.gown,
+                inventory=100,
+                demand_src={DemandSrc.real_demand},
+                demand=7654622,
+                sell=5,
+            ),
+        )
 
         # Turn off use of hospitalization projection
         rollup = aggregations.asset_rollup(
-            today - timedelta(days=27), today,
-            use_hospitalization_projection=False,
+            today - timedelta(days=27), today, use_hospitalization_projection=False,
         )
-        self.assertEqual(rollup[dc.Item.gown], AssetRollup(
-            asset=dc.Item.gown,
-            inventory=100,
-            demand_src={DemandSrc.real_demand},
-            demand=2457000 * 4,
-            sell=5))
+        self.assertEqual(
+            rollup[dc.Item.gown],
+            AssetRollup(
+                asset=dc.Item.gown,
+                inventory=100,
+                demand_src={DemandSrc.real_demand},
+                demand=2457000 * 4,
+                sell=5,
+            ),
+        )
 
         # should fallback to past deliveries
-        self.assertEqual(rollup[dc.Item.faceshield],
-                         AssetRollup(asset=dc.Item.faceshield,
-                                     inventory=0,
-                                     demand_src={DemandSrc.past_deliveries},
-                                     demand=123 * 4,
-                                     sell=0))
+        self.assertEqual(
+            rollup[dc.Item.faceshield],
+            AssetRollup(
+                asset=dc.Item.faceshield,
+                inventory=0,
+                demand_src={DemandSrc.past_deliveries},
+                demand=123 * 4,
+                sell=0,
+            ),
+        )
 
         # Turn of use off hospitalization projection & real demand
         future_rollup = aggregations.asset_rollup(
-            today, today + timedelta(days=27),
+            today,
+            today + timedelta(days=27),
             use_hospitalization_projection=False,
-            use_real_demand=False
+            use_real_demand=False,
         )
 
         # Fallback to delivery
         self.assertEqual(
             future_rollup[dc.Item.gown],
-            AssetRollup(asset=dc.Item.gown,
-                        demand=1234 * 4,
-                        sell=1000,
-                        demand_src={DemandSrc.past_deliveries},
-                        inventory=100
-                        )
+            AssetRollup(
+                asset=dc.Item.gown,
+                demand=1234 * 4,
+                sell=1000,
+                demand_src={DemandSrc.past_deliveries},
+                inventory=100,
+            ),
         )
 
     def test_mayoral_rollup(self):
         today = datetime(2020, 4, 12)
         rollup = aggregations.asset_rollup(
-            today - timedelta(days=27), today,
+            today - timedelta(days=27),
+            today,
             rollup_fn=lambda row: row.to_mayoral_category(),
         )
         # no uncategorized items in the rollup
         self.assertEqual(len(rollup), len(dc.MayoralCategory) - 1)
-        self.assertEqual(rollup[dc.MayoralCategory.iso_gowns].asset, dc.MayoralCategory.iso_gowns)
+        self.assertEqual(
+            rollup[dc.MayoralCategory.iso_gowns].asset, dc.MayoralCategory.iso_gowns
+        )
 
     def test_only_aggregate_active_items(self):
         today = datetime(2020, 4, 12)
@@ -157,10 +178,10 @@ class TestAssetRollup(TestCase):
         self.data_import.save()
         try:
             self.assertEqual(aggregations.known_recent_demand(), {})
-            rollup = aggregations.asset_rollup(
-                today - timedelta(days=28), today
+            rollup = aggregations.asset_rollup(today - timedelta(days=28), today)
+            self.assertEqual(
+                rollup[dc.Item.gown], AssetRollup(asset=dc.Item.gown, demand=0, sell=0)
             )
-            self.assertEqual(rollup[dc.Item.gown], AssetRollup(asset=dc.Item.gown, demand=0, sell=0))
         finally:
             self.data_import.status = ImportStatus.active
             self.data_import.save()
@@ -171,7 +192,7 @@ class TestUnscheduledDeliveries(unittest.TestCase):
         data_import = DataImport(
             status=ImportStatus.active,
             data_file=DataFile.PPE_ORDERINGCHARTS_DATE_XLSX,
-            file_checksum='123'
+            file_checksum="123",
         )
         data_import.save()
         items = SourcingRow(
@@ -179,11 +200,13 @@ class TestUnscheduledDeliveries(unittest.TestCase):
             quantity=2000,
             vendor="Gown Sellers Ltd",
             description="Some gowns",
-            delivery_day_1=datetime.strptime('2020-04-12', '%Y-%m-%d') - timedelta(days=5),
+            delivery_day_1=datetime.strptime("2020-04-12", "%Y-%m-%d")
+            - timedelta(days=5),
             delivery_day_1_quantity=5,
-            delivery_day_2=datetime.strptime('2020-04-12', '%Y-%m-%d') + timedelta(days=1),
+            delivery_day_2=datetime.strptime("2020-04-12", "%Y-%m-%d")
+            + timedelta(days=1),
             delivery_day_2_quantity=1000,
-            status='Completed',
+            status="Completed",
             received_quantity=0,
             raw_data={},
         ).to_objects(ErrorCollector())
@@ -200,11 +223,19 @@ class TestUnscheduledDeliveries(unittest.TestCase):
 class TestCategoryMappings(unittest.TestCase):
     def test_category_to_mayoral(self):
         for _, item in dc.Item.__members__.items():
-            self.assertNotEqual(dc.ITEM_TO_MAYORAL.get(item), None, f"No mayoral category defined for {item}")
+            self.assertNotEqual(
+                dc.ITEM_TO_MAYORAL.get(item),
+                None,
+                f"No mayoral category defined for {item}",
+            )
 
     def test_display_names(self):
         for _, item in dc.Item.__members__.items():
-            self.assertNotEqual(dc.ITEM_TO_DISPLAYNAME.get(item), None, f"No display name defined for {item}")
+            self.assertNotEqual(
+                dc.ITEM_TO_DISPLAYNAME.get(item),
+                None,
+                f"No display name defined for {item}",
+            )
 
 
 @override_settings(LOCKDOWN_ENABLED=False)
@@ -212,25 +243,30 @@ class TestViews(TestCase):
     """Sanity that the views work at a basic level"""
 
     def test_home(self):
-        response = self.client.get(reverse('index'))
+        response = self.client.get(reverse("index"))
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b'Current status', response.content)
+        self.assertIn(b"Current status", response.content)
 
     def test_home_mayoral(self):
-        response = self.client.get(reverse('index'), {'rollup': 'mayoral'})
-        self.assertIn(b'Current status', response.content)
+        response = self.client.get(reverse("index"), {"rollup": "mayoral"})
+        self.assertIn(b"Current status", response.content)
         self.assertEqual(response.status_code, 200)
 
     def test_drilldown(self):
-        response = self.client.get(reverse('drilldown'), {'category': 'Eye Protection', 'rollup': 'mayoral'})
-        self.assertIn(b'Incoming Supply', response.content)
+        response = self.client.get(
+            reverse("drilldown"), {"category": "Eye Protection", "rollup": "mayoral"}
+        )
+        self.assertIn(b"Incoming Supply", response.content)
         self.assertEqual(response.status_code, 200)
 
 
 class TestPeriod(unittest.TestCase):
     def test_period_len(self):
-        start = datetime.strptime('2020-04-11', '%Y-%m-%d')
-        end = datetime.strptime('2020-04-17', '%Y-%m-%d')
+        start = datetime.strptime("2020-04-11", "%Y-%m-%d")
+        end = datetime.strptime("2020-04-17", "%Y-%m-%d")
         self.assertEqual(Period(start, end).inclusive_length(), timedelta(days=7))
 
-        self.assertEqual(Period(start, start + timedelta(days=6)).inclusive_length(), timedelta(days=7))
+        self.assertEqual(
+            Period(start, start + timedelta(days=6)).inclusive_length(),
+            timedelta(days=7),
+        )
