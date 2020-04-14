@@ -173,8 +173,8 @@ def add_demand_estimate(time_start: datetime,
             if k in recent_demands and demand_calculation_config.use_real_demand:
                 print(f'Using real demand data for {k}')
                 recent_demand = recent_demands[k]
-                hospitalization_of_the_week = get_total_hospitalization(recent_demand.week_start_date,
-                                                                        recent_demand.week_end_date)
+                hospitalization_of_the_week = get_total_hospitalization(recent_demand.start_date,
+                                                                        recent_demand.end_date)
                 demand_per_patient_per_day = recent_demand.demand / hospitalization_of_the_week
                 asset_rollup.demand_src = [DemandSrc.real_demand]
             else:

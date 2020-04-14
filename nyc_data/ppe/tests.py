@@ -5,13 +5,13 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from ppe import aggregations
-from ppe.aggregations import AssetRollup
+from ppe.aggregations import AssetRollup, DemandSrc
 from ppe.data_mapping.types import DataFile
 from ppe.data_mapping.mappers.dcas_sourcing import SourcingRow
 from ppe.data_mapping.mappers.hospital_demands import DemandRow
 import ppe.dataclasses as dc
 from ppe.data_mapping.utils import ErrorCollector
-from ppe.models import DataImport, ImportStatus, Purchase
+from ppe.models import DataImport, ImportStatus, Purchase, Inventory
 
 
 class TestAssetRollup(TestCase):
@@ -35,6 +35,23 @@ class TestAssetRollup(TestCase):
             delivery_day_2_quantity=1000,
             raw_data={},
         ).to_objects(ErrorCollector())
+
+        inventory = [
+            Inventory(item=dc.Item.gown,
+                      quantity=100,
+                      as_of=datetime(year=2020, day=11, month=4),
+                      raw_data={},
+                      ),
+            # this one is old and should be superceded
+            Inventory(item=dc.Item.gown,
+                      quantity=200,
+                      as_of=datetime(year=2020, day=10, month=4),
+                      raw_data={},
+                      )
+
+        ]
+
+        items += inventory
 
         for item in items:
             item.source = self.data_import
@@ -60,19 +77,28 @@ class TestAssetRollup(TestCase):
     def test_rollup(self):
         today = datetime(2020, 4, 12)
         rollup = aggregations.asset_rollup(
-            today - timedelta(days=28), today, use_delivery_as_demand=False
+            today - timedelta(days=28), today
         )
         self.assertEqual(len(rollup), len(dc.Item))
         # demand of 20 = 5 in the last week * 4 weeks in the period
-        self.assertEqual(rollup[dc.Item.gown], AssetRollup(asset=dc.Item.gown, demand=7915269, sell=5))
+        self.assertEqual(rollup[dc.Item.gown],
+                         AssetRollup(asset=dc.Item.gown,
+                                     inventory=100,
+                                     demand_src={DemandSrc.real_demand},
+                                     demand=7915269,
+                                     sell=5))
 
-        # Turn of use of hospitalization projection
+        # Turn off use of hospitalization projection
         rollup = aggregations.asset_rollup(
             today - timedelta(days=28), today,
             use_hospitalization_projection=False,
-            use_delivery_as_demand=False
         )
-        self.assertEqual(rollup[dc.Item.gown], AssetRollup(asset=dc.Item.gown, demand=4163, sell=5))
+        self.assertEqual(rollup[dc.Item.gown], AssetRollup(
+            asset=dc.Item.gown,
+            inventory=100,
+            demand_src={DemandSrc.real_demand},
+            demand=4163,
+            sell=5))
 
         future_rollup = aggregations.asset_rollup(
             today - timedelta(days=30), today + timedelta(days=30), use_delivery_as_demand=False
@@ -166,10 +192,6 @@ class TestCategoryMappings(unittest.TestCase):
     def test_display_names(self):
         for _, item in dc.Item.__members__.items():
             self.assertNotEqual(dc.ITEM_TO_DISPLAYNAME.get(item), None, f"No display name defined for {item}")
-
-
-class TestInventory(unittest.TestCase):
-    pass
 
 
 @override_settings(LOCKDOWN_ENABLED=False)

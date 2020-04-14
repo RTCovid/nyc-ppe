@@ -20,8 +20,8 @@ class DemandRow(ImportedRow, NamedTuple):
             Demand(
                 item=self.item,
                 demand=self.demand,
-                week_start_date=self.week_start_date,
-                week_end_date=self.week_end_date,
+                start_date=self.week_start_date,
+                end_date=self.week_end_date,
             )
         ]
 
