@@ -101,7 +101,7 @@ class TestAssetRollup(TestCase):
         # no uncategorized items in the rollup
         self.assertEqual(len(rollup), len(dc.MayoralCategory) - 1)
         self.assertEqual(rollup[dc.MayoralCategory.iso_gowns],
-                         AssetRollup(asset=dc.MayoralCategory.iso_gowns, demand=3581, sell=5))
+                         AssetRollup(asset=dc.MayoralCategory.iso_gowns, demand=7915269, sell=5))
 
         # Turn of use of hospitalization projection
         rollup = aggregations.asset_rollup(
