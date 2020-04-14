@@ -402,6 +402,10 @@ th:last-child.tooltip::after {
     margin-bottom: 20px;
 }
 
+.drilldown-deliveries tr.drilldown-newday td, .drilldown-deliveries tr.drilldown-newday th {
+    padding-top: 20px;
+}
+
 .drilldown-deliveries {
     font-size: 14px;
     font-weight: 300;
