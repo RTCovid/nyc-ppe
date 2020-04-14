@@ -123,17 +123,27 @@ def add_demand_estimate(time_start: datetime,
             demand_per_patient_per_day = last_week_supply / last_week_hospitalization
 
             # Add up the forecast demand for each day between time_start and time_end
-            rollup.demand = 0
-            date = time_start
-            while date <= time_end:
-                hospitalization = HOSPITALIZATION[date.strftime("%Y-%m-%d")]
-                if not hospitalization or hospitalization < ALL_BEDS_AVAILABLE:
-                    hospitalization = ALL_BEDS_AVAILABLE
-                rollup.demand += demand_per_patient_per_day * hospitalization
-                date += datetime.timedelta(days=1)
-            rollup.demand = int(rollup.demand)
+            projected_demand = get_projected_demand(time_start, time_end, demand_per_patient_per_day)
+            rollup.demand = int(sum(projected_demand))
         else:
             rollup.demand = int(last_week_supply * scaling_factor)
+
+
+def get_projected_demand(time_start: datetime,
+                         time_end: datetime,
+                         demand_per_patient_per_day):
+
+    projected_demand = []
+
+    date = time_start
+    while date <= time_end:
+        hospitalization = HOSPITALIZATION[date.strftime("%Y-%m-%d")]
+        if not hospitalization or hospitalization < ALL_BEDS_AVAILABLE:
+            hospitalization = ALL_BEDS_AVAILABLE
+        projected_demand.append(demand_per_patient_per_day * hospitalization)
+        date += datetime.timedelta(days=1)
+
+    return projected_demand
 
 
 def get_total_demands(time_start: datetime,
@@ -148,6 +158,7 @@ def get_total_demands(time_start: datetime,
         total_demands = {k: v.sell + v.make for k, v in last_week_rollup.items()}
 
     return total_demands
+
 
 def get_total_hospitalization(time_start: datetime,
                               time_end: datetime):
