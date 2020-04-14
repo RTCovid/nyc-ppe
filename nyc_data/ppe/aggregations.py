@@ -16,6 +16,8 @@ HOSPITALIZATION = {}
 with open('../public-data/hospitalization_projection_new_york.json', 'r') as f:
     HOSPITALIZATION = json.load(f)
 ALL_BEDS_AVAILABLE = 20420
+DEMAND_MESSAGE = "Demand projected based on the previous 7 days of hospital deliveries " \
+                 "& https://covidactnow.org/ hospitalization model"
 
 
 @dataclass
@@ -165,7 +167,7 @@ class NumericalColumn(tables.Column):
 
 class AggregationTable(tables.Table):
     asset = tables.Column()
-    projected_demand = NumericalColumn(accessor="demand", verbose_name="Demand Proxy", attrs={"th": {"class": "tooltip", "aria-label": "Demand projected based on the previous 7 days of hospital deliveries & IMHE hospitalization model"}})
+    projected_demand = NumericalColumn(accessor="demand", verbose_name="Demand Proxy", attrs={"th": {"class": "tooltip", "aria-label": DEMAND_MESSAGE}})
     balance = tables.Column(empty_values=(), order_by="percent_balance", attrs={"th": {"class": "tooltip", "aria-label": "Supply deficit or surplus against demand"}})
 
     total = NumericalColumn(verbose_name="Supply", attrs={"th": {"class": "tooltip", "aria-label": "Sum of inventory, ordered, and made."}})
