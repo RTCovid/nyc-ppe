@@ -419,6 +419,7 @@ th:last-child.tooltip::after {
     display: flex;
     border-bottom: 1px solid #eee;
     margin-bottom: 20px;
+    padding-bottom: 10px;
 }
 
 .incoming-rollup p {
