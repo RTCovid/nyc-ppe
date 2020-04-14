@@ -24,6 +24,8 @@ class MakeRow(ImportedRow, NamedTuple):
     def sanity(self):
         if self.quantity is None:
             return ["Quantity is none"]
+        if self.vendor is None:
+            return ["Vendor is none"]
 
     def to_objects(self, error_collector: ErrorCollector):
         errors = self.sanity()
@@ -65,7 +67,7 @@ class MakeRow(ImportedRow, NamedTuple):
 
 SUPPLIERS_AND_PARTNERS = SheetMapping(
     data_file=DataFile.SUPPLIERS_PARTNERS_XLSX,
-    sheet_name="EDC Suppliers & Partners",
+    sheet_name="EDC Product delivery",
     mappings={
         Mapping(
             sheet_column_name="Supply / Service",
