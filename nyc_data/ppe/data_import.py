@@ -27,6 +27,7 @@ def handle_upload(f, uploader_name: str) -> DataImport:
     with tempfile.NamedTemporaryFile('w+b', delete=False, suffix=f.name) as upload_target:
         for chunk in f.chunks():
             upload_target.write(chunk)
+        upload_target.flush()
         return smart_import(Path(upload_target.name), uploader_name)
 
 
@@ -100,7 +101,6 @@ def import_data(path: Path, mappings: List[xlsx_utils.SheetMapping], uploaded_by
                         obj.save()
 
             FacilityDelivery.objects.bulk_create(deliveries)
-            print(FacilityDelivery.active().count())
 
         except Exception:
             print(f'Failure importing {path}, mapping: {mapping.sheet_name}')

@@ -81,7 +81,7 @@ class DataImport(models.Model):
 
     def imported_objects(self):
         return {tpe: tpe.objects.prefetch_related('source').filter(source=self) for tpe in
-                [ScheduledDelivery, Inventory, Purchase, FacilityDelivery]}
+                [ScheduledDelivery, Inventory, Purchase, FacilityDelivery, Demand]}
 
 
 class UploadDelta(NamedTuple):
@@ -178,7 +178,6 @@ class ScheduledDelivery(BaseModel):
     purchase = models.ForeignKey(Purchase, on_delete=models.CASCADE, related_name='deliveries')
     delivery_date = models.DateField(null=True)
     quantity = models.IntegerField()
-
 
     @property
     def item(self):
