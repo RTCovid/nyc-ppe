@@ -31,3 +31,4 @@ class DataFile(str, Enum):
     SUPPLIERS_PARTNERS_XLSX = "edc_suppliers_partners"
     INVENTORY = "inventory"
     FACILITY_DELIVERIES = "facility_deliveries"
+    HOSPITAL_DEMANDS = "hospital_demands"

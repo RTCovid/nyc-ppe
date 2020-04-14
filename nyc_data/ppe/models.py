@@ -81,7 +81,7 @@ class DataImport(models.Model):
 
     def imported_objects(self):
         return {tpe: tpe.objects.prefetch_related('source').filter(source=self) for tpe in
-                [ScheduledDelivery, Inventory, Purchase, FacilityDelivery]}
+                [ScheduledDelivery, Inventory, Purchase, FacilityDelivery, Demand]}
 
 
 class UploadDelta(NamedTuple):
@@ -179,7 +179,6 @@ class ScheduledDelivery(BaseModel):
     delivery_date = models.DateField(null=True)
     quantity = models.IntegerField()
 
-
     @property
     def item(self):
         return self.check_cached('purchase').item
@@ -223,6 +222,15 @@ class FacilityDelivery(BaseModel):
     facility = models.ForeignKey(Facility, on_delete=models.CASCADE)
     item = ChoiceField(dc.Item)
     quantity = models.IntegerField()
+
+
+class Demand(BaseModel):
+    """Real demand data from NYC"""
+    item = ChoiceField(dc.Item)
+    demand = models.IntegerField()
+    # both start and end are inclusive
+    start_date = models.DateField()
+    end_date = models.DateField()
 
 
 class Hospital(BaseModel):

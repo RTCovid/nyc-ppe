@@ -46,8 +46,8 @@ def guess_mapping(sheet: Path, possible_mappings: List[SheetMapping]):
         possible_mappings = [m for m in possible_mappings if m.sheet_name is None]
     else:
         return []
-
     final_mappings = []
+
     for mapping in possible_mappings:
         if mapping.sheet_name is not None and workbook:
             sheet = workbook[mapping.sheet_name]
