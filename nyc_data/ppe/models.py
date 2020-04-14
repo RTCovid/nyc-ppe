@@ -193,11 +193,13 @@ class FacilityDelivery(BaseModel):
     quantity = models.IntegerField()
 
 
-class WeeklyDemand(BaseModel):
-    item = models.TextField()
+class Demand(BaseModel):
+    """Real demand data from NYC"""
+    item = ChoiceField(dc.Item)
     demand = models.IntegerField()
-    week_start_date = models.DateField()
-    week_end_date = models.DateField()
+    # both start and end are inclusive
+    start_date = models.DateField()
+    end_date = models.DateField()
 
 
 class Hospital(BaseModel):

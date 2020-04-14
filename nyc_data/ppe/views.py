@@ -17,7 +17,7 @@ from ppe.optimization import generate_forecast
 
 
 def mayoral_rollup(row):
-    return row.to_mayoral_category()
+    return dc.Item(row).to_mayoral_category()
 
 
 def default(request):

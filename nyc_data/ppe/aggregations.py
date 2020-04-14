@@ -1,7 +1,8 @@
 import collections
 import datetime
-from dataclasses import dataclass
-from typing import Dict, Callable
+from dataclasses import dataclass, field
+from enum import Enum
+from typing import Dict, Callable, NamedTuple, Optional, List, Set
 import json
 
 import django_tables2 as tables
@@ -9,7 +10,7 @@ from django.db.models import Sum
 from django.utils.html import format_html
 
 import ppe.dataclasses as dc
-from ppe.models import ScheduledDelivery, Inventory, ImportStatus, FacilityDelivery, WeeklyDemand
+from ppe.models import ScheduledDelivery, Inventory, ImportStatus, FacilityDelivery, Demand
 
 # NY Forecast from https://covid19.healthdata.org/united-states-of-america/new-york
 HOSPITALIZATION = {}
@@ -18,10 +19,22 @@ with open('../public-data/hospitalization_projection_new_york.json', 'r') as f:
 ALL_BEDS_AVAILABLE = 20420
 
 
+class DemandCalculationConfig(NamedTuple):
+    use_real_demand: bool
+    use_hospitalization_projection: bool
+    rollup_fn: Callable[[dc.Item], str]
+
+
+class DemandSrc(str, Enum):
+    past_deliveries = "PAST_DELIVERIES"
+    real_demand = "LIVE_DEMAND"
+
+
 @dataclass
 class AssetRollup:
     asset: str
     demand: int = 0
+    demand_src: Set[DemandSrc] = field(default_factory=set)
     donate: int = 0
     sell: int = 0
     make: int = 0
@@ -39,6 +52,17 @@ class AssetRollup:
     def percent_balance(self):
         return self.absolute_balance / (self.demand + 1)
 
+    def __add__(self, other: 'AssetRollup'):
+        return AssetRollup(
+            asset=self.asset,
+            demand=self.demand + other.demand,
+            demand_src=self.demand_src.union(other.demand_src),
+            donate=self.donate + other.donate,
+            sell=self.sell + other.sell,
+            make=self.make + other.make,
+            inventory=self.inventory + other.inventory,
+        )
+
 
 MAPPING = {dc.OrderType.Make: "make", dc.OrderType.Purchase: "sell"}
 
@@ -46,21 +70,30 @@ MAPPING = {dc.OrderType.Make: "make", dc.OrderType.Purchase: "sell"}
 def asset_rollup(
         time_start: datetime,
         time_end: datetime,
-        rollup_fn: Callable[[dc.Item], any] = lambda x: x,
-        estimate_demand=True,
         use_hospitalization_projection=True,
-        use_delivery_as_demand=True,
+        rollup_fn: Callable[[dc.Item], str] = lambda x: x
+):
+    return _asset_rollup(time_start, time_end,
+                         DemandCalculationConfig(use_real_demand=True,
+                                                 use_hospitalization_projection=use_hospitalization_projection,
+                                                 rollup_fn=rollup_fn))
+
+
+def _asset_rollup(
+        time_start: datetime,
+        time_end: datetime,
+        demand_calculation_config: DemandCalculationConfig,
 ) -> Dict[str, AssetRollup]:
     relevant_deliveries = ScheduledDelivery.active().prefetch_related('purchase').filter(
         delivery_date__gte=time_start, delivery_date__lte=time_end
     )
 
-    results: Dict[str, AssetRollup] = {}
+    results: Dict[dc.Item, AssetRollup] = {}
     for _, item in dc.Item.__members__.items():
-        results[rollup_fn(item)] = AssetRollup(asset=rollup_fn(item))
+        results[item] = AssetRollup(asset=item)
 
     for delivery in relevant_deliveries:
-        rollup = results[rollup_fn(dc.Item(delivery.purchase.item))]
+        rollup = results[delivery.purchase.item]
         tpe = delivery.purchase.order_type
         param = MAPPING.get(tpe)
         if param is None:
@@ -69,17 +102,22 @@ def asset_rollup(
 
     inventory = Inventory.active()
     for item in inventory:
-        rollup = results[rollup_fn(dc.Item(item.item))]
+        rollup = results[item.item]
         rollup.inventory += item.quantity
 
-    if estimate_demand:
-        add_demand_estimate(time_start, time_end, results, rollup_fn, use_hospitalization_projection,
-                            use_delivery_demand=use_delivery_as_demand)
+    add_demand_estimate(time_start, time_end, results, demand_calculation_config)
 
-    return results
+    rollup_results = {}
+    for item, rollup in results.items():
+        rolledup_category = demand_calculation_config.rollup_fn(item)
+        if not rolledup_category in rollup_results:
+            rollup_results[rolledup_category] = AssetRollup(asset=rolledup_category)
+        rollup_results[rolledup_category] += rollup
+
+    return rollup_results
 
 
-def demand_for_period(time_start: datetime, time_end: datetime, rollup_fn):
+def deliveries_for_period(time_start: datetime, time_end: datetime):
     """
     Returns
     :param time_start:
@@ -91,70 +129,71 @@ def demand_for_period(time_start: datetime, time_end: datetime, rollup_fn):
         Sum('quantity'))
     rollup = collections.defaultdict(lambda: 0)
     for row in demand_by_day:
-        rollup[rollup_fn(dc.Item(row['item']))] += row['quantity__sum']
+        rollup[row['item']] += row['quantity__sum']
     return rollup
 
 
 def known_recent_demand():
-
     recent_demands = {}
-    for weeklyDemand in WeeklyDemand.active():
+    # TODO replace with `max by item`
+    for demand in Demand.active():
         # Only use the most recent demand record
-        if weeklyDemand.item in recent_demands:
-            prev_demand = recent_demands[weeklyDemand.item]
-            if weeklyDemand.week_start_date > prev_demand.week_start_date:
-                recent_demands[weeklyDemand.item] = weeklyDemand
+        if demand.item in recent_demands:
+            prev_demand = recent_demands[demand.item]
+            if demand.start_date > prev_demand.start_date:
+                recent_demands[demand.item] = demand
         else:
-            recent_demands[weeklyDemand.item] = weeklyDemand
+            recent_demands[demand.item] = demand
 
     return recent_demands
 
 
 def add_demand_estimate(time_start: datetime,
                         time_end: datetime,
-                        rollup: Dict[str, AssetRollup],
-                        rollup_fn,
-                        use_hospitalization_projection=True,
-                        use_delivery_demand=False):
-
+                        asset_rollup: Dict[dc.Item, AssetRollup],
+                        demand_calculation_config: DemandCalculationConfig):
     last_week_start = datetime.datetime.today() - datetime.timedelta(days=7)
-    last_week_end = last_week_start+datetime.timedelta(days=6)
+    last_week_end = last_week_start + datetime.timedelta(days=6)
 
-    # Get last week's demands
-    last_weeks_demand = get_total_demands(last_week_start, last_week_end, rollup_fn, use_delivery_demand)
-
-    # Calculate scaling factor (both time_start and time_end are inclusive)
-    scaling_factor = (time_end - time_start + datetime.timedelta(days=1)) / datetime.timedelta(days=7)
+    # Get last week's deliveries
+    last_weeks_demand = deliveries_for_period(last_week_start, last_week_end)
 
     # Get last week's total hospitalization
     last_week_hospitalization = get_total_hospitalization(last_week_start, last_week_end)
 
     recent_demands = known_recent_demand()
     # Iterate through each category
-    for k, rollup in rollup.items():
+    for k, asset_rollup in asset_rollup.items():
         # ignore donations
         last_week_supply = last_weeks_demand[k]
-        if use_hospitalization_projection:
+        if demand_calculation_config.use_hospitalization_projection:
             # Per hospitalization demand
             demand_per_patient_per_day = last_week_supply / last_week_hospitalization
             # Recalculate the value if we have true demand data for the category
-            if k in recent_demands:
+            if k in recent_demands and demand_calculation_config.use_real_demand:
+                print(f'Using real demand data for {k}')
                 recent_demand = recent_demands[k]
                 hospitalization_of_the_week = get_total_hospitalization(recent_demand.week_start_date,
                                                                         recent_demand.week_end_date)
                 demand_per_patient_per_day = recent_demand.demand / hospitalization_of_the_week
+                asset_rollup.demand_src = [DemandSrc.real_demand]
+            else:
+                asset_rollup.demand_src = [DemandSrc.past_deliveries]
+                print(f'Using delivery based demand for {k}')
 
             # Add up the forecast demand for each day between time_start and time_end
             projected_demand = get_projected_demand(time_start, time_end, demand_per_patient_per_day)
-            rollup.demand = int(sum(projected_demand))
+            asset_rollup.demand = int(sum(projected_demand))
         else:
-            rollup.demand = int(last_week_supply * scaling_factor)
+            # Calculate scaling factor (both time_start and time_end are inclusive)
+            time_range_scaling_factor = (time_end - time_start + datetime.timedelta(days=1)) / datetime.timedelta(
+                days=7)
+            asset_rollup.demand = int(last_week_supply * time_range_scaling_factor)
 
 
 def get_projected_demand(time_start: datetime,
                          time_end: datetime,
                          demand_per_patient_per_day):
-
     projected_demand = []
 
     date = time_start
@@ -172,23 +211,8 @@ def get_projected_demand(time_start: datetime,
     return projected_demand
 
 
-def get_total_demands(time_start: datetime,
-                      time_end: datetime,
-                      rollup_fn,
-                      use_delivery_demand=False):
-
-    if use_delivery_demand:
-        total_demands = demand_for_period(time_start, time_end, rollup_fn)
-    else:
-        last_week_rollup = asset_rollup(time_start, time_end, rollup_fn, estimate_demand=False)
-        total_demands = {k: v.sell + v.make for k, v in last_week_rollup.items()}
-
-    return total_demands
-
-
 def get_total_hospitalization(time_start: datetime,
                               time_end: datetime):
-
     total_hospitalization = 0
     date = time_start
     while date <= time_end:
@@ -226,15 +250,29 @@ class NumericalColumn(tables.Column):
 
 class AggregationTable(tables.Table):
     asset = tables.Column()
-    projected_demand = NumericalColumn(accessor="demand", verbose_name="Demand Proxy", attrs={"th": {"class": "tooltip", "aria-label": "Demand projected based on the previous 7 days of hospital deliveries & IMHE hospitalization model"}})
-    balance = tables.Column(empty_values=(), order_by="percent_balance", attrs={"th": {"class": "tooltip", "aria-label": "Supply deficit or surplus against demand"}})
+    projected_demand = NumericalColumn(accessor="demand",
+                                       verbose_name="Demand Proxy",
+                                       attrs={
+                                           "th": {"class": "tooltip",
+                                                  "aria-label": "Demand projected based on the previous 7 days of hospital deliveries & IMHE hospitalization model"},
+                                           "td": {"class": "tooltip",
+                                                  "aria-label": lambda record: f"Demand from {record.demand_src}"}
+                                       },
+                                       )
+    balance = tables.Column(empty_values=(), order_by="percent_balance", attrs={
+        "th": {"class": "tooltip", "aria-label": "Supply deficit or surplus against demand"}})
 
-    total = NumericalColumn(verbose_name="Supply", attrs={"th": {"class": "tooltip", "aria-label": "Sum of inventory, ordered, and made."}})
+    total = NumericalColumn(verbose_name="Supply",
+                            attrs={"th": {"class": "tooltip", "aria-label": "Sum of inventory, ordered, and made."}})
     inventory = NumericalColumn(attrs={
         "th": {"class": "tooltip", "aria-label": lambda: f"DOHMH [{Inventory.as_of_latest()}]"}})
     donate = NumericalColumn()
-    sell = NumericalColumn(verbose_name="Ordered", attrs={"th": {"class": "tooltip", "aria-label": "DCAS scheduled orders [2020-4-12]"}})
-    make = NumericalColumn(verbose_name="Made", attrs={"th": {"class": "tooltip", "aria-label": "EDC scheduled deliveries [2020-4-7]"}})
+    sell = NumericalColumn(verbose_name="Ordered",
+
+                           attrs={"th": {"class": "tooltip", "aria-label": "DCAS scheduled orders [2020-4-12]"}})
+
+    make = NumericalColumn(verbose_name="Made",
+                           attrs={"th": {"class": "tooltip", "aria-label": "EDC scheduled deliveries [2020-4-7]"}})
 
     def render_projected_demand(self, value):
         if value == 0:

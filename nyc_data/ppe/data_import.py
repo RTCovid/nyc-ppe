@@ -7,7 +7,7 @@ import xlsx_utils
 from ppe.data_mapping.mappers import dcas_make, dcas_sourcing, inventory, inventory_from_facilities, hospital_deliveries, hospital_demands
 from ppe.data_mapping.types import DataFile
 from ppe.data_mapping.utils import ErrorCollector
-from ppe.models import ImportStatus, DataImport, InboundReceipt, FacilityDelivery, WeeklyDemand
+from ppe.models import ImportStatus, DataImport, InboundReceipt, FacilityDelivery, Demand
 from xlsx_utils import import_xlsx
 
 ALL_MAPPINGS = [

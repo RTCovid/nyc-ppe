@@ -3,7 +3,7 @@ from datetime import date
 
 from ppe.data_mapping.types import DataFile, ImportedRow
 from ppe.data_mapping.utils import parse_int_or_zero, parse_date, asset_name_to_item, ErrorCollector
-from ppe.models import WeeklyDemand
+from ppe.models import Demand
 from xlsx_utils import SheetMapping, Mapping
 
 
@@ -17,7 +17,7 @@ class DemandRow(ImportedRow, NamedTuple):
 
     def to_objects(self, error_collector):
         return [
-            WeeklyDemand(
+            Demand(
                 item=self.item,
                 demand=self.demand,
                 week_start_date=self.week_start_date,
