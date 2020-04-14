@@ -23,8 +23,9 @@ def mayoral_rollup(row):
 def default(request):
     if request.GET.get('rollup', '') in ['mayoral', '', None]:
         aggregation = aggregations.asset_rollup(
-            datetime.now(), datetime.now() + timedelta(days=30),
-            mayoral_rollup
+            time_start=datetime.now(),
+            time_end=datetime.now() + timedelta(days=30),
+            rollup_fn=mayoral_rollup
         )
     elif request.GET.get('rollup', '') in ['critical',]:
         aggregation = aggregations.asset_rollup(
