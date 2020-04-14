@@ -138,6 +138,10 @@ def get_projected_demand(time_start: datetime,
     date = time_start
     while date <= time_end:
         hospitalization = HOSPITALIZATION[date.strftime("%Y-%m-%d")]
+        # Use All Beds Available (max during normal operation, not theoretical upper bounds) as lower bound
+        # to make sure that our projection won't fall to zero as the estimated COVID-19
+        # related hospitalization falls to zero.
+        # We will need to revise this approximation as the hospitalization falls below the Max
         if not hospitalization or hospitalization < ALL_BEDS_AVAILABLE:
             hospitalization = ALL_BEDS_AVAILABLE
         projected_demand.append(demand_per_patient_per_day * hospitalization)
@@ -167,7 +171,7 @@ def get_total_hospitalization(time_start: datetime,
     date = time_start
     while date <= time_end:
         hospitalization = HOSPITALIZATION[date.strftime("%Y-%m-%d")]
-        # Use All Beds Available as baseline
+        # Use All Beds Available (max during normal operation, not theoretical upper bounds) as lower bound
         if not hospitalization or hospitalization < ALL_BEDS_AVAILABLE:
             hospitalization = ALL_BEDS_AVAILABLE
         total_hospitalization += hospitalization
