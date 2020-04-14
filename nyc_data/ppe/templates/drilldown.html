@@ -40,7 +40,7 @@
         {% for day in date_list %}
         {% if forloop.first %}
         <table class="drilldown-deliveries">{% endif %}
-            <tr>
+            <tr class="drilldown-newday">
                 <th rowspan="{{day.list|length}}">{{day.grouper}}</th>
                 {% for delivery in day.list %}
                 {% if not forloop.first %}
@@ -54,22 +54,22 @@
             {% endif %}
             {% endfor %}
             </tr>
-            {% if forloop.last %}
+        {% endfor %}
+            <tr class="drilldown-newday"><td colspan="4"></td></tr>
+            <tr>
+                <th rowspan="100">Unscheduled</th>
+                {% for purchase in purchases %}
+                    {% if purchase.unscheduled_quantity > 0 and purchase.quantity != purchase.received_quantity %}
+                    {% if not forloop.first %}<tr>{% endif %}
+                        <td class="drilldown-deliveries-quantity"><span class="quantity">{{ purchase.unscheduled_quantity|pretty_num }} {{ purchase.item|display_name }}</span>
+                        </td>
+                        <td class="drilldown-deliveries-desc">{{ purchase.description|default:"No description" }}</td>
+                        <td class="drilldown-deliveries-vendor">{{purchase.vendor}}</td>
+                    {% if not forloop.last %}</tr>{% endif %}
+                    {% endif %}
+                {% endfor %}
+            </tr>
         </table>
-        {% endif %}
-        {% endfor %}
     </div>
-
-    <h2>Unscheduled Supply (Total: {{ unscheduled_total | pretty_num }})</h2>
-    <ul>
-        {% for purchase in purchases %}
-        {% if purchase.unscheduled_quantity > 0 and purchase.quantity != purchase.received_quantity %}
-        <li class="tooltip" aria-label="{{purchase.vendor}}">
-            Receiving {{purchase.unscheduled_quantity|pretty_num}} {{ purchase.item }} –
-            {{purchase.description|default:"No description"}}
-        </li>
-        {% endif %}
-        {% endfor %}
-    </ul>
 </div>
 {% endblock %}
