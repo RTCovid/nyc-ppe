@@ -98,13 +98,14 @@ def demand_for_period(time_start: datetime, time_end: datetime, rollup_fn):
 def known_recent_demand():
 
     recent_demands = {}
-
     for weeklyDemand in WeeklyDemand.active():
         # Only use the most recent demand record
         if weeklyDemand.item in recent_demands:
             prev_demand = recent_demands[weeklyDemand.item]
             if weeklyDemand.week_start_date > prev_demand.week_start_date:
                 recent_demands[weeklyDemand.item] = weeklyDemand
+        else:
+            recent_demands[weeklyDemand.item] = weeklyDemand
 
     return recent_demands
 
@@ -136,13 +137,12 @@ def add_demand_estimate(time_start: datetime,
         if use_hospitalization_projection:
             # Per hospitalization demand
             demand_per_patient_per_day = last_week_supply / last_week_hospitalization
-
             # Recalculate the value if we have true demand data for the category
             if k in recent_demands:
                 recent_demand = recent_demands[k]
                 hospitalization_of_the_week = get_total_hospitalization(recent_demand.week_start_date,
                                                                         recent_demand.week_end_date)
-                demand_per_patient_per_day = recent_demand.demand / last_week_hospitalization
+                demand_per_patient_per_day = recent_demand.demand / hospitalization_of_the_week
 
             # Add up the forecast demand for each day between time_start and time_end
             projected_demand = get_projected_demand(time_start, time_end, demand_per_patient_per_day)

@@ -8,6 +8,7 @@ from ppe import aggregations
 from ppe.aggregations import AssetRollup
 from ppe.data_mapping.types import DataFile
 from ppe.data_mapping.mappers.dcas_sourcing import SourcingRow
+from ppe.data_mapping.mappers.hospital_demands import DemandRow
 import ppe.dataclasses as dc
 from ppe.data_mapping.utils import ErrorCollector
 from ppe.models import DataImport, ImportStatus, Purchase
@@ -39,6 +40,23 @@ class TestAssetRollup(TestCase):
             item.source = self.data_import
             item.save()
 
+        items = DemandRow(
+            item=dc.Item.gown,
+            demand=2457000,
+            week_start_date=datetime.strptime('2020-04-11', '%Y-%m-%d'),
+            week_end_date=datetime.strptime('2020-04-17', '%Y-%m-%d'),
+            raw_data={},
+        ).to_objects(ErrorCollector())
+        data_import = DataImport(
+            status=ImportStatus.active,
+            data_file=DataFile.HOSPITAL_DEMANDS,
+            file_checksum='123'
+        )
+        data_import.save()
+        for item in items:
+            item.source = data_import
+            item.save()
+
     def test_rollup(self):
         today = datetime(2020, 4, 12)
         rollup = aggregations.asset_rollup(
@@ -46,7 +64,7 @@ class TestAssetRollup(TestCase):
         )
         self.assertEqual(len(rollup), len(dc.Item))
         # demand of 20 = 5 in the last week * 4 weeks in the period
-        self.assertEqual(rollup[dc.Item.gown], AssetRollup(asset=dc.Item.gown, demand=3581, sell=5))
+        self.assertEqual(rollup[dc.Item.gown], AssetRollup(asset=dc.Item.gown, demand=7915269, sell=5))
 
         # Turn of use of hospitalization projection
         rollup = aggregations.asset_rollup(
@@ -60,7 +78,7 @@ class TestAssetRollup(TestCase):
             today - timedelta(days=30), today + timedelta(days=30), use_delivery_as_demand=False
         )
         self.assertEqual(
-            future_rollup[dc.Item.gown], AssetRollup(asset=dc.Item.gown, demand=9593, sell=1005)
+            future_rollup[dc.Item.gown], AssetRollup(asset=dc.Item.gown, demand=21203275, sell=1005)
         )
 
         # Turn of use off hospitalization projection
@@ -103,7 +121,7 @@ class TestAssetRollup(TestCase):
             rollup = aggregations.asset_rollup(
                 today - timedelta(days=28), today
             )
-            self.assertEqual(rollup[dc.Item.gown], AssetRollup(asset=dc.Item.gown, demand=0, sell=0))
+            self.assertEqual(rollup[dc.Item.gown], AssetRollup(asset=dc.Item.gown, demand=7915269, sell=0))
         finally:
             self.data_import.status = ImportStatus.active
             self.data_import.save()
