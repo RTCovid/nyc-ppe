@@ -8,7 +8,7 @@ from openpyxl import load_workbook
 
 from ppe.data_mapping.types import DataFile
 from ppe.data_mapping.utils import ErrorCollector
-
+from ppe import data_import
 
 def XLSXDictReader(sheet):
     rows = sheet.max_row
@@ -54,8 +54,15 @@ def guess_mapping(sheet: Path, possible_mappings: List[SheetMapping]):
             first_row = next(XLSXDictReader(sheet))
         else:
             with open(sheet) as csvfile:
-                reader = csv.DictReader(csvfile)
-                first_row = next(reader)
+
+                try:
+                    reader = csv.DictReader(csvfile)
+                    for row in reader:
+                        print(row)
+                    first_row = next(reader)
+                except Exception:
+
+                    raise data_import.CsvImportError('message for messages sake')
 
         col_names = [m.sheet_column_name for m in mapping.mappings]
         if all(col_name in first_row for col_name in col_names):

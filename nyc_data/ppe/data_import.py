@@ -45,6 +45,8 @@ class ImportInProgressError(DataImportError):
     def __init__(self, import_id):
         self.import_id = import_id
 
+class CsvImportError(DataImportError):
+    pass
 
 def smart_import(path: Path, uploader_name: str, overwrite_in_prog: bool = False) -> DataImport:
     possible_mappings = xlsx_utils.guess_mapping(path, ALL_MAPPINGS)
