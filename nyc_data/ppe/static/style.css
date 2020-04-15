@@ -360,6 +360,10 @@ th.orderable a {
 th.orderable.desc::before, th.orderable.asc::before {
     font-size: 12px;
     color: #aaa;
+    display: block;
+    float: left;
+    margin-right: 5px;
+    padding-top: 1px;
 }
 th.orderable.desc::before { content:"▲"; }
 th.orderable.asc::before { content:"▼"; }
