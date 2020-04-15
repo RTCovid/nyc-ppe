@@ -9,6 +9,7 @@ from django.urls import reverse
 from django.views import View
 from django_tables2 import RequestConfig
 
+import ppe.errors
 from ppe import aggregations, dataclasses as dc
 from ppe import forms, data_import
 from ppe.drilldown import drilldown_result
@@ -164,7 +165,7 @@ class Upload(View):
                 return HttpResponseRedirect(
                     reverse("verify", kwargs={"import_id": import_obj.id})
                 )
-            except data_import.ImportInProgressError as ex:
+            except ppe.errors.ImportInProgressError as ex:
                 return render(
                     request,
                     "upload.html",
@@ -173,13 +174,15 @@ class Upload(View):
                         import_in_progress=ex.import_id,
                     )._asdict(),
                 )
-            except data_import.NoMappingForFileError as ex:
+            except ppe.errors.NoMappingForFileError as ex:
                 return render(
                     request,
                     "upload.html",
                     UploadContext(error="No mapping found for this file")._asdict(),
                 )
-
+            except ppe.errors.CsvImportError as ex:
+                return render(request, "upload.html",
+                              UploadContext(error="Error reading in CSV file")._asdict())
 
 class Verify(View):
     def get(self, request, import_id):

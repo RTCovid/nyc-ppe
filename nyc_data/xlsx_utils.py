@@ -6,6 +6,7 @@ from typing import NamedTuple, Any, Callable, List, Optional, Set
 from django.core.serializers.json import DjangoJSONEncoder
 from openpyxl import load_workbook
 
+from ppe import errors
 from ppe.data_mapping.types import DataFile
 from ppe.data_mapping.utils import ErrorCollector
 
@@ -39,12 +40,10 @@ RAW_DATA = "raw_data"
 
 def guess_mapping(sheet: Path, possible_mappings: List[SheetMapping]):
     workbook = None
-    if sheet.suffix == ".xlsx":
-        workbook = load_workbook(sheet)
-        possible_mappings = [
-            m for m in possible_mappings if m.sheet_name in workbook.sheetnames
-        ]
-    elif sheet.suffix == ".csv":
+    if sheet.suffix == '.xlsx':
+        workbook = load_workbook(sheet, data_only=True)
+        possible_mappings = [m for m in possible_mappings if m.sheet_name in workbook.sheetnames]
+    elif sheet.suffix == '.csv':
         possible_mappings = [m for m in possible_mappings if m.sheet_name is None]
     else:
         return []
@@ -54,12 +53,16 @@ def guess_mapping(sheet: Path, possible_mappings: List[SheetMapping]):
         if mapping.sheet_name is not None and workbook:
             sheet = workbook[mapping.sheet_name]
             first_row = next(XLSXDictReader(sheet))
+
         else:
 
-            with open(sheet, "r", encoding="utf16") as csvfile:
-                text = csvfile.read()
-            reader = csv.DictReader(text.splitlines())
-            first_row = next(reader)
+            try:
+                with open(sheet, encoding="latin-1") as csvfile:
+                    reader = csv.DictReader(csvfile)
+                    first_row = next(reader)
+                    
+            except Exception as exc:
+                raise errors.CsvImportError('Error reading in CSV file') from exc
 
         col_names = [m.sheet_column_name for m in mapping.mappings]
         if all(col_name in first_row for col_name in col_names):
@@ -88,7 +91,7 @@ def import_xlsx(
         sheet = workbook[sheet_mapping.sheet_name]
         as_dicts = XLSXDictReader(sheet)
     else:
-        with open(sheet) as csvfile:
+        with open(sheet, encoding="latin-1") as csvfile:
             reader = csv.DictReader(csvfile)
             as_dicts = list(reader)
 
