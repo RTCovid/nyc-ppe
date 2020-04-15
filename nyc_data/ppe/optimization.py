@@ -28,6 +28,7 @@ def generate_forecast_for_item(start_date: date, item: dc.Item, n_days: int = 10
         demand_for_asset = demand_data[item]
     start_inventory = Inventory.active().filter(item=item).first().quantity
     future_deliveries = ScheduledDelivery.active().filter(purchase__item=item, delivery_date__gte=start_date)
+
     # 100 days
     future_supply = [0] * n_days
     demand_forecast = [0] * n_days
@@ -58,7 +59,7 @@ def generate_forecast(start_date, start_inventory, demand_forecast, known_supply
         "simple_lp_program", pywraplp.Solver.GLOP_LINEAR_PROGRAMMING
     )
 
-    days = list(range(1, len(demand_forecast)))
+    days = list(range(1, len(demand_forecast) + 1))
     demand_vars = []
     supply_vars = []
     additional_supply_vars = []
@@ -66,7 +67,7 @@ def generate_forecast(start_date, start_inventory, demand_forecast, known_supply
 
     demand_vars.append(solver.NumVar(0, 0, "demand-d0"))
     supply_vars.append(solver.NumVar(0, 0, "supply-d0"))
-    additional_supply_vars.append(solver.NumVar(0, 0, "add-supply-d0"))
+    additional_supply_vars.append(solver.NumVar(0, solver.infinity(), "add-supply-d0"))
 
     # initial demand is known
     inventory_vars.append(
@@ -110,6 +111,7 @@ def generate_forecast(start_date, start_inventory, demand_forecast, known_supply
 
     # Create the objective function to minimize total additional supplies.
     objective = solver.Objective()
+    objective.SetCoefficient(additional_supply_vars[0], 1)
     for day in days:
         objective.SetCoefficient(additional_supply_vars[day], 1)
     objective.SetMinimization()
@@ -119,8 +121,17 @@ def generate_forecast(start_date, start_inventory, demand_forecast, known_supply
     if status != pywraplp.Solver.OPTIMAL:
         return []
 
-    forecast_result = []
-    import pdb; pdb.set_trace()
+    # Include Day 0 result (we may need additional supply on this day)
+    forecast_result = [
+        Forecast(
+            date=(start_date + timedelta(days=-1)).strftime("%Y%m%d"),
+            demand=0,
+            existing_supply=0,
+            additional_supply=additional_supply_vars[0].solution_value(),
+            inventory=inventory_vars[0].solution_value(),
+        )]
+
+    # Include result for future days
     for day in days:
         forecast_result.append(
             Forecast(

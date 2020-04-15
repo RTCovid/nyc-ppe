@@ -91,8 +91,6 @@ def drilldown(request):
         print(forecast)
         import pdb; pdb.set_trace()
 
-
-
     received_deliveries = sum([p.received_quantity or 0 for p in purchases])
     context = {
         "aggregations": table,
