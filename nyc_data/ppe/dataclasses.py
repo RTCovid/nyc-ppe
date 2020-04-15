@@ -137,7 +137,7 @@ ITEM_TO_DISPLAYNAME = {
     Item.bipap_machines: "BiPAP Machines",
     Item.ppe_other: "Other PPE",
     Item.unknown: "Other Assets",
-    Item.body_bags: "Body Bags",
+    Item.body_bags: "Post Mortem Bags",
 }
 
 ITEM_TO_MAYORAL = {
