@@ -27,7 +27,9 @@ def generate_forecast_for_item(start_date: date, item: dc.Item, n_days: int = 10
     else:
         demand_for_asset = demand_data[item]
     start_inventory = Inventory.active().filter(item=item).first().quantity
-    future_deliveries = ScheduledDelivery.active().filter(purchase__item=item, delivery_date__gte=start_date)
+    future_deliveries = ScheduledDelivery.active().filter(
+        purchase__item=item, delivery_date__gte=start_date
+    )
     # 100 days
     future_supply = [0] * n_days
     demand_forecast = [0] * n_days
@@ -46,10 +48,14 @@ def generate_forecast_for_item(start_date: date, item: dc.Item, n_days: int = 10
             projection_period=dc.Period(day_of, day_of + timedelta(days=1)),
             demand_calculation_config=DemandCalculationConfig(),
         )
-        import pdb; pdb.set_trace()
+        import pdb
+
+        pdb.set_trace()
         demand_forecast[day] += int(scaling_factor * demand_for_asset.demand)
 
-    return generate_forecast(start_date, start_inventory, demand_forecast, future_supply)
+    return generate_forecast(
+        start_date, start_inventory, demand_forecast, future_supply
+    )
 
 
 def generate_forecast(start_date, start_inventory, demand_forecast, known_supply):
@@ -115,12 +121,16 @@ def generate_forecast(start_date, start_inventory, demand_forecast, known_supply
     objective.SetMinimization()
 
     status = solver.Solve()
-    import pdb; pdb.set_trace()
+    import pdb
+
+    pdb.set_trace()
     if status != pywraplp.Solver.OPTIMAL:
         return []
 
     forecast_result = []
-    import pdb; pdb.set_trace()
+    import pdb
+
+    pdb.set_trace()
     for day in days:
         forecast_result.append(
             Forecast(

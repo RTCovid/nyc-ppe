@@ -32,7 +32,7 @@ DEMAND_MESSAGE = (
 class DemandCalculationConfig(NamedTuple):
     use_real_demand: bool = True
     use_hospitalization_projection: bool = True
-    rollup_fn: Callable[[dc.Item], str] = lambda x:x
+    rollup_fn: Callable[[dc.Item], str] = lambda x: x
 
 
 class DemandSrc(str, Enum):
@@ -91,11 +91,11 @@ MAPPING = {dc.OrderType.Make: "make", dc.OrderType.Purchase: "sell"}
 
 
 def asset_rollup_legacy(
-        time_start: datetime,
-        time_end: datetime,
-        use_hospitalization_projection=True,
-        use_real_demand=True,
-        rollup_fn: Callable[[dc.Item], str] = lambda x: x,
+    time_start: datetime,
+    time_end: datetime,
+    use_hospitalization_projection=True,
+    use_real_demand=True,
+    rollup_fn: Callable[[dc.Item], str] = lambda x: x,
 ):
     return asset_rollup(
         Period(time_start, time_end),
@@ -108,14 +108,13 @@ def asset_rollup_legacy(
 
 
 def asset_rollup(
-        time_range: Period,
-        demand_calculation_config: DemandCalculationConfig,
+    time_range: Period, demand_calculation_config: DemandCalculationConfig,
 ) -> Dict[str, AssetRollup]:
     time_start, time_end = time_range.start, time_range.end
     relevant_deliveries = (
         ScheduledDelivery.active()
-            .prefetch_related("purchase")
-            .filter(delivery_date__gte=time_start, delivery_date__lte=time_end)
+        .prefetch_related("purchase")
+        .filter(delivery_date__gte=time_start, delivery_date__lte=time_end)
     )
 
     results: Dict[dc.Item, AssetRollup] = {}
@@ -157,9 +156,9 @@ def deliveries_for_period(time_start: datetime, time_end: datetime):
     """
     demand_by_day = (
         FacilityDelivery.active()
-            .filter(date__gte=time_start, date__lte=time_end)
-            .values("item")
-            .annotate(Sum("quantity"))
+        .filter(date__gte=time_start, date__lte=time_end)
+        .values("item")
+        .annotate(Sum("quantity"))
     )
     rollup = collections.defaultdict(lambda: 0)
     for row in demand_by_day:
@@ -183,9 +182,9 @@ def known_recent_demand() -> Dict[dc.Item, Demand]:
 
 
 def compute_scaling_factor(
-        past_period: Period,
-        projection_period: Period,
-        demand_calculation_config: DemandCalculationConfig,
+    past_period: Period,
+    projection_period: Period,
+    demand_calculation_config: DemandCalculationConfig,
 ) -> float:
     if demand_calculation_config.use_hospitalization_projection:
         # Get last week'ks total hospitalization
@@ -201,10 +200,10 @@ def compute_scaling_factor(
 
 
 def add_demand_estimate(
-        time_start: datetime,
-        time_end: datetime,
-        asset_rollup: Dict[dc.Item, AssetRollup],
-        demand_calculation_config: DemandCalculationConfig,
+    time_start: datetime,
+    time_end: datetime,
+    asset_rollup: Dict[dc.Item, AssetRollup],
+    demand_calculation_config: DemandCalculationConfig,
 ):
     last_week_start = datetime.datetime.today() - datetime.timedelta(days=7)
     last_week_end = last_week_start + datetime.timedelta(days=6)

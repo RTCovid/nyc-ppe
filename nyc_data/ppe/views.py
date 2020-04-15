@@ -27,18 +27,20 @@ class StandardRequestParams(NamedTuple):
     rollup_fn: Callable[[str], str]
 
     @classmethod
-    def load_from_request(cls, request) -> 'StandardRequestParams':
+    def load_from_request(cls, request) -> "StandardRequestParams":
         if request.GET:
             params = request.GET
         else:
             params = request.POST
 
-        start_date = params.get('start_date')
-        end_date = params.get('end_date')
+        start_date = params.get("start_date")
+        end_date = params.get("end_date")
 
         err_collector = ErrorCollector()
-        start_date = parse_date(start_date, err_collector) or date.today()
-        end_date = parse_date(end_date, err_collector) or date.today() + timedelta(days=29)
+        start_date = (parse_date(start_date, err_collector) or datetime.now()).date()
+        end_date = (
+            parse_date(end_date, err_collector) or datetime.now() + timedelta(days=29)
+        ).date()
 
         if params.get("rollup") in {"mayoral", "", None}:
             rollup_fn = mayoral_rollup
@@ -46,9 +48,7 @@ class StandardRequestParams(NamedTuple):
             rollup_fn = lambda x: x
 
         return StandardRequestParams(
-            start_date=start_date,
-            end_date=end_date,
-            rollup_fn=rollup_fn
+            start_date=start_date, end_date=end_date, rollup_fn=rollup_fn
         )
 
 
@@ -69,7 +69,12 @@ def default(request):
 
     table = aggregations.AggregationTable(cleaned_aggregation)
     RequestConfig(request).configure(table)
-    context = {"aggregations": table}
+    context = {
+        "aggregations": table,
+        "days_in_view": dc.Period(params.start_date, params.end_date)
+        .inclusive_length()
+        .days,
+    }
     return render(request, "dashboard.html", context)
 
 
@@ -85,13 +90,6 @@ def drilldown(request):
     purchases = drilldown_res.purchases
     deliveries = drilldown_res.scheduled_deliveries
     inventory = drilldown_res.inventory
-    # deliveries_next_three = datetime.now() + timedelta(days=3)
-    for inventory_row in inventory:
-        forecast = optimization.generate_forecast_for_item(params.start_date, inventory_row.item)
-        print(forecast)
-        import pdb; pdb.set_trace()
-
-
 
     received_deliveries = sum([p.received_quantity or 0 for p in purchases])
     context = {
@@ -107,8 +105,8 @@ def drilldown(request):
                 d.quantity
                 for d in deliveries
                 if datetime.now().date()
-                   <= d.delivery_date
-                   <= datetime.now().date() + timedelta(days=2)
+                <= d.delivery_date
+                <= datetime.now().date() + timedelta(days=2)
             ]
         ),
         "deliveries_next_week": sum(
@@ -116,8 +114,8 @@ def drilldown(request):
                 d.quantity
                 for d in deliveries
                 if datetime.now().date()
-                   <= d.delivery_date
-                   <= datetime.now().date() + timedelta(days=6)
+                <= d.delivery_date
+                <= datetime.now().date() + timedelta(days=6)
             ]
         ),
         "deliveries_next_thirty": sum(
@@ -125,8 +123,8 @@ def drilldown(request):
                 d.quantity
                 for d in deliveries
                 if datetime.now().date()
-                   <= d.delivery_date
-                   <= datetime.now().date() + timedelta(days=29)
+                <= d.delivery_date
+                <= datetime.now().date() + timedelta(days=29)
             ]
         ),
         "scheduled_total": sum([d.quantity for d in deliveries]),

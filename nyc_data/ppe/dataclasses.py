@@ -1,5 +1,4 @@
-import datetime
-from datetime import datetime
+from datetime import datetime, timedelta, date
 from enum import Enum
 
 from dataclasses import dataclass
@@ -167,15 +166,15 @@ ITEM_TO_MAYORAL = {
 
 
 class Period(NamedTuple):
-    start: datetime.date
-    end: datetime.date
+    start: date
+    end: date
 
     @classmethod
     def last_week(cls):
-        return Period(datetime.today() - datetime.timedelta(days=6), datetime.today())
+        return Period(datetime.today() - timedelta(days=6), datetime.today())
 
     def inclusive_length(self):
-        return self.end - self.start + datetime.timedelta(days=1)
+        return self.end - self.start + timedelta(days=1)
 
     def exclusive_length(self):
         return self.end - self.start
