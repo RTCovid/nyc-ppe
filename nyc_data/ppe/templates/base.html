@@ -4,7 +4,7 @@
     <title>{% block titleprefix %}{% endblock %}NYC PPE Data</title>
     <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">
 </head>
-<body>
+<body class="{% block bodyclass %}{% endblock %}">
     <section class="disclaimer">
         <strong>CONFIDENTIAL.</strong>&nbsp;DO NOT DISTRIBUTE WITHOUT AUTHORIZATION.
     </section>

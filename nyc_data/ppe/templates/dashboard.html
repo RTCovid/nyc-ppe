@@ -15,7 +15,9 @@
 {% endblock %}
 
 {% block content %}
-{% render_table aggregations %}
+<div class="dashboard-table">
+    {% render_table aggregations %}
+</div>
 {% endblock %}
 
 {% block footer %}

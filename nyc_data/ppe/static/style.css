@@ -95,53 +95,6 @@ section.content {
     padding: 40px 0;
 }
 
-table {
-    border-spacing: 0 1em;
-    border-collapse: collapse;
-    width: 100%;
-    font-size: 18px;
-}
-
-tr.even {
-    background: #fafafa;
-}
-
-th, td {
-    padding-right: 20px;
-    padding-top: 16px;
-    padding-bottom: 16px;
-    text-align: left;
-}
-
-th {
-    text-transform: uppercase;
-}
-th.orderable a {
-    color: #888888;
-    text-decoration: none;
-    font-style: normal;
-    font-weight: 300;
-    font-size: 16px;
-    line-height: 19px;
-}
-th.orderable.desc::before, th.orderable.asc::before {
-    font-size: 12px;
-    color: #aaa;
-}
-th.orderable.desc::before { content:"▲"; }
-th.orderable.asc::before { content:"▼"; }
-
-td {
-    white-space: pre;
-}
-td:first-child {
-    padding-left: 10px;
-    text-align: left;
-}
-td:last-child {
-    padding-right: 10px;
-}
-
 .value {
     font-size: 18px;
     line-height: 21px;
@@ -382,6 +335,63 @@ th:last-child.tooltip::after {
     animation-timing-function: ease-in;
 }
 
+
+/* general table styles */
+
+table {
+    border-spacing: 0 1em;
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 18px;
+}
+
+th {
+    text-transform: uppercase;
+}
+
+th.orderable a {
+    color: #888888;
+    text-decoration: none;
+    font-style: normal;
+    font-weight: 300;
+    font-size: 16px;
+    line-height: 19px;
+}
+th.orderable.desc::before, th.orderable.asc::before {
+    font-size: 12px;
+    color: #aaa;
+}
+th.orderable.desc::before { content:"▲"; }
+th.orderable.asc::before { content:"▼"; }
+
+td:first-child {
+    padding-left: 10px;
+    text-align: left;
+}
+td:last-child {
+    padding-right: 10px;
+}
+/* dashboard table styles */
+
+body.drilldown .dashboard-table {
+    padding-bottom: 40px;
+}
+
+.dashboard-table tr.even {
+    background: #fafafa;
+}
+
+.dashboard-table th, td {
+    padding-right: 20px;
+    padding-top: 16px;
+    padding-bottom: 16px;
+    text-align: left;
+}
+
+.dashboard-table td {
+    white-space: pre;
+}
+
 /* Drilldown styles */
 
 .incoming-supply h2 {
@@ -400,6 +410,7 @@ th:last-child.tooltip::after {
     font-weight: inherit;
     white-space: nowrap;
     margin-bottom: 20px;
+    text-align: left;
 }
 
 .drilldown-deliveries tr.drilldown-newday td, .drilldown-deliveries tr.drilldown-newday th {
