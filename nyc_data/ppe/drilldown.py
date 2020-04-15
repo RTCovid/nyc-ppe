@@ -6,6 +6,8 @@ from ppe.aggregations import AssetRollup, DemandCalculationConfig
 from ppe.models import ScheduledDelivery, Purchase, Inventory
 from typing import List, Callable, NamedTuple, Dict
 
+from ppe.utils import log_db_queries
+
 
 class DrilldownResult(NamedTuple):
     purchases: List[Purchase]
@@ -14,6 +16,7 @@ class DrilldownResult(NamedTuple):
     aggregation: Dict[str, AssetRollup]
 
 
+@log_db_queries
 def drilldown_result(
     item_type: str, rollup_fn: Callable[[dc.Item], str], time_range: dc.Period = None
 ):
@@ -25,13 +28,16 @@ def drilldown_result(
         .prefetch_related("deliveries")
         .order_by("deliveries__delivery_date")
     )
-    purchases = [p for p in purchases if rollup_fn(dc.Item(p.item)) == item_type]
-    deliveries = (
-        ScheduledDelivery.active()
-        .prefetch_related("purchase")
-        .order_by("delivery_date")
-    )
-    deliveries = [d for d in deliveries if rollup_fn(dc.Item(d.item)) == item_type]
+
+    purchases = [
+        p
+        for p in purchases
+        if rollup_fn(dc.Item(p.item)) == item_type and not p.complete
+    ]
+    deliveries = [list(p.deliveries.all()) for p in purchases]
+    # flatten
+    deliveries = sum(deliveries, [])
+    deliveries = sorted(deliveries, key=lambda d: d.delivery_date)
     inventory = [
         i for i in Inventory.active() if rollup_fn(dc.Item(i.item)) == item_type
     ]

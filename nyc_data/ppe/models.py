@@ -161,27 +161,22 @@ class Purchase(BaseModel):
 
     raw_data = JSONField()
 
-    # property so we can use it in templates
+    @property
+    def total_deliveries(self):
+        # WARNING: I this doesn't seem to be prefetched.
+        return self.deliveries.aggregate(Sum("quantity"))["quantity__sum"]
+
+    @property
+    def complete(self):
+        return self.total_deliveries == self.received_quantity
+
     @property
     def unscheduled_quantity(self):
         if self.received_quantity == self.quantity:
             return 0
         else:
-            total_scheduled = self.deliveries.aggregate(Sum("quantity"))[
-                "quantity__sum"
-            ]
-            return self.quantity - (total_scheduled or 0)
 
-    def to_dataclass(self):
-        return dc.Purchase(
-            order_type=self.order_type,
-            item=dc.Item(self.item).display(),
-            description=self.description,
-            quantity=self.quantity,
-            unscheduled_quantity=self.unscheduled_quantity,
-            deliveries=self.deliveries.all(),
-            vendor=self.vendor,
-        )
+            return self.quantity - (self.total_deliveries or 0)
 
 
 class Inventory(BaseModel):

@@ -22,6 +22,8 @@ from ppe.models import (
 )
 
 # NY Forecast from https://covid19.healthdata.org/united-states-of-america/new-york
+from ppe.utils import log_db_queries
+
 HOSPITALIZATION = {}
 with open("../public-data/hospitalization_projection_new_york.json", "r") as f:
     HOSPITALIZATION = json.load(f)
@@ -110,14 +112,15 @@ def asset_rollup_legacy(
     )
 
 
+@log_db_queries
 def asset_rollup(
-        time_range: Period, demand_calculation_config: DemandCalculationConfig,
+    time_range: Period, demand_calculation_config: DemandCalculationConfig,
 ) -> Dict[str, AssetRollup]:
     time_start, time_end = time_range.start, time_range.end
     relevant_deliveries = (
         ScheduledDelivery.active()
-            .prefetch_related("purchase")
-            .filter(delivery_date__gte=time_start, delivery_date__lte=time_end)
+        .prefetch_related("purchase")
+        .filter(delivery_date__gte=time_start, delivery_date__lte=time_end)
     )
 
     results: Dict[dc.Item, AssetRollup] = {}
