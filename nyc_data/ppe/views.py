@@ -181,7 +181,7 @@ class Upload(View):
                 )
             except data_import.CsvImportError as ex:
                 return render(request, "upload.html",
-                              UploadContext(error="Csv ")._asdict())
+                              UploadContext(error="Error reading in CSV file")._asdict())
 
 class Verify(View):
     def get(self, request, import_id):

@@ -53,11 +53,13 @@ def guess_mapping(sheet: Path, possible_mappings: List[SheetMapping]):
             sheet = workbook[mapping.sheet_name]
             first_row = next(XLSXDictReader(sheet))
 
-            with open(sheet, "r", encoding="utf16") as csvfile:
-                text = csvfile.read()
+        else:
+
             try:
-                reader = csv.DictReader(text.splitlines())
-                first_row = next(reader)
+                with open(sheet, encoding="latin-1") as csvfile:
+                    reader = csv.DictReader(csvfile)
+                    first_row = next(reader)
+                    
             except Exception as exc:
                 raise data_import.CsvImportError('Error reading in CSV file')
 
@@ -88,7 +90,7 @@ def import_xlsx(
         sheet = workbook[sheet_mapping.sheet_name]
         as_dicts = XLSXDictReader(sheet)
     else:
-        with open(sheet) as csvfile:
+        with open(sheet, encoding="latin-1") as csvfile:
             reader = csv.DictReader(csvfile)
             as_dicts = list(reader)
 
