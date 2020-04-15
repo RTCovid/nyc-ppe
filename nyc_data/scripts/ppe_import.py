@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import ppe.errors
 from ppe import data_import
 
 
@@ -20,9 +21,9 @@ def run(path=None):
                 file, "Uploaded via CLI", overwrite_in_prog=True
             )
             data_import.complete_import(import_obj)
-        except data_import.NoMappingForFileError:
+        except ppe.errors.NoMappingForFileError:
             print(f"{file} does not appear to be a format we recognize")
-        except data_import.PartialFile:
+        except ppe.errors.PartialFile:
             print(
                 f"{file} appears to have changed and does not match the format anymore"
             )

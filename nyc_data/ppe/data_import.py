@@ -7,19 +7,17 @@ import xlsx_utils
 from ppe.data_mapping.mappers import (
     dcas_make,
     dcas_sourcing,
-    inventory,
     inventory_from_facilities,
     hospital_deliveries,
     hospital_demands,
 )
 from ppe.data_mapping.types import DataFile
 from ppe.data_mapping.utils import ErrorCollector
+from ppe.errors import DataImportError, NoMappingForFileError, PartialFile, ImportInProgressError
 from ppe.models import (
     ImportStatus,
     DataImport,
-    InboundReceipt,
     FacilityDelivery,
-    Demand,
 )
 from xlsx_utils import import_xlsx
 
@@ -30,10 +28,6 @@ ALL_MAPPINGS = [
     hospital_deliveries.FACILITY_DELIVERIES,
     hospital_demands.WEEKLY_DEMANDS,
 ]
-
-
-class DataImportError(Exception):
-    pass
 
 
 def handle_upload(f, uploader_name: str) -> DataImport:
@@ -48,19 +42,6 @@ def handle_upload(f, uploader_name: str) -> DataImport:
 
 def import_in_progress(data_file: DataFile):
     return DataImport.objects.filter(data_file=data_file, status=ImportStatus.candidate)
-
-
-class NoMappingForFileError(DataImportError):
-    pass
-
-
-class PartialFile(DataImportError):
-    pass
-
-
-class ImportInProgressError(DataImportError):
-    def __init__(self, import_id):
-        self.import_id = import_id
 
 
 def smart_import(
