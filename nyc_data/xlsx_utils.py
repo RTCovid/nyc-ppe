@@ -56,7 +56,7 @@ def guess_mapping(sheet: Path, possible_mappings: List[SheetMapping]):
             first_row = next(XLSXDictReader(sheet))
         else:
 
-            with open(sheet, "r", encoding="utf16") as csvfile:
+            with open(sheet) as csvfile:
                 text = csvfile.read()
             reader = csv.DictReader(text.splitlines())
             first_row = next(reader)
