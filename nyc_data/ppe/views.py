@@ -1,15 +1,15 @@
 from datetime import datetime, timedelta, date
 from typing import NamedTuple, Optional, Callable
 
-from django.http import HttpResponse, JsonResponse
 from django.forms import Form
 from django.http import HttpResponse, HttpResponseRedirect
+from django.http import JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 from django.views import View
 from django_tables2 import RequestConfig
 
-from ppe import aggregations, dataclasses as dc, optimization
+from ppe import aggregations, dataclasses as dc
 from ppe import forms, data_import
 from ppe.data_mapping.utils import parse_date, ErrorCollector
 from ppe.drilldown import drilldown_result
@@ -25,6 +25,9 @@ class StandardRequestParams(NamedTuple):
     start_date: date  # usually today
     end_date: date  # usually today + n days
     rollup_fn: Callable[[str], str]
+
+    def time_range(self):
+        return dc.Period(self.start_date, self.end_date)
 
     @classmethod
     def load_from_request(cls, request) -> "StandardRequestParams":
@@ -84,7 +87,9 @@ def drilldown(request):
     if category is None:
         return HttpResponse("Need an asset category param", status=400)
 
-    drilldown_res = drilldown_result(category, params.rollup_fn)
+    drilldown_res = drilldown_result(
+        category, params.rollup_fn, time_range=params.time_range()
+    )
     table = aggregations.AggregationTable(drilldown_res.aggregation.values())
     RequestConfig(request).configure(table)
     purchases = drilldown_res.purchases
