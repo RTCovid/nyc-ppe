@@ -445,3 +445,9 @@ th:last-child.tooltip::after {
     color: #888;
     font-size: 14px;
 }
+
+/* dashboard table styles */
+
+body.drilldown .dashboard-table {
+    padding-bottom: 40px;
+}

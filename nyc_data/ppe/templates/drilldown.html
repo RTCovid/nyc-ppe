@@ -2,23 +2,18 @@
 {% load ppe_extras %}
 {% load render_table from django_tables2 %}
 
+{% block bodyclass %}drilldown{% endblock %}
+
 {% block titlebar %}
 <h2>{{ asset_category|display_name }}</h2>
 {% endblock %}
 
 {% block content %}
-{% render_table aggregations %}
-<div class="incoming-supply">
-    <div>
-        <!--<h4>Disbursed to facilities (hospitals, nursing homes, etc.) last 7 days</h4>
-        <ul>
-            {%for item, ct in facility_deliveries.items%}
-            <li>{{item|display_name}}: {{ct|pretty_num}}</li>
-            {% endfor %}
-        </ul>
-        <hr/>-->
-    </div>
+<div class="dashboard-table">
+    {% render_table aggregations %}
+</div>
 
+<div class="incoming-supply">
     <div class="drilldown-detail supply-scheduled">
         <h2>Incoming Supply</h2>
         <div class="incoming-rollup">
