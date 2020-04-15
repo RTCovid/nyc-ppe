@@ -1,19 +1,22 @@
 import collections
 import datetime
+import json
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, Callable, NamedTuple, Optional, List, Set
-import json
+from typing import Dict, Callable, NamedTuple, Set
 
 import django_tables2 as tables
 from django.db.models import Sum
+from django.urls import reverse
 from django.utils.html import format_html
+from django.utils.http import urlencode
+from django.utils.safestring import mark_safe
 
 import ppe.dataclasses as dc
+from ppe.dataclasses import Period
 from ppe.models import (
     ScheduledDelivery,
     Inventory,
-    ImportStatus,
     FacilityDelivery,
     Demand,
 )
@@ -30,9 +33,9 @@ DEMAND_MESSAGE = (
 
 
 class DemandCalculationConfig(NamedTuple):
-    use_real_demand: bool
-    use_hospitalization_projection: bool
-    rollup_fn: Callable[[dc.Item], str]
+    use_real_demand: bool = True
+    use_hospitalization_projection: bool = True
+    rollup_fn: Callable[[dc.Item], str] = lambda x: x
 
 
 class DemandSrc(str, Enum):
@@ -90,16 +93,15 @@ class AssetRollup:
 MAPPING = {dc.OrderType.Make: "make", dc.OrderType.Purchase: "sell"}
 
 
-def asset_rollup(
-    time_start: datetime,
-    time_end: datetime,
-    use_hospitalization_projection=True,
-    use_real_demand=True,
-    rollup_fn: Callable[[dc.Item], str] = lambda x: x,
+def asset_rollup_legacy(
+        time_start: datetime,
+        time_end: datetime,
+        use_hospitalization_projection=True,
+        use_real_demand=True,
+        rollup_fn: Callable[[dc.Item], str] = lambda x: x,
 ):
-    return _asset_rollup(
-        time_start,
-        time_end,
+    return asset_rollup(
+        Period(time_start, time_end),
         DemandCalculationConfig(
             use_real_demand,
             use_hospitalization_projection=use_hospitalization_projection,
@@ -108,15 +110,14 @@ def asset_rollup(
     )
 
 
-def _asset_rollup(
-    time_start: datetime,
-    time_end: datetime,
-    demand_calculation_config: DemandCalculationConfig,
+def asset_rollup(
+        time_range: Period, demand_calculation_config: DemandCalculationConfig,
 ) -> Dict[str, AssetRollup]:
+    time_start, time_end = time_range.start, time_range.end
     relevant_deliveries = (
         ScheduledDelivery.active()
-        .prefetch_related("purchase")
-        .filter(delivery_date__gte=time_start, delivery_date__lte=time_end)
+            .prefetch_related("purchase")
+            .filter(delivery_date__gte=time_start, delivery_date__lte=time_end)
     )
 
     results: Dict[dc.Item, AssetRollup] = {}
@@ -158,9 +159,9 @@ def deliveries_for_period(time_start: datetime, time_end: datetime):
     """
     demand_by_day = (
         FacilityDelivery.active()
-        .filter(date__gte=time_start, date__lte=time_end)
-        .values("item")
-        .annotate(Sum("quantity"))
+            .filter(date__gte=time_start, date__lte=time_end)
+            .values("item")
+            .annotate(Sum("quantity"))
     )
     rollup = collections.defaultdict(lambda: 0)
     for row in demand_by_day:
@@ -183,21 +184,10 @@ def known_recent_demand() -> Dict[dc.Item, Demand]:
     return recent_demands
 
 
-class Period(NamedTuple):
-    start: datetime.date
-    end: datetime.date
-
-    def inclusive_length(self):
-        return self.end - self.start + datetime.timedelta(days=1)
-
-    def exclusive_length(self):
-        return self.end - self.start
-
-
 def compute_scaling_factor(
-    past_period: Period,
-    projection_period: Period,
-    demand_calculation_config: DemandCalculationConfig,
+        past_period: Period,
+        projection_period: Period,
+        demand_calculation_config: DemandCalculationConfig,
 ) -> float:
     if demand_calculation_config.use_hospitalization_projection:
         # Get last week'ks total hospitalization
@@ -213,10 +203,10 @@ def compute_scaling_factor(
 
 
 def add_demand_estimate(
-    time_start: datetime,
-    time_end: datetime,
-    asset_rollup: Dict[dc.Item, AssetRollup],
-    demand_calculation_config: DemandCalculationConfig,
+        time_start: datetime,
+        time_end: datetime,
+        asset_rollup: Dict[dc.Item, AssetRollup],
+        demand_calculation_config: DemandCalculationConfig,
 ):
     last_week_start = datetime.datetime.today() - datetime.timedelta(days=7)
     last_week_end = last_week_start + datetime.timedelta(days=6)
@@ -258,7 +248,7 @@ def get_total_hospitalization(time_start: datetime, time_end: datetime) -> float
     total_hospitalization = 0
     date = time_start
     while date <= time_end:
-        hospitalization = HOSPITALIZATION[date.strftime("%Y-%m-%d")]
+        hospitalization = HOSPITALIZATION.get(date.strftime("%Y-%m-%d"))
         # Use All Beds Available (max during normal operation, not theoretical upper bounds) as lower bound
         if not hospitalization or hospitalization < ALL_BEDS_AVAILABLE:
             hospitalization = ALL_BEDS_AVAILABLE
@@ -364,11 +354,14 @@ class AggregationTable(tables.Table):
         )
 
     def render_asset(self, value):
-        href = f"/drilldown?category={value}"
+        params = {"category": value.value, **self.request.GET}
         if isinstance(value, dc.MayoralCategory):
-            href += "&rollup=mayoral"
+            params["rollup"] = "mayoral"
+        param_str = urlencode(params, doseq=True)
+        base_url = reverse("drilldown")
         return format_html(
-            '<a href="{href}">{display_name}', href=href, display_name=value.display()
+            '<a href="{base_url}?{param_str}">{display_name}', base_url=base_url, param_str=mark_safe(param_str),
+            display_name=value.display()
         )
 
     def render_balance(self, record: AssetRollup):

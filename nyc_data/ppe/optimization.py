@@ -1,8 +1,9 @@
 from ortools.linear_solver import pywraplp
-from datetime import datetime
-from datetime import timedelta
+from datetime import timedelta, datetime, date
+import ppe.dataclasses as dc
+from ppe import aggregations
+from ppe.aggregations import compute_scaling_factor, DemandCalculationConfig
 from ppe.dataclasses import Forecast
-
 
 # For each day and each type of resource, I am think of modeling with the following four variables (day N):
 # demand_N : demand of this day.
@@ -16,10 +17,48 @@ from ppe.dataclasses import Forecast
 # inventory_N  will be estimated by the LP model.
 
 # The type of constraints would be very simple at the beginning: just day-to-day consistency: inventory_N + supply_N + additional_supply_N - demand_(N+1) = inventory_(N+1)
+from ppe.models import Inventory, ScheduledDelivery
+
+
+def generate_forecast_for_item(start_date: date, item: dc.Item, n_days: int = 100):
+    demand_data = aggregations.known_recent_demand()
+    if item not in demand_data:
+        return None
+    else:
+        demand_for_asset = demand_data[item]
+    start_inventory = Inventory.active().filter(item=item).first().quantity
+    future_deliveries = ScheduledDelivery.active().filter(
+        purchase__item=item, delivery_date__gte=start_date
+    )
+    # 100 days
+    future_supply = [0] * n_days
+    demand_forecast = [0] * n_days
+
+    for delivery in future_deliveries:
+        day = (delivery.delivery_date - start_date).days
+        if day > 0 and day < len(future_supply):
+            future_supply[day] += delivery.quantity
+
+    for day in range(n_days):
+        day_of = start_date + timedelta(days=day)
+        scaling_factor = compute_scaling_factor(
+            past_period=dc.Period(
+                demand_for_asset.start_date, demand_for_asset.end_date
+            ),
+            projection_period=dc.Period(day_of, day_of + timedelta(days=1)),
+            demand_calculation_config=DemandCalculationConfig(),
+        )
+        import pdb
+
+        pdb.set_trace()
+        demand_forecast[day] += int(scaling_factor * demand_for_asset.demand)
+
+    return generate_forecast(
+        start_date, start_inventory, demand_forecast, future_supply
+    )
 
 
 def generate_forecast(start_date, start_inventory, demand_forecast, known_supply):
-
     # Create the linear solver with the GLOP backend.
     solver = pywraplp.Solver(
         "simple_lp_program", pywraplp.Solver.GLOP_LINEAR_PROGRAMMING
@@ -82,10 +121,16 @@ def generate_forecast(start_date, start_inventory, demand_forecast, known_supply
     objective.SetMinimization()
 
     status = solver.Solve()
+    import pdb
+
+    pdb.set_trace()
     if status != pywraplp.Solver.OPTIMAL:
         return []
 
     forecast_result = []
+    import pdb
+
+    pdb.set_trace()
     for day in days:
         forecast_result.append(
             Forecast(

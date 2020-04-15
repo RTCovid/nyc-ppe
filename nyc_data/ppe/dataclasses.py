@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta, date
 from enum import Enum
 
 from dataclasses import dataclass
@@ -163,3 +163,18 @@ ITEM_TO_MAYORAL = {
     Item.unknown: MayoralCategory.uncategorized,
     Item.body_bags: MayoralCategory.uncategorized,
 }
+
+
+class Period(NamedTuple):
+    start: date
+    end: date
+
+    @classmethod
+    def last_week(cls):
+        return Period(datetime.today() - timedelta(days=6), datetime.today())
+
+    def inclusive_length(self):
+        return self.end - self.start + timedelta(days=1)
+
+    def exclusive_length(self):
+        return self.end - self.start

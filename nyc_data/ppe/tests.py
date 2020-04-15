@@ -5,7 +5,8 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from ppe import aggregations
-from ppe.aggregations import AssetRollup, DemandSrc, Period
+from ppe.aggregations import AssetRollup, DemandSrc
+from ppe.dataclasses import Period
 from ppe.data_mapping.types import DataFile
 from ppe.data_mapping.mappers.dcas_sourcing import SourcingRow
 from ppe.data_mapping.mappers.hospital_demands import DemandRow
@@ -98,7 +99,7 @@ class TestAssetRollup(TestCase):
 
     def test_rollup(self):
         today = datetime(2020, 4, 12)
-        rollup = aggregations.asset_rollup(today - timedelta(days=27), today)
+        rollup = aggregations.asset_rollup_legacy(today - timedelta(days=27), today)
         self.assertEqual(len(rollup), len(dc.Item))
         # demand of 20 = 5 in the last week * 4 weeks in the period
         self.assertEqual(
@@ -113,7 +114,7 @@ class TestAssetRollup(TestCase):
         )
 
         # Turn off use of hospitalization projection
-        rollup = aggregations.asset_rollup(
+        rollup = aggregations.asset_rollup_legacy(
             today - timedelta(days=27), today, use_hospitalization_projection=False,
         )
         self.assertEqual(
@@ -140,7 +141,7 @@ class TestAssetRollup(TestCase):
         )
 
         # Turn of use off hospitalization projection & real demand
-        future_rollup = aggregations.asset_rollup(
+        future_rollup = aggregations.asset_rollup_legacy(
             today,
             today + timedelta(days=27),
             use_hospitalization_projection=False,
@@ -161,7 +162,7 @@ class TestAssetRollup(TestCase):
 
     def test_mayoral_rollup(self):
         today = datetime(2020, 4, 12)
-        rollup = aggregations.asset_rollup(
+        rollup = aggregations.asset_rollup_legacy(
             today - timedelta(days=27),
             today,
             rollup_fn=lambda row: row.to_mayoral_category(),
@@ -178,7 +179,7 @@ class TestAssetRollup(TestCase):
         self.data_import.save()
         try:
             self.assertEqual(aggregations.known_recent_demand(), {})
-            rollup = aggregations.asset_rollup(today - timedelta(days=28), today)
+            rollup = aggregations.asset_rollup_legacy(today - timedelta(days=28), today)
             self.assertEqual(
                 rollup[dc.Item.gown], AssetRollup(asset=dc.Item.gown, demand=0, sell=0)
             )
