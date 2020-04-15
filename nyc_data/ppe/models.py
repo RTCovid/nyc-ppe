@@ -168,7 +168,7 @@ class Purchase(BaseModel):
 
     @property
     def complete(self):
-        return self.total_deliveries == self.received_quantity
+        return self.received_quantity == self.quantity
 
     @property
     def unscheduled_quantity(self):
