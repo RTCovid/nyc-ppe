@@ -1,5 +1,5 @@
-from datetime import datetime, timedelta
-from typing import NamedTuple, Optional
+from datetime import datetime, timedelta, date
+from typing import NamedTuple, Optional, Callable
 
 from django.http import HttpResponse, JsonResponse
 from django.forms import Form
@@ -9,31 +9,57 @@ from django.urls import reverse
 from django.views import View
 from django_tables2 import RequestConfig
 
-from ppe import aggregations, dataclasses as dc
+from ppe import aggregations, dataclasses as dc, optimization
 from ppe import forms, data_import
+from ppe.data_mapping.utils import parse_date, ErrorCollector
 from ppe.drilldown import drilldown_result
 from ppe.models import DataImport
 from ppe.optimization import generate_forecast
 
 
-def mayoral_rollup(row):
+def mayoral_rollup(row: str):
     return dc.Item(row).to_mayoral_category()
 
 
-def default(request):
-    if request.GET.get("rollup", "") in ["mayoral", "", None]:
-        aggregation = aggregations.asset_rollup(
-            time_start=datetime.now(),
-            time_end=datetime.now() + timedelta(days=30),
-            rollup_fn=mayoral_rollup,
-        )
-    elif request.GET.get("rollup", "") in [
-        "critical",
-    ]:
-        aggregation = aggregations.asset_rollup(
-            datetime.now(), datetime.now() + timedelta(days=30)
+class StandardRequestParams(NamedTuple):
+    start_date: date  # usually today
+    end_date: date  # usually today + n days
+    rollup_fn: Callable[[str], str]
+
+    @classmethod
+    def load_from_request(cls, request) -> 'StandardRequestParams':
+        if request.GET:
+            params = request.GET
+        else:
+            params = request.POST
+
+        start_date = params.get('start_date')
+        end_date = params.get('end_date')
+
+        err_collector = ErrorCollector()
+        start_date = parse_date(start_date, err_collector) or date.today()
+        end_date = parse_date(end_date, err_collector) or date.today() + timedelta(days=29)
+
+        if params.get("rollup") in {"mayoral", "", None}:
+            rollup_fn = mayoral_rollup
+        else:
+            rollup_fn = lambda x: x
+
+        return StandardRequestParams(
+            start_date=start_date,
+            end_date=end_date,
+            rollup_fn=rollup_fn
         )
 
+
+def default(request):
+    params = StandardRequestParams.load_from_request(request)
+
+    aggregation = aggregations.asset_rollup_legacy(
+        time_start=params.start_date,
+        time_end=params.end_date,
+        rollup_fn=params.rollup_fn,
+    )
     displayed_vals = ["donate", "sell", "make", "inventory"]
     cleaned_aggregation = [
         rollup
@@ -48,24 +74,29 @@ def default(request):
 
 
 def drilldown(request):
+    params = StandardRequestParams.load_from_request(request)
     category = request.GET.get("category")
     if category is None:
         return HttpResponse("Need an asset category param", status=400)
-    if request.GET.get("rollup") == "mayoral":
-        rollup = mayoral_rollup
-        cat_display = category
-    else:
-        rollup = lambda x: x
-        cat_display = dc.Item(category).display()
-    drilldown_res = drilldown_result(category, rollup)
+
+    drilldown_res = drilldown_result(category, params.rollup_fn)
+    table = aggregations.AggregationTable(drilldown_res.aggregation.values())
+    RequestConfig(request).configure(table)
     purchases = drilldown_res.purchases
     deliveries = drilldown_res.scheduled_deliveries
     inventory = drilldown_res.inventory
     # deliveries_next_three = datetime.now() + timedelta(days=3)
+    for inventory_row in inventory:
+        forecast = optimization.generate_forecast_for_item(params.start_date, inventory_row.item)
+        print(forecast)
+        import pdb; pdb.set_trace()
+
+
 
     received_deliveries = sum([p.received_quantity or 0 for p in purchases])
     context = {
-        "asset_category": cat_display,
+        "aggregations": table,
+        "asset_category": category,
         # conversion to data class handles conversion to display names, etc.
         "purchases": purchases,
         "deliveries": deliveries,
@@ -76,8 +107,8 @@ def drilldown(request):
                 d.quantity
                 for d in deliveries
                 if datetime.now().date()
-                <= d.delivery_date
-                <= datetime.now().date() + timedelta(days=2)
+                   <= d.delivery_date
+                   <= datetime.now().date() + timedelta(days=2)
             ]
         ),
         "deliveries_next_week": sum(
@@ -85,8 +116,8 @@ def drilldown(request):
                 d.quantity
                 for d in deliveries
                 if datetime.now().date()
-                <= d.delivery_date
-                <= datetime.now().date() + timedelta(days=6)
+                   <= d.delivery_date
+                   <= datetime.now().date() + timedelta(days=6)
             ]
         ),
         "deliveries_next_thirty": sum(
@@ -94,8 +125,8 @@ def drilldown(request):
                 d.quantity
                 for d in deliveries
                 if datetime.now().date()
-                <= d.delivery_date
-                <= datetime.now().date() + timedelta(days=29)
+                   <= d.delivery_date
+                   <= datetime.now().date() + timedelta(days=29)
             ]
         ),
         "scheduled_total": sum([d.quantity for d in deliveries]),
@@ -111,7 +142,7 @@ def drilldown(request):
             for k, v in aggregations.deliveries_for_period(
                 datetime.now().date() - timedelta(days=6), datetime.now().date()
             ).items()
-            if rollup(k) == category
+            if params.rollup_fn(k) == category
         },
     }
     return render(request, "drilldown.html", context)
