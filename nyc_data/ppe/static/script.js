@@ -41,7 +41,7 @@ $(function(){
         function cb(start, end) {
             var newloc;
 
-            $('#reportrange span').html(start.format('MMM D') + ' - ' + end.format('MMM D'));
+            $('#reportrange span').html(start.format('MMM D') + ' – ' + end.format('MMM D'));
             searchParams.set('start_date', start.format('YYYY-MM-DD'));
             searchParams.set('end_date', end.format('YYYY-MM-DD'));
 

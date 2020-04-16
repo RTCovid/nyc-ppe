@@ -463,6 +463,11 @@ body.drilldown .dashboard-table {
 
 /* Datepicker styles */
 
+#reportrange {
+    display: inline-block;
+    cursor: pointer;
+}
+
 #reportrange span {
     text-decoration: underline;
     color: #000;
