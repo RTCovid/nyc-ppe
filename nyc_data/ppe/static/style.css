@@ -15,7 +15,7 @@ a:hover {
 }
 
 section.container {
-    width: 80%;
+    width: 90%;
     margin: 0 auto;
 }
 
@@ -466,6 +466,15 @@ body.drilldown .dashboard-table {
 #reportrange {
     display: inline-block;
     cursor: pointer;
+}
+
+#reportrange::after {
+    display: inline-block;
+    content: "▼";
+    font-size: 14px;
+    margin-left: 5px;
+    vertical-align: middle;
+    color: #999;
 }
 
 #reportrange span {
