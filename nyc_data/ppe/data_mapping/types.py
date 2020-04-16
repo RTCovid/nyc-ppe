@@ -32,3 +32,4 @@ class DataFile(str, Enum):
     INVENTORY = "inventory"
     FACILITY_DELIVERIES = "facility_deliveries"
     HOSPITAL_DEMANDS = "hospital_demands"
+    CSH_DONATIONS = "donations"
