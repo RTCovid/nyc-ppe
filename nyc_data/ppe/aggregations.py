@@ -46,7 +46,7 @@ class DemandSrc(str, Enum):
         if self == DemandSrc.past_deliveries:
             return "previous deliveries"
         elif self == DemandSrc.real_demand:
-            return "demand information"
+            return "supply burndown information"
 
 
 @dataclass
