@@ -8,6 +8,9 @@ class ErrorCollector:
         self.errors = []
         self.warnings = []
 
+    def __len__(self):
+        return len(self.errors) + len(self.warnings)
+
     def report_error(self, err: str):
         self.errors.append(err)
 

@@ -51,6 +51,9 @@ class StandardRequestParams(NamedTuple):
         else:
             rollup_fn = lambda x: x
 
+        print(f"Parsed request as {start_date}->{end_date}")
+        if len(err_collector) > 0:
+            err_collector.dump()
         return StandardRequestParams(
             start_date=start_date, end_date=end_date, rollup_fn=rollup_fn
         )
