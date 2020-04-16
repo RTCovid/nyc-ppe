@@ -15,7 +15,7 @@ a:hover {
 }
 
 section.container {
-    width: 80%;
+    width: 90%;
     margin: 0 auto;
 }
 
@@ -385,7 +385,7 @@ body.drilldown .dashboard-table {
     background: #fafafa;
 }
 
-.dashboard-table th, td {
+.dashboard-table th, .dashboard-table td {
     padding-right: 20px;
     padding-top: 16px;
     padding-bottom: 16px;
@@ -459,4 +459,46 @@ body.drilldown .dashboard-table {
     font-weight: 300;
     color: #888;
     font-size: 14px;
+}
+
+/* Datepicker styles */
+
+#reportrange {
+    display: inline-block;
+    cursor: pointer;
+}
+
+#reportrange::after {
+    display: inline-block;
+    content: "▼";
+    font-size: 14px;
+    margin-left: 5px;
+    vertical-align: middle;
+    color: #999;
+}
+
+#reportrange span {
+    text-decoration: underline;
+    color: #000;
+}
+
+.daterangepicker td.active, .daterangepicker td.active:hover {
+    background-color: #0a5796;
+}
+
+.daterangepicker .ranges li.active {
+    background-color: #0a5796;
+}
+
+.daterangepicker .drp-buttons .btn {
+    background: #eee;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    font-weight: 300;
+}
+
+.daterangepicker .drp-buttons .btn-primary {
+    background: #0a5796;
+    border: 1px solid #ddd;
+    color: #fff;
 }

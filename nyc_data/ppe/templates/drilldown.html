@@ -5,7 +5,9 @@
 {% block bodyclass %}drilldown{% endblock %}
 
 {% block titlebar %}
-<h2>{{ asset_category|display_name }}</h2>
+<h2>
+    {{ asset_category|display_name }} status for <div id="reportrange"><span></span></div>
+</h2>
 {% endblock %}
 
 {% block content %}

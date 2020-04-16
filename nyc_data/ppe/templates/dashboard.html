@@ -2,7 +2,10 @@
 {% load render_table from django_tables2 %}
 
 {% block titlebar %}
-<h2>Current status including all sources for the next {{ days_in_view }} days</h2>
+<h2>
+    Current status for <div id="reportrange"><span></span></div>
+</h2>
+
 <div class="view-options">
     <div id="rollup-options" class="toggle">
         <label>View as</label>
