@@ -330,7 +330,14 @@ class AggregationTable(tables.Table):
             }
         }
     )
-    donate = NumericalColumn()
+    donate = NumericalColumn(verbose_name="Donated",
+        attrs={
+            "th": {
+                "class": "tooltip",
+                "aria-label": lambda: f"DCAS pending pledges [{current_as_of(Purchase.active().filter(order_type=dc.OrderType.Donation))}]",
+            },
+        },
+    )
     sell = NumericalColumn(
         verbose_name="Ordered",
         attrs={
