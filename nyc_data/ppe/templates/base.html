@@ -33,10 +33,10 @@
             {% block footer %}
             <dl>
                 <dt>Demand</dt>
-                <dd>A proxy for future demand, calculated by considering the previous 7 day's deliveries to hospitals,
-                    extrapolated with CovidActNow (https://covidactnow.org/)'s model for NYC to project future demand.</dd>
+                <dd>A proxy for future demand, using multiple sources including previous deliveries and supply burndown data,
+                    extrapolated with <a href="https://covidactnow.org">CovidActNow</a>'s model for NYC.</dd>
                 <dt>Supply</dt>
-                <dd>The sum of inventory, purchasing (Ordered), and manufacturing (Made) efforts.</dd>
+                <dd>The sum of inventory, donations, purchasing (Ordered), and manufacturing (Made) efforts.</dd>
                 <dt>Balance</dt>
                 <dd>The supply deficit or surplus compared to demand, both numerically and as a percentage.</dd>
                 <dt>Inventory</dt>
