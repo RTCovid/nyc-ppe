@@ -1,5 +1,5 @@
 import ppe.dataclasses as dc
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 from ppe import aggregations
 from ppe.aggregations import AssetRollup, DemandCalculationConfig
@@ -36,6 +36,16 @@ def drilldown_result(
         for d in purchases if rollup_fn(dc.Item(d.item)) == item_type and d.order_type == OrderType.Donation and not d.complete
     ]
 
+    for don in donations:
+        days_since_pledge =  (date.today() - don.donation_date).days
+        if days_since_pledge >= 7:
+            pledge_status = "error"
+        elif days_since_pledge > 3:
+            pledge_status = "warning"
+        else:
+            pledge_status = "pending" 
+        setattr(don, "pledge_status", pledge_status)
+
     purchases = [
         p
         for p in purchases
@@ -56,6 +66,7 @@ def drilldown_result(
     filtered_aggregation = {
         item: agg for item, agg in aggregation.items() if rollup_fn(item) == item_type
     }
+
     return DrilldownResult(
         purchases, deliveries, inventory, donations, aggregation=filtered_aggregation
     )
