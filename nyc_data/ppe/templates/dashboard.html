@@ -22,22 +22,3 @@
     {% render_table aggregations %}
 </div>
 {% endblock %}
-
-{% block footer %}
-<dl>
-    <dt>Demand</dt>
-    <dd>A proxy for future demand, calculated by considering the previous 7 day's deliveries to hospitals,
-        extrapolated with CovidActNow (https://covidactnow.org/)'s model for NYC to project future demand.</dd>
-    <dt>Supply</dt>
-    <dd>The sum of inventory, purchasing (Ordered), and manufacturing (Made) efforts.</dd>
-    <dt>Balance</dt>
-    <dd>The supply deficit or surplus compared to demand, both numerically and as a percentage.</dd>
-    <dt>Inventory</dt>
-    <dd>Daily inventory numbers from DOHMH. <a href="mailto:kbrown@cityops.nyc.gov?subject=NYCPPE%20Data%20Update%20Requested&body=Please%20update%20the%20DOHMH%20inventory%20data%20at%20your%20earliest%20convenience.">[Request update]</a></dd>
-    <dt>Ordered</dt>
-    <dd>Purchase orders for future deliveries with a known future delivery date from DCAS. <a href="mailto:brandon.chiazza@mocs.nyc.gov?subject=NYCPPE%20Data%20Update%20Requested&body=Please%20update%20the%20DCAS%20ordering%20charts%20data%20at%20your%20earliest%20convenience.">[Request update]</a></dd>
-    <dt>Make</dt>
-    <dd>Purchase orders for manufacturing, from EDC. <a href="mailto:tchilds@edc.nyc?subject=NYCPPE%20Data%20Update%20Requested&body=Please%20update%20the%20EDC%20PPE%20data%20at%20your%20earliest%20convenience.">[Request update]</a></dd>
-</dl>
-
-{% endblock %}

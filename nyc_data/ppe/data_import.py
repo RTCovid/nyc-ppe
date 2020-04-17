@@ -66,7 +66,9 @@ def import_data(
 ):
     df = mappings[0].data_file
     if len([m for m in ALL_MAPPINGS if m.data_file == df]) != len(mappings):
-        raise PartialFile("Importing a file, but only got one of the expected sheets")
+        expected = [m.sheet_name for m in ALL_MAPPINGS if m.data_file == df]
+        actual = [m.sheet_name for m in mappings]
+        raise PartialFile(f"Importing a file, but only got one of the expected sheets (Expected: {expected}, Actual: {actual}")
     error_collector = ErrorCollector()
     data_file = {mapping.data_file for mapping in mappings}
     if len(data_file) != 1:
