@@ -4,7 +4,7 @@ from typing import NamedTuple, Dict
 
 from django.contrib.postgres.fields import JSONField
 from django.db import models
-from django.db.models import Sum, Max
+from django.db.models import Sum, Max, QuerySet
 
 import ppe.dataclasses as dc
 from ppe.data_mapping.types import DataFile
@@ -31,6 +31,8 @@ class DataImport(models.Model):
     import_date = models.DateTimeField(auto_now_add=True, db_index=True)
     status = ChoiceField(ImportStatus)
     data_file = ChoiceField(DataFile)
+
+    current_as_of = models.DateField(null=True)
 
     uploaded_by = models.TextField(blank=True)
     file_checksum = models.TextField()
@@ -112,7 +114,13 @@ class UploadDelta(NamedTuple):
     new_objects: Dict[str, any]
 
 
-class BaseModel(models.Model):
+def current_as_of(qs: QuerySet):
+    if qs.count() == 0:
+        return 'Unknown'
+    return qs.first().source.current_as_of or 'Unknown'
+
+
+class ImportedDataModel(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -146,7 +154,7 @@ class BaseModel(models.Model):
         abstract = True
 
 
-class Purchase(BaseModel):
+class Purchase(ImportedDataModel):
     order_type = ChoiceField(dc.OrderType)
 
     item = ChoiceField(dc.Item)
@@ -158,6 +166,8 @@ class Purchase(BaseModel):
 
     vendor = models.TextField()
     cost = models.IntegerField(null=True)
+
+    comment = models.TextField(blank=True)
 
     raw_data = JSONField()
 
@@ -179,7 +189,7 @@ class Purchase(BaseModel):
             return self.quantity - (self.total_deliveries or 0)
 
 
-class Inventory(BaseModel):
+class Inventory(ImportedDataModel):
     item = ChoiceField(dc.Item)
     quantity = models.IntegerField()
     as_of = models.DateField()
@@ -195,7 +205,7 @@ class Inventory(BaseModel):
         return super().active().filter(as_of=cls.as_of_latest())
 
 
-class ScheduledDelivery(BaseModel):
+class ScheduledDelivery(ImportedDataModel):
     purchase = models.ForeignKey(
         Purchase, on_delete=models.CASCADE, related_name="deliveries"
     )
@@ -225,7 +235,7 @@ class ScheduledDelivery(BaseModel):
         )
 
 
-class InboundReceipt(BaseModel):
+class InboundReceipt(ImportedDataModel):
     date_received = models.DateTimeField()
     supplier = ChoiceField(dc.Supplier)
     description = models.TextField()
@@ -235,19 +245,19 @@ class InboundReceipt(BaseModel):
     item = ChoiceField(dc.Item)
 
 
-class Facility(BaseModel):
+class Facility(ImportedDataModel):
     name = models.TextField()
     tpe = ChoiceField(dc.FacilityType)
 
 
-class FacilityDelivery(BaseModel):
+class FacilityDelivery(ImportedDataModel):
     date = models.DateField()
     facility = models.ForeignKey(Facility, on_delete=models.CASCADE)
     item = ChoiceField(dc.Item)
     quantity = models.IntegerField()
 
 
-class Demand(BaseModel):
+class Demand(ImportedDataModel):
     """Real demand data from NYC"""
 
     item = ChoiceField(dc.Item)
@@ -257,13 +267,13 @@ class Demand(BaseModel):
     end_date = models.DateField()
 
 
-class Hospital(BaseModel):
+class Hospital(ImportedDataModel):
     # TODO: need to figure out what resolution is needed. Could bring in the full geocoding hospital
     # model from covidhospitalstatus
     name = models.TextField()
 
 
-class Need(BaseModel):
+class Need(ImportedDataModel):
     item = models.TextField(choices=enum2choices(dc.Item))
     date = models.DateField()
 

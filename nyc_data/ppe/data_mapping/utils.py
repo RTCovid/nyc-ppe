@@ -26,6 +26,9 @@ class ErrorCollector:
 
 
 def asset_name_to_item(asset_name: str, error_collector: ErrorCollector) -> Item:
+    if asset_name is None:
+        error_collector.report_error('Null asset name')
+        return Item.unknown
     mapping = {
         "KN95 Masks": Item.kn95_mask,
         "Face Masks-Other": Item.mask_other,
@@ -71,15 +74,23 @@ def parse_date(date: any, error_collector: ErrorCollector):
         ("%Y-%m-%d", lambda x: x),  # 2020-04-10
         ("%d-%b", lambda d: d.replace(year=2020)),  # 30-Apr
         ("%m/%d", lambda d: d.replace(year=2020)),  # 4/15
+        ("%m-%d-%Y", lambda x: x),
     ]
     if isinstance(date, str):
+        date = date.strip()
+        match = []
         for fmt, mapper in formats:
             try:
-                return mapper(datetime.strptime(date, fmt))
+                match.append(mapper(datetime.strptime(date, fmt)))
             except ValueError:
                 pass
-        error_collector.report_error(f"Unknown date format: {date}")
-        return None
+        if len(set(match)) > 1:
+            error_collector.report_error(f"Ambiguous date! {date}")
+        elif len(set(match)) == 1:
+            return match[0]
+        else:
+            error_collector.report_error(f"Unknown date format: {date}")
+            return None
     elif isinstance(date, datetime):
         return date
     else:
@@ -103,3 +114,13 @@ def parse_int(inp: str, error_collector: ErrorCollector):
             f"Can't parse {inp}. Returning None for now [TODO]"
         )
         return None
+
+
+def parse_bool(inp: str, error_collector: ErrorCollector):
+    # TODO: would probably be useful to show more than just true/false
+    if inp.lower() in {"y", "yes"}:
+        return True
+    elif inp.lower() in {"n", "no"}:
+        return False
+    else:
+        error_collector.report_error(f"Failed to parse bool: {inp}")

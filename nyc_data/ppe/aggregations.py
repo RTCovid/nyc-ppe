@@ -13,12 +13,13 @@ from django.utils.http import urlencode
 from django.utils.safestring import mark_safe
 
 import ppe.dataclasses as dc
+from ppe.data_mapping.types import DataFile
 from ppe.dataclasses import Period
 from ppe.models import (
     ScheduledDelivery,
     Inventory,
     FacilityDelivery,
-    Demand,
+    Demand, DataImport, Purchase, current_as_of,
 )
 
 # NY Forecast from https://covid19.healthdata.org/united-states-of-america/new-york
@@ -48,7 +49,7 @@ class DemandSrc(str, Enum):
         if self == DemandSrc.past_deliveries:
             return "previous deliveries"
         elif self == DemandSrc.real_demand:
-            return "demand information"
+            return "supply burndown information"
 
 
 @dataclass
@@ -92,7 +93,7 @@ class AssetRollup:
             return "No demand data available"
 
 
-MAPPING = {dc.OrderType.Make: "make", dc.OrderType.Purchase: "sell"}
+MAPPING = {dc.OrderType.Make: "make", dc.OrderType.Purchase: "sell", dc.OrderType.Donation: "donate"}
 
 
 def asset_rollup_legacy(
@@ -114,13 +115,13 @@ def asset_rollup_legacy(
 
 @log_db_queries
 def asset_rollup(
-    time_range: Period, demand_calculation_config: DemandCalculationConfig,
+        time_range: Period, demand_calculation_config: DemandCalculationConfig,
 ) -> Dict[str, AssetRollup]:
     time_start, time_end = time_range.start, time_range.end
     relevant_deliveries = (
         ScheduledDelivery.active()
-        .prefetch_related("purchase")
-        .filter(delivery_date__gte=time_start, delivery_date__lte=time_end)
+            .prefetch_related("purchase")
+            .filter(delivery_date__gte=time_start, delivery_date__lte=time_end)
     )
 
     results: Dict[dc.Item, AssetRollup] = {}
@@ -282,7 +283,10 @@ def split_value_unit(value):
 
 class NumericalColumn(tables.Column):
     def render(self, value):
-        return pretty_render_numeric(value)
+        if value == 0:
+            return '—'
+        else:
+            return pretty_render_numeric(value)
 
 
 class AggregationTable(tables.Table):
@@ -332,8 +336,8 @@ class AggregationTable(tables.Table):
         attrs={
             "th": {
                 "class": "tooltip",
-                "aria-label": "DCAS scheduled orders [2020-4-12]",
-            }
+                "aria-label": lambda: f"DCAS scheduled orders [{current_as_of(Purchase.active().filter(order_type=dc.OrderType.Purchase))}]",
+            },
         },
     )
 
@@ -342,7 +346,7 @@ class AggregationTable(tables.Table):
         attrs={
             "th": {
                 "class": "tooltip",
-                "aria-label": "EDC scheduled deliveries [2020-4-12]",
+                "aria-label": lambda: f"EDC scheduled deliveries [{current_as_of(Purchase.active().filter(order_type=dc.OrderType.Make))}]",
             }
         },
     )
@@ -434,5 +438,5 @@ class AggregationTable(tables.Table):
             "inventory",
             "sell",
             "make",
+            "donate"
         )
-        exclude = ("donate",)
