@@ -71,15 +71,16 @@ $(function(){
     // Data staleness indicators
     if($('.dashboard-table').length > 0){
         $('th.tooltip').each(function(index) {
-            var day, days;
+            var day, days, daystring;
             var matches = $(this).attr('aria-label').match(/\[(.*?)\]/);
             if(matches && matches[1] != 'None') {
-                day = moment(matches[1]);
+                daystring = matches[1].replace(/-/g,'');
+                day = moment(daystring);
                 days = moment().diff(day, 'days');
                 if (days > 1) {
                     console.log('warning');
                 } else if (days > 3) {
-                    console.log('warning');
+                    console.log('error');
                 }
             } 
         });
