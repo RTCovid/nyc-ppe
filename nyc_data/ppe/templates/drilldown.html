@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load ppe_extras %}
+{% load static %}
 {% load render_table from django_tables2 %}
 
 {% block bodyclass %}drilldown{% endblock %}
@@ -11,6 +12,7 @@
 {% endblock %}
 
 {% block content %}
+
 <div class="dashboard-table">
     {% render_table aggregations %}
 </div>
@@ -60,8 +62,13 @@
 
                 {% if not forloop.first %}
             <tr>{% endif %}
-                <td class="drilldown-deliveries-quantity"><span class="quantity">{{ donation.quantity|pretty_num }}
-                        {{ donation.item|display_name }}</span>
+                <td class="drilldown-deliveries-quantity donation-row">
+                    <span class="quantity">{{ donation.quantity|pretty_num }}
+                        {{ donation.item|display_name }} {{ donation.pledge_status }}
+                    </span>
+
+                    <img src="/app/nyc_data/ppe/static/img/clock.svg"></img>
+
                 </td>
                 <td class="drilldown-deliveries-desc">{{ donation.description|default:"No description" }}</td>
                 <td class="drilldown-deliveries-vendor">{{ donation.vendor }}</td>
