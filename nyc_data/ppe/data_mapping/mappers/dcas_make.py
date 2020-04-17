@@ -72,7 +72,7 @@ class MakeRow(ImportedRow, NamedTuple):
 
 SUPPLIERS_AND_PARTNERS = SheetMapping(
     data_file=DataFile.SUPPLIERS_PARTNERS_XLSX,
-    sheet_name="EDC Product delivery",
+    sheet_name="Wkly Delivery Tracker - CH",
     mappings={
         Mapping(
             sheet_column_name="Supply / Service",
