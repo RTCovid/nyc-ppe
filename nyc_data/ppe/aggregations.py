@@ -124,6 +124,15 @@ def asset_rollup(
             .filter(delivery_date__gte=time_start, delivery_date__lte=time_end)
     )
 
+    #i'm sorry. will improve this later :)
+    relevant_donations = (
+        ScheduledDelivery.active()
+            .prefetch_related("purchase")
+            .filter(
+                delivery_date__gte=datetime.datetime(2020, 1, 1), 
+                delivery_date__lte=datetime.datetime(2021, 12, 31))
+    )
+
     results: Dict[dc.Item, AssetRollup] = {}
     for _, item in dc.Item.__members__.items():
         results[item] = AssetRollup(asset=item)
@@ -133,10 +142,22 @@ def asset_rollup(
         rollup = results[delivery.purchase.item]
         tpe = delivery.purchase.order_type
 
-        param = MAPPING.get(tpe)
-        if param is None:
-            raise Exception(f"unexpected purchase type: `{tpe}`")
-        setattr(rollup, param, getattr(rollup, param) + delivery.quantity)
+        if tpe != dc.OrderType.Donation:
+            param = MAPPING.get(tpe)
+            
+            if param is None:
+                raise Exception(f"unexpected purchase type: `{tpe}`")
+            setattr(rollup, param, getattr(rollup, param) + delivery.quantity)
+    
+    for donation in relevant_donations:
+        rollup = results[donation.purchase.item]
+        tpe = donation.purchase.order_type
+
+        if tpe != dc.OrderType.Donation:
+            continue
+        else:
+            param = param = MAPPING.get(tpe)
+            setattr(rollup, param, getattr(rollup, param) + donation.quantity)
 
     inventory = Inventory.active()
     for item in inventory:
