@@ -92,7 +92,7 @@ class AssetRollup:
             return "No demand data available"
 
 
-MAPPING = {dc.OrderType.Make: "make", dc.OrderType.Purchase: "sell"}
+MAPPING = {dc.OrderType.Make: "make", dc.OrderType.Purchase: "sell", dc.OrderType.Donation: "donate"}
 
 
 def asset_rollup_legacy(
@@ -114,13 +114,13 @@ def asset_rollup_legacy(
 
 @log_db_queries
 def asset_rollup(
-    time_range: Period, demand_calculation_config: DemandCalculationConfig,
+        time_range: Period, demand_calculation_config: DemandCalculationConfig,
 ) -> Dict[str, AssetRollup]:
     time_start, time_end = time_range.start, time_range.end
     relevant_deliveries = (
         ScheduledDelivery.active()
-        .prefetch_related("purchase")
-        .filter(delivery_date__gte=time_start, delivery_date__lte=time_end)
+            .prefetch_related("purchase")
+            .filter(delivery_date__gte=time_start, delivery_date__lte=time_end)
     )
 
     results: Dict[dc.Item, AssetRollup] = {}
@@ -434,5 +434,5 @@ class AggregationTable(tables.Table):
             "inventory",
             "sell",
             "make",
+            "donate"
         )
-        exclude = ("donate",)
