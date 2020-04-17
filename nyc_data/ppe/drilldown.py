@@ -45,6 +45,7 @@ def drilldown_result(
         else:
             pledge_status = "pending" 
         setattr(don, "pledge_status", pledge_status)
+        setattr(don, "days_since_pledge", days_since_pledge)
 
     purchases = [
         p

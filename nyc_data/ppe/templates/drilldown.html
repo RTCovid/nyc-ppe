@@ -32,10 +32,11 @@
                 <li><b>Total Received (all time)</b> {{deliveries_past|pretty_num}}</li>
             </ul>
         </div>
-        {% regroup deliveries by delivery_date as date_list %}
-        {% for day in date_list %}
-        {% if forloop.first %}
-        <table class="drilldown-deliveries">{% endif %}
+
+        <table class="drilldown-deliveries">
+            {% regroup deliveries by delivery_date as date_list %}
+            {% for day in date_list %}
+
             <tr class="drilldown-newday">
                 <th rowspan="{{day.list|length}}">{{day.grouper}}</th>
                 {% for delivery in day.list %}
@@ -62,17 +63,19 @@
 
                 {% if not forloop.first %}
             <tr>{% endif %}
-                <td class="drilldown-deliveries-quantity donation-row {% if donation.pledge_status != 'pending' %}tooltip{% endif %}" {% if donation.pledge_status != "pending" %}aria-label="{% if donation.pledge_status == 'warning' %}3+{% elif donation.pledge_status == 'error' %}7+{% endif %} days since donation" {% endif %}>
+                <td class="drilldown-deliveries-quantity donation-row {% if donation.pledge_status != 'pending' %}tooltip{% endif %}"
+                    {% if donation.pledge_status != "pending" %}
+                    aria-label="{{donation.days_since_pledge}} days since pledged donation" {% endif %}>
                     <span class="quantity">{{ donation.quantity|pretty_num }}
-                        {{ donation.item|display_name }} {{ donation.pledge_status }}
+                        {{ donation.item|display_name }}
+                        {% if donation.pledge_status == 'warning' or donation.pledge_status == 'error' %}
+                        <svg class="icon-clock tooltip {{donation.pledge_status}}" xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 512 512" height=14 width=14>
+                            <path
+                                d="M256 8a248 248 0 100 496 248 248 0 000-496zm0 448a200 200 0 110-400 200 200 0 010 400zm62-104l-85-62c-3-2-5-6-5-10V116c0-7 5-12 12-12h32c7 0 12 5 12 12v142l67 48c5 4 6 12 2 17l-18 26c-4 5-12 7-17 3z" />
+                        </svg>
+                        {% endif %}
                     </span>
-
-                    {% if donation.pledge_status == 'warning' or donation.pledge_status == 'error' %}
-                    <svg class="icon-clock tooltip {{donation.pledge_status}}"  xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" height=14 width=14>
-                        <path d="M256 8a248 248 0 100 496 248 248 0 000-496zm0 448a200 200 0 110-400 200 200 0 010 400zm62-104l-85-62c-3-2-5-6-5-10V116c0-7 5-12 12-12h32c7 0 12 5 12 12v142l67 48c5 4 6 12 2 17l-18 26c-4 5-12 7-17 3z"/>
-                    </svg>
-                    {% endif %}
-
                 </td>
                 <td class="drilldown-deliveries-desc">{{ donation.description|default:"No description" }}</td>
                 <td class="drilldown-deliveries-vendor">{{ donation.vendor }}</td>
