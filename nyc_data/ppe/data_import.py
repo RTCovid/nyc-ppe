@@ -1,5 +1,6 @@
 import hashlib
 import tempfile
+from datetime import date
 from pathlib import Path
 from typing import Optional, List
 
@@ -30,14 +31,14 @@ ALL_MAPPINGS = [
 ]
 
 
-def handle_upload(f, uploader_name: str) -> DataImport:
+def handle_upload(f, uploader_name: str, current_as_of: date) -> DataImport:
     with tempfile.NamedTemporaryFile(
-        "w+b", delete=False, suffix=f.name
+            "w+b", delete=False, suffix=f.name
     ) as upload_target:
         for chunk in f.chunks():
             upload_target.write(chunk)
         upload_target.flush()
-        return smart_import(Path(upload_target.name), uploader_name)
+        return smart_import(Path(upload_target.name), uploader_name, current_as_of)
 
 
 def import_in_progress(data_file: DataFile):
@@ -45,19 +46,21 @@ def import_in_progress(data_file: DataFile):
 
 
 def smart_import(
-    path: Path, uploader_name: str, overwrite_in_prog: bool = False
+        path: Path, uploader_name: str, current_as_of: date, overwrite_in_prog: bool = False
 ) -> DataImport:
     possible_mappings = xlsx_utils.guess_mapping(path, ALL_MAPPINGS)
     if len(possible_mappings) == 0:
         raise NoMappingForFileError()
-    return import_data(path, possible_mappings, uploader_name, overwrite_in_prog)
+    return import_data(path, possible_mappings, current_as_of=current_as_of, uploaded_by=uploader_name,
+                       overwrite_in_prog=overwrite_in_prog)
 
 
 def import_data(
-    path: Path,
-    mappings: List[xlsx_utils.SheetMapping],
-    uploaded_by: Optional[str] = None,
-    overwrite_in_prog=False,
+        path: Path,
+        mappings: List[xlsx_utils.SheetMapping],
+        current_as_of: date,
+        uploaded_by: Optional[str] = None,
+        overwrite_in_prog=False,
 ):
     df = mappings[0].data_file
     if len([m for m in ALL_MAPPINGS if m.data_file == df]) != len(mappings):
@@ -83,6 +86,7 @@ def import_data(
     uploaded_by = uploaded_by or ""
     data_import = DataImport(
         status=ImportStatus.candidate,
+        current_as_of=current_as_of,
         data_file=data_file,
         uploaded_by=uploaded_by,
         file_checksum=checksum,

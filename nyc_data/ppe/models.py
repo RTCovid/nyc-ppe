@@ -4,7 +4,7 @@ from typing import NamedTuple, Dict
 
 from django.contrib.postgres.fields import JSONField
 from django.db import models
-from django.db.models import Sum, Max
+from django.db.models import Sum, Max, QuerySet
 
 import ppe.dataclasses as dc
 from ppe.data_mapping.types import DataFile
@@ -31,6 +31,8 @@ class DataImport(models.Model):
     import_date = models.DateTimeField(auto_now_add=True, db_index=True)
     status = ChoiceField(ImportStatus)
     data_file = ChoiceField(DataFile)
+
+    current_as_of = models.DateField(null=True)
 
     uploaded_by = models.TextField(blank=True)
     file_checksum = models.TextField()
@@ -110,6 +112,12 @@ class UploadDelta(NamedTuple):
     candidate_stats: Dict[str, int]
 
     new_objects: Dict[str, any]
+
+
+def current_as_of(qs: QuerySet):
+    if qs.count() == 0:
+        return 'Unknown'
+    return qs.first().source.current_as_of or 'Unknown'
 
 
 class BaseModel(models.Model):
