@@ -122,6 +122,7 @@ def asset_rollup(
         ScheduledDelivery.active()
             .prefetch_related("purchase")
             .filter(delivery_date__gte=time_start, delivery_date__lte=time_end)
+            .exclude(purchase__order_type=OrderType.Donation)
     )
 
     #i'm sorry. will improve this later :)
@@ -129,8 +130,7 @@ def asset_rollup(
         ScheduledDelivery.active()
             .prefetch_related("purchase")
             .filter(
-                delivery_date__gte=datetime.datetime(2020, 1, 1), 
-                delivery_date__lte=datetime.datetime(2021, 12, 31))
+                purchase__order_type=OrderType.Donation)
     )
 
     results: Dict[dc.Item, AssetRollup] = {}
