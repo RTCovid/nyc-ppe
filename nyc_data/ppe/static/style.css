@@ -196,10 +196,6 @@ button {
     cursor: pointer;
 }
 
-.icon-clock {
-    display: inline;
-}
-
 .upload button.cancel {
     background: #fff;
     color: #0a5796;
@@ -413,6 +409,10 @@ body.drilldown .dashboard-table {
 
 .dashboard-table th.error svg, svg.error {
     fill: #CE4C23;
+}
+
+.icon-clock {
+    display: inline;
 }
 
 /* Drilldown styles */
