@@ -14,7 +14,7 @@ from django.utils.safestring import mark_safe
 
 import ppe.dataclasses as dc
 from ppe.data_mapping.types import DataFile
-from ppe.dataclasses import Period
+from ppe.dataclasses import Period, OrderType
 from ppe.models import (
     ScheduledDelivery,
     Inventory,
@@ -128,9 +128,11 @@ def asset_rollup(
     for _, item in dc.Item.__members__.items():
         results[item] = AssetRollup(asset=item)
 
+
     for delivery in relevant_deliveries:
         rollup = results[delivery.purchase.item]
         tpe = delivery.purchase.order_type
+
         param = MAPPING.get(tpe)
         if param is None:
             raise Exception(f"unexpected purchase type: `{tpe}`")
@@ -330,7 +332,14 @@ class AggregationTable(tables.Table):
             }
         }
     )
-    donate = NumericalColumn()
+    donate = NumericalColumn(
+        attrs={
+            "th": {
+                "class": "tooltip",
+                "aria-label": lambda: f"DOHMH [date]",
+            }
+        }
+    )
     sell = NumericalColumn(
         verbose_name="Ordered",
         attrs={
