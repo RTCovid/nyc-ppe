@@ -93,7 +93,7 @@ class AssetRollup:
             return "No demand data available"
 
 
-MAPPING = {dc.OrderType.Make: "make", dc.OrderType.Purchase: "sell"}
+MAPPING = {dc.OrderType.Make: "make", dc.OrderType.Purchase: "sell", dc.OrderType.Donation: "donate"}
 
 
 def asset_rollup_legacy(
@@ -438,5 +438,5 @@ class AggregationTable(tables.Table):
             "inventory",
             "sell",
             "make",
+            "donate"
         )
-        exclude = ("donate",)

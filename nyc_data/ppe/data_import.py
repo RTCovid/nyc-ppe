@@ -11,7 +11,7 @@ from ppe.data_mapping.mappers import (
     inventory_from_facilities,
     hospital_deliveries,
     hospital_demands,
-)
+    donations)
 from ppe.data_mapping.types import DataFile
 from ppe.data_mapping.utils import ErrorCollector
 from ppe.errors import DataImportError, NoMappingForFileError, PartialFile, ImportInProgressError
@@ -28,6 +28,7 @@ ALL_MAPPINGS = [
     inventory_from_facilities.INVENTORY,
     hospital_deliveries.FACILITY_DELIVERIES,
     hospital_demands.WEEKLY_DEMANDS,
+    donations.DONATION_DATA
 ]
 
 

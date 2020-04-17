@@ -32,6 +32,7 @@ class Unit(str, Enum):
 class OrderType(str, Enum):
     Purchase = "purchase"
     Make = "make"
+    Donation = "donation"
 
 
 # tightly control this column to keep the DB clean

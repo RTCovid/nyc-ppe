@@ -11,14 +11,14 @@ from ppe.data_mapping.types import DataFile
 from ppe.data_mapping.utils import ErrorCollector
 
 
-def XLSXDictReader(sheet):
+def XLSXDictReader(sheet, header_row):
     rows = sheet.max_row
     cols = sheet.max_column
 
     def item(i, j):
-        return sheet.cell(row=1, column=j).value, sheet.cell(row=i, column=j).value
+        return sheet.cell(row=header_row, column=j).value, sheet.cell(row=i, column=j).value
 
-    return (dict(item(i, j) for j in range(1, cols + 1)) for i in range(2, rows + 1))
+    return (dict(item(i, j) for j in range(1, cols + 1)) for i in range(header_row + 1, rows + 1))
 
 
 class Mapping(NamedTuple):
@@ -32,7 +32,11 @@ class SheetMapping(NamedTuple):
     sheet_name: Optional[str]  # None for CSV
     mappings: Set[Mapping]
     include_raw: bool
-    obj_constructor: Optional[Callable[[Any], "ImportedRow"]] = None
+    obj_constructor: Optional[Callable[[Any], "ImportedRow"]]
+    header_row_idx: int = 1
+
+    def key_columns(self):
+        return (mapping.sheet_column_name for mapping in self.mappings)
 
 
 RAW_DATA = "raw_data"
@@ -52,11 +56,11 @@ def guess_mapping(sheet: Path, possible_mappings: List[SheetMapping]):
     for mapping in possible_mappings:
         if mapping.sheet_name is not None and workbook:
             sheet = workbook[mapping.sheet_name]
-            first_row = next(XLSXDictReader(sheet))
+            first_row = next(XLSXDictReader(sheet, header_row=mapping.header_row_idx or 1))
         else:
             try:
                 with open(sheet, encoding="latin-1") as csvfile:
-                    text = csvfile.read()                    
+                    text = csvfile.read()
             except Exception as exc:
                 raise errors.CsvImportError('Error reading in CSV file') from exc
 
@@ -67,6 +71,8 @@ def guess_mapping(sheet: Path, possible_mappings: List[SheetMapping]):
         if all(col_name in first_row for col_name in col_names):
             final_mappings.append(mapping)
         elif mapping.sheet_name is not None:
+            import pdb;
+            pdb.set_trace()
             print(
                 "We expected: ",
                 set(col_names).difference(first_row.keys()),
@@ -81,14 +87,14 @@ def guess_mapping(sheet: Path, possible_mappings: List[SheetMapping]):
 
 
 def import_xlsx(
-    sheet: Path,
-    sheet_mapping: SheetMapping,
-    error_collector: ErrorCollector = lambda: ErrorCollector(),
+        sheet: Path,
+        sheet_mapping: SheetMapping,
+        error_collector: ErrorCollector = lambda: ErrorCollector(),
 ):
     if sheet_mapping.sheet_name is not None:
         workbook = load_workbook(sheet, data_only=True)
         sheet = workbook[sheet_mapping.sheet_name]
-        as_dicts = XLSXDictReader(sheet)
+        as_dicts = XLSXDictReader(sheet, sheet_mapping.header_row_idx)
     else:
         with open(sheet, encoding="latin-1") as csvfile:
             reader = csv.DictReader(csvfile)
@@ -96,7 +102,7 @@ def import_xlsx(
 
     for row in as_dicts:
         mapped_row = {}
-        if all(el is None for el in row.values()):
+        if all(row.get(col) is None for col in sheet_mapping.key_columns()):
             continue
         for mapping in sheet_mapping.mappings:
             item = row[mapping.sheet_column_name]
