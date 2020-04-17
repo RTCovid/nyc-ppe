@@ -50,8 +50,10 @@ class DonationRow(ImportedRow, NamedTuple):
             received_quantity=self.quantity if self.picked_up else 0,
             vendor=self.donor,
             comment=self.comments,
-            raw_data=self.raw_data
+            raw_data=self.raw_data,
+            donation_date=self.notification_date
         )
+
         objs = [purchase]
         delivery_date = self.guess_delivery_date(error_collector)
         if delivery_date is not None:

@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load ppe_extras %}
+{% load static %}
 {% load render_table from django_tables2 %}
 
 {% block bodyclass %}drilldown{% endblock %}
@@ -11,6 +12,7 @@
 {% endblock %}
 
 {% block content %}
+
 <div class="dashboard-table">
     {% render_table aggregations %}
 </div>
@@ -25,20 +27,23 @@
                 <li><b>Next 7 days</b> {{deliveries_next_week|pretty_num}}</li>
                 <li><b>Next 30 days</b> {{deliveries_next_thirty|pretty_num}}</li>
                 <li><b>Total Scheduled</b> {{scheduled_total|pretty_num}}</li>
+                <li><b>Total Donations</b> {{ donations_total|pretty_num }}</li>
                 <li><b>Total Unscheduled</b> {{unscheduled_total|pretty_num}}</li>
                 <li><b>Total Received (all time)</b> {{deliveries_past|pretty_num}}</li>
             </ul>
         </div>
-        {% regroup deliveries by delivery_date as date_list %}
-        {% for day in date_list %}
-        {% if forloop.first %}
-        <table class="drilldown-deliveries">{% endif %}
+
+        <table class="drilldown-deliveries">
+            {% regroup deliveries by delivery_date as date_list %}
+            {% for day in date_list %}
+
             <tr class="drilldown-newday">
                 <th rowspan="{{day.list|length}}">{{day.grouper}}</th>
                 {% for delivery in day.list %}
                 {% if not forloop.first %}
             <tr>{% endif %}
-                <td class="drilldown-deliveries-quantity"><span class="quantity">{{ delivery.quantity|pretty_num }} {{ delivery.purchase.item|display_name }}</span>
+                <td class="drilldown-deliveries-quantity"><span class="quantity">{{ delivery.quantity|pretty_num }}
+                        {{ delivery.purchase.item|display_name }}</span>
                 </td>
                 <td class="drilldown-deliveries-desc">{{ delivery.description|default:"No description" }}</td>
                 <td class="drilldown-deliveries-vendor">{{delivery.vendor}}</td>
@@ -47,21 +52,62 @@
             {% endif %}
             {% endfor %}
             </tr>
-        {% endfor %}
-            <tr class="drilldown-newday"><td colspan="4"></td></tr>
+            {% endfor %}
+
+            <tr class="drilldown-newday">
+                <td colspan="4"></td>
+            </tr>
+            <tr>
+                <th rowspan="{{ donations|length }}">Donations</th>
+                {% for donation in donations %}
+
+                {% if not forloop.first %}
+            <tr>{% endif %}
+                <td class="drilldown-deliveries-quantity donation-row {% if donation.pledge_status != 'pending' %}tooltip{% endif %}"
+                    {% if donation.pledge_status != "pending" %}
+                    aria-label="{{donation.days_since_pledge}} days since pledged donation" {% endif %}>
+                    <span class="quantity">{{ donation.quantity|pretty_num }}
+                        {{ donation.item|display_name }}
+                        {% if donation.pledge_status == 'warning' or donation.pledge_status == 'error' %}
+                        <svg class="icon-clock tooltip {{donation.pledge_status}}" xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 512 512" height=14 width=14>
+                            <path
+                                d="M256 8a248 248 0 100 496 248 248 0 000-496zm0 448a200 200 0 110-400 200 200 0 010 400zm62-104l-85-62c-3-2-5-6-5-10V116c0-7 5-12 12-12h32c7 0 12 5 12 12v142l67 48c5 4 6 12 2 17l-18 26c-4 5-12 7-17 3z" />
+                        </svg>
+                        {% endif %}
+                    </span>
+                </td>
+                <td class="drilldown-deliveries-desc">{{ donation.description|default:"No description" }}</td>
+                <td class="drilldown-deliveries-vendor">{{ donation.vendor }}</td>
+                {% if not forloop.last %}
+            </tr>{% endif %}
+
+            {% endfor %}
+            </tr>
+
+
+            <tr class="drilldown-newday">
+                <td colspan="4"></td>
+            </tr>
             <tr>
                 <th rowspan="100">Unscheduled</th>
                 {% for purchase in purchases %}
-                    {% if purchase.unscheduled_quantity > 0 and purchase.quantity != purchase.received_quantity %}
-                    {% if not forloop.first %}<tr>{% endif %}
-                        <td class="drilldown-deliveries-quantity"><span class="quantity">{{ purchase.unscheduled_quantity|pretty_num }} {{ purchase.item|display_name }}</span>
-                        </td>
-                        <td class="drilldown-deliveries-desc">{{ purchase.description|default:"No description" }}</td>
-                        <td class="drilldown-deliveries-vendor">{{purchase.vendor}}</td>
-                    {% if not forloop.last %}</tr>{% endif %}
-                    {% endif %}
-                {% endfor %}
+                {% if purchase.unscheduled_quantity > 0 and purchase.quantity != purchase.received_quantity %}
+                {% if not forloop.first %}
+            <tr>{% endif %}
+                <td class="drilldown-deliveries-quantity"><span
+                        class="quantity">{{ purchase.unscheduled_quantity|pretty_num }}
+                        {{ purchase.item|display_name }}</span>
+                </td>
+                <td class="drilldown-deliveries-desc">{{ purchase.description|default:"No description" }}</td>
+                <td class="drilldown-deliveries-vendor">{{purchase.vendor}}</td>
+                {% if not forloop.last %}
+            </tr>{% endif %}
+            {% endif %}
+            {% endfor %}
             </tr>
+
+
         </table>
     </div>
 </div>

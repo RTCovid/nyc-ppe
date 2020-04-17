@@ -403,12 +403,16 @@ body.drilldown .dashboard-table {
     margin-left: 5px;
 }
 
-.dashboard-table th.warning svg {
+.dashboard-table th.warning svg, svg.warning {
     fill: #CE9E23;
 }
 
-.dashboard-table th.error svg {
+.dashboard-table th.error svg, svg.error {
     fill: #CE4C23;
+}
+
+.icon-clock {
+    display: inline;
 }
 
 /* Drilldown styles */
@@ -439,6 +443,10 @@ body.drilldown .dashboard-table {
 .drilldown-deliveries {
     font-size: 14px;
     font-weight: 300;
+}
+
+.drilldown-deliveries td svg {
+    vertical-align: bottom;
 }
 
 .drilldown-deliveries-desc {
