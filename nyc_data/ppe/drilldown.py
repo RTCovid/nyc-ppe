@@ -33,7 +33,7 @@ def drilldown_result(
 
     donations = [
         d
-        for d in purchases if rollup_fn(dc.Item(d.item)) == item_type and d.order_type == OrderType.Donation
+        for d in purchases if rollup_fn(dc.Item(d.item)) == item_type and d.order_type == OrderType.Donation and not d.complete
     ]
 
     purchases = [
