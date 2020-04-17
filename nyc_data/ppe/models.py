@@ -166,7 +166,7 @@ class Purchase(ImportedDataModel):
 
     vendor = models.TextField()
     cost = models.IntegerField(null=True)
-
+    donation_date = models.DateField(null=True, blank=True, default=None)
     comment = models.TextField(blank=True)
 
     raw_data = JSONField()
