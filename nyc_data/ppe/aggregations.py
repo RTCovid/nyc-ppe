@@ -30,8 +30,7 @@ with open("../public-data/hospitalization_projection_new_york.json", "r") as f:
     HOSPITALIZATION = json.load(f)
 ALL_BEDS_AVAILABLE = 20420
 DEMAND_MESSAGE = (
-    "Demand projected based on the previous 7 days of hospital deliveries "
-    "& https://covidactnow.org/ hospitalization model"
+    "Demand projected based on multiple sources and hospitalization models."
 )
 
 
