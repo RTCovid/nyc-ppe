@@ -197,7 +197,7 @@ class Upload(View):
         if form.is_valid():
             try:
                 import_obj = data_import.handle_upload(
-                    request.FILES["file"], form.data["name"]
+                    request.FILES["file"], form.data["name"], form.data["data_current"]
                 )
                 return HttpResponseRedirect(
                     reverse("verify", kwargs={"import_id": import_obj.id})
@@ -220,6 +220,10 @@ class Upload(View):
             except ppe.errors.CsvImportError as ex:
                 return render(request, "upload.html",
                               UploadContext(error="Error reading in CSV file")._asdict())
+        else:
+            return render(request, "upload.html",
+                          UploadContext(error=form.errors)._asdict())
+
 
 class Verify(View):
     def get(self, request, import_id):
