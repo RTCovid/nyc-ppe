@@ -92,7 +92,7 @@ class SourcingRow(ImportedRow, NamedTuple):
 
 
 DCAS_DAILY_SOURCING = SheetMapping(
-    sheet_name=None,
+    sheet_name='DCAS 4-12 3PM',
     data_file=DataFile.PPE_ORDERINGCHARTS_DATE_XLSX,
     mappings={
         Mapping(

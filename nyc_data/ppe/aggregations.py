@@ -13,12 +13,13 @@ from django.utils.http import urlencode
 from django.utils.safestring import mark_safe
 
 import ppe.dataclasses as dc
+from ppe.data_mapping.types import DataFile
 from ppe.dataclasses import Period
 from ppe.models import (
     ScheduledDelivery,
     Inventory,
     FacilityDelivery,
-    Demand,
+    Demand, DataImport, Purchase, current_as_of,
 )
 
 # NY Forecast from https://covid19.healthdata.org/united-states-of-america/new-york
@@ -282,7 +283,10 @@ def split_value_unit(value):
 
 class NumericalColumn(tables.Column):
     def render(self, value):
-        return pretty_render_numeric(value)
+        if value == 0:
+            return '—'
+        else:
+            return pretty_render_numeric(value)
 
 
 class AggregationTable(tables.Table):
@@ -332,8 +336,8 @@ class AggregationTable(tables.Table):
         attrs={
             "th": {
                 "class": "tooltip",
-                "aria-label": "DCAS scheduled orders [2020-4-12]",
-            }
+                "aria-label": lambda: f"DCAS scheduled orders [{current_as_of(Purchase.active().filter(order_type=dc.OrderType.Purchase))}]",
+            },
         },
     )
 
@@ -342,7 +346,7 @@ class AggregationTable(tables.Table):
         attrs={
             "th": {
                 "class": "tooltip",
-                "aria-label": "EDC scheduled deliveries [2020-4-12]",
+                "aria-label": lambda: f"EDC scheduled deliveries [{current_as_of(Purchase.active().filter(order_type=dc.OrderType.Make))}]",
             }
         },
     )
