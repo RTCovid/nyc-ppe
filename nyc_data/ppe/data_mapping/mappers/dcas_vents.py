@@ -1,21 +1,18 @@
-from datetime import datetime, date
+from datetime import date
 from typing import NamedTuple, Dict
 
 from ppe import models
 from ppe.data_mapping.types import ImportedRow, repr_no_raw, DataFile
 from ppe.data_mapping.utils import (
-    asset_name_to_item,
     parse_int,
     parse_date,
-    ErrorCollector,
+    ErrorCollector, parse_bool,
 )
 from ppe.dataclasses import Item, OrderType
 from xlsx_utils import SheetMapping, Mapping
 
 
-class SourcingRow(ImportedRow, NamedTuple):
-    status: str
-
+class VentilatorRow(ImportedRow, NamedTuple):
     type: str
     functionality: str
     vendor: str
@@ -56,7 +53,8 @@ class SourcingRow(ImportedRow, NamedTuple):
             item=item,
             quantity=self.quantity,
             received_quantity=received_quantity,
-            description=f'Ventilator {self.type} ({self.functionality})'
+            description=f'Ventilator {self.type} ({self.functionality})',
+            raw_data=self.raw_data
         )
         deliveries = []
         if self.eta is not None:
@@ -71,7 +69,7 @@ class SourcingRow(ImportedRow, NamedTuple):
         return [purchase, *deliveries]
 
 
-DCAS_DAILY_SOURCING = SheetMapping(
+HNH_VENTS = SheetMapping(
     sheet_name='H+H 4-3 3PM',
     data_file=DataFile.PPE_ORDERINGCHARTS_DATE_XLSX,
     mappings={
@@ -89,9 +87,13 @@ DCAS_DAILY_SOURCING = SheetMapping(
             obj_column_name="quantity",
             proc=parse_int,
         ),
+        Mapping(
+            sheet_column_name='Functionality',
+            obj_column_name='functionality'
+        ),
         Mapping(sheet_column_name="Vendor", obj_column_name="vendor"),
         Mapping(sheet_column_name="Delivered?", obj_column_name="delivered", proc=parse_bool),
     },
     include_raw=True,
-    obj_constructor=SourcingRow,
+    obj_constructor=VentilatorRow,
 )

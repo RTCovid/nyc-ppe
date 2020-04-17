@@ -11,7 +11,7 @@ from ppe.data_mapping.mappers import (
     inventory_from_facilities,
     hospital_deliveries,
     hospital_demands,
-    donations)
+    donations, dcas_vents)
 from ppe.data_mapping.types import DataFile
 from ppe.data_mapping.utils import ErrorCollector
 from ppe.errors import DataImportError, NoMappingForFileError, PartialFile, ImportInProgressError
@@ -25,6 +25,7 @@ from xlsx_utils import import_xlsx
 ALL_MAPPINGS = [
     dcas_make.SUPPLIERS_AND_PARTNERS,
     dcas_sourcing.DCAS_DAILY_SOURCING,
+    dcas_vents.HNH_VENTS,
     inventory_from_facilities.INVENTORY,
     hospital_deliveries.FACILITY_DELIVERIES,
     hospital_demands.WEEKLY_DEMANDS,

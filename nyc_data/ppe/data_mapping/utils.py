@@ -118,9 +118,9 @@ def parse_int(inp: str, error_collector: ErrorCollector):
 
 def parse_bool(inp: str, error_collector: ErrorCollector):
     # TODO: would probably be useful to show more than just true/false
-    if inp.lower() == "y":
+    if inp.lower() in {"y", "yes"}:
         return True
-    elif inp.lower() == "n":
+    elif inp.lower() in {"n", "no"}:
         return False
     else:
         error_collector.report_error(f"Failed to parse bool: {inp}")
