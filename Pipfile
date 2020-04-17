@@ -18,6 +18,7 @@ dj-database-url = "*"
 whitenoise = "*"
 ortools = "*"
 black = "*"
+sentry-sdk = "*"
 
 [requires]
 python_version = "3.8"
