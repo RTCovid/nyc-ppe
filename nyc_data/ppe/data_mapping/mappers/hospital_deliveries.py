@@ -69,7 +69,7 @@ FACILITY_DELIVERIES = SheetMapping(
     mappings={
         Mapping(sheet_column_name="Date", obj_column_name="date", proc=parse_date),
         Mapping(
-            sheet_column_name="Facility or Network Name",
+            sheet_column_name="Facility Name or Network",
             obj_column_name="facility_name",
         ),
         Mapping(sheet_column_name="Facility Type", obj_column_name="facility_type"),

@@ -51,7 +51,6 @@ $(function(){
                     window.location.search = newloc;
                 }
             }
-        
             $('#reportrange').daterangepicker({
                 startDate: start,
                 endDate: end,
@@ -64,9 +63,31 @@ $(function(){
                     'Next Month': [moment().add(1, 'month').startOf('month'), moment().add(1, 'month').endOf('month')]
                 }
             }, cb);
-        
+    
             cb(start, end);
+        });
+    }
         
+    // Data staleness indicators
+    if($('.dashboard-table').length > 0){
+        $('th.tooltip').each(function(index) {
+            var day, days, daystring;
+            var matches = $(this).attr('aria-label').match(/\[(.*?)\]/);
+            if(matches && matches[1] != 'None') {
+                daystring = matches[1].replace(/-/g,'');
+                day = moment(daystring);
+                days = moment().diff(day, 'days');
+                console.log($(this), days);
+                if (days > 3) {
+                    $(this).addClass('error');
+                    $(this).find('a').after(svgClock);
+                } else if (days > 1) {
+                    $(this).addClass('warning');
+                    $(this).find('a').after(svgClock);
+                } 
+            } 
         });
     }
 });
+
+svgClock = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M256 8a248 248 0 100 496 248 248 0 000-496zm0 448a200 200 0 110-400 200 200 0 010 400zm62-104l-85-62c-3-2-5-6-5-10V116c0-7 5-12 12-12h32c7 0 12 5 12 12v142l67 48c5 4 6 12 2 17l-18 26c-4 5-12 7-17 3z"/></svg>'

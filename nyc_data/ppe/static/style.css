@@ -396,6 +396,21 @@ body.drilldown .dashboard-table {
     white-space: pre;
 }
 
+.dashboard-table th svg {
+    height: 14px;
+    width: 14px;
+    display: inline-block;
+    margin-left: 5px;
+}
+
+.dashboard-table th.warning svg {
+    fill: #CE9E23;
+}
+
+.dashboard-table th.error svg {
+    fill: #CE4C23;
+}
+
 /* Drilldown styles */
 
 .incoming-supply h2 {
