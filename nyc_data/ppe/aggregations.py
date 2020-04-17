@@ -30,8 +30,7 @@ with open("../public-data/hospitalization_projection_new_york.json", "r") as f:
     HOSPITALIZATION = json.load(f)
 ALL_BEDS_AVAILABLE = 20420
 DEMAND_MESSAGE = (
-    "Demand projected based on the previous 7 days of hospital deliveries "
-    "& https://covidactnow.org/ hospitalization model"
+    "Demand projected based on multiple sources and hospitalization models."
 )
 
 
@@ -310,10 +309,16 @@ class NumericalColumn(tables.Column):
             return '—'
         else:
             return pretty_render_numeric(value)
+    
+    def render_footer(self, bound_column, table):
+        if table.has_footer:
+            return pretty_render_numeric(sum(bound_column.accessor.resolve(row) for row in table.data))
+
 
 
 class AggregationTable(tables.Table):
-    asset = tables.Column()
+    has_footer = False
+    asset = tables.Column(footer='Total')
     projected_demand = NumericalColumn(
         accessor="demand",
         verbose_name="Demand Proxy",
@@ -470,3 +475,6 @@ class AggregationTable(tables.Table):
             "make",
             "donate"
         )
+
+class TotaledAggregationTable(AggregationTable):
+    has_footer = True

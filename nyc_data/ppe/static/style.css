@@ -411,6 +411,15 @@ body.drilldown .dashboard-table {
     fill: #CE4C23;
 }
 
+.dashboard-table tfoot {
+    border-top: 1px solid #ddd;
+}
+.dashboard-table tfoot td, .dashboard-table tfoot .value {
+    color: #888;
+    text-transform: uppercase;
+    font-weight: 300;
+}
+
 .icon-clock {
     display: inline;
 }

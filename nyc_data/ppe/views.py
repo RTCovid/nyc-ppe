@@ -94,7 +94,7 @@ def drilldown(request):
     drilldown_res = drilldown_result(
         category, params.rollup_fn, time_range=params.time_range()
     )
-    table = aggregations.AggregationTable(drilldown_res.aggregation.values())
+    table = aggregations.TotaledAggregationTable(drilldown_res.aggregation.values())
     RequestConfig(request).configure(table)
     purchases = drilldown_res.purchases
     deliveries = drilldown_res.scheduled_deliveries
