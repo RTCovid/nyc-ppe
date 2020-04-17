@@ -67,6 +67,7 @@ def default(request):
         time_end=params.end_date,
         rollup_fn=params.rollup_fn,
     )
+    
     displayed_vals = ["donate", "sell", "make", "inventory"]
     cleaned_aggregation = [
         rollup
@@ -84,7 +85,6 @@ def default(request):
     }
     return render(request, "dashboard.html", context)
 
-
 def drilldown(request):
     params = StandardRequestParams.load_from_request(request)
     category = request.GET.get("category")
@@ -99,6 +99,7 @@ def drilldown(request):
     purchases = drilldown_res.purchases
     deliveries = drilldown_res.scheduled_deliveries
     inventory = drilldown_res.inventory
+    donations = drilldown_res.donations
 
     received_deliveries = sum([p.received_quantity or 0 for p in purchases])
     context = {
@@ -108,6 +109,8 @@ def drilldown(request):
         "purchases": purchases,
         "deliveries": deliveries,
         "inventory": inventory,
+        "donations" : donations,
+        "donations_total" : sum([d.quantity for d in donations]),
         "deliveries_past": received_deliveries,
         "deliveries_next_three": sum(
             [
