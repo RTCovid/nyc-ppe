@@ -81,11 +81,9 @@ $(function(){
                 if (days > 3) {
                     $(this).addClass('error');
                     $(this).find('a').after(svgClock);
-                    console.log('error');
                 } else if (days > 1) {
                     $(this).addClass('warning');
                     $(this).find('a').after(svgClock);
-                    console.log('warning');
                 } 
             } 
         });
