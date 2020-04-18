@@ -19,6 +19,7 @@ whitenoise = "*"
 ortools = "*"
 black = "*"
 sentry-sdk = "*"
+freezegun = "*"
 
 [requires]
 python_version = "3.8"
