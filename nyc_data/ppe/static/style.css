@@ -163,6 +163,11 @@ section.content {
     text-align: center;
 }
 
+.lockdown p {
+    max-width: 300px;
+    font-weight: 300;
+}
+
 .lockdown label, .upload label {
     display: block;
     color: #aaa;
@@ -174,7 +179,7 @@ section.content {
 .lockdown input, .upload input {
     display: block;
     min-width: 250px;
-    margin: 10px 0;
+    margin: 10px auto;
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 5px;
