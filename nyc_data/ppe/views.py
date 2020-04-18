@@ -233,7 +233,7 @@ class Upload(LoginRequiredMixin, View):
                           UploadContext(error=form.errors)._asdict())
 
 
-class Verify(View):
+class Verify(LoginRequiredMixin, View):
     def get(self, request, import_id):
         import_obj = DataImport.objects.get(id=import_id)
         return render(
@@ -247,7 +247,7 @@ class Verify(View):
         return HttpResponseRedirect(reverse("index"))
 
 
-class CancelImport(View):
+class CancelImport(LoginRequiredMixin, View):
     def post(self, request, import_id):
         import_obj = DataImport.objects.get(id=import_id)
         import_obj.cancel()
