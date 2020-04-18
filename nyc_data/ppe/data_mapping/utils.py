@@ -71,6 +71,7 @@ def asset_name_to_item(asset_name: str, error_collector: ErrorCollector) -> Item
 def parse_date(date: any, error_collector: ErrorCollector):
     formats = [
         ("%m/%d/%Y", lambda x: x),  # 04/10/2020
+        ("%m/%d/%y", lambda x: x),  # 04/10/20
         ("%Y-%m-%d", lambda x: x),  # 2020-04-10
         ("%d-%b", lambda d: d.replace(year=2020)),  # 30-Apr
         ("%m/%d", lambda d: d.replace(year=2020)),  # 4/15
