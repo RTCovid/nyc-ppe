@@ -141,8 +141,9 @@ ACCOUNT_ADAPTER = 'nyc_data.auth.ClosedAccountAdapter'  # Don't allow signups
 ACCOUNT_SESSION_REMEMBER = True  # Allow users to stay logged in
 ACCOUNT_EMAIL_VERIFICATION = 'none'  # Don't require email verification
 ACCOUNT_AUTHENTICATION_METHOD = 'username_email'  # log in with either username or email
-ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'https'
-
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'https'  # links should use HTTPS
+ACCOUNT_LOGIN_ATTEMPTS_LIMIT =  5  # Timeout after this many failed attempts
+ACCOUNT_LOGIN_ATTEMPTS_TIMEOUT = 300  # Duration of timeout after failed attempts in seconds
 
 
 # Third party config
