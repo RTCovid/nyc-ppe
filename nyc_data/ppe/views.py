@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, date
 from typing import NamedTuple, Optional, Callable
 
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.forms import Form
@@ -205,7 +206,7 @@ class Upload(LoginRequiredMixin, View):
         if form.is_valid():
             try:
                 import_obj = data_import.handle_upload(
-                    request.FILES["file"], form.data["name"], form.data["data_current"]
+                    f=request.FILES["file"], user=request.user, current_as_of=form.data["data_current"]
                 )
                 return HttpResponseRedirect(
                     reverse("verify", kwargs={"import_id": import_obj.id})
@@ -228,6 +229,11 @@ class Upload(LoginRequiredMixin, View):
             except ppe.errors.CsvImportError as ex:
                 return render(request, "upload.html",
                               UploadContext(error="Error reading in CSV file")._asdict())
+            except Exception as ex:
+                if settings.DEBUG:
+                    raise
+                return render(request, "upload.html",
+                              UploadContext(error=f"There was an unknown error importing the file -- we're looking into it! [{ex}]")._asdict())
         else:
             return render(request, "upload.html",
                           UploadContext(error=form.errors)._asdict())
@@ -243,7 +249,7 @@ class Verify(LoginRequiredMixin, View):
         )
 
     def post(self, request, import_id):
-        data_import.complete_import(DataImport.objects.get(id=import_id))
+        data_import.finalize_import(DataImport.objects.get(id=import_id))
         return HttpResponseRedirect(reverse("index"))
 
 

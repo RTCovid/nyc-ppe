@@ -151,12 +151,9 @@ def asset_rollup(
     for donation in relevant_donations:
         rollup = results[donation.purchase.item]
         tpe = donation.purchase.order_type
-
-        if tpe != dc.OrderType.Donation:
-            continue
-        else:
-            param = param = MAPPING.get(tpe)
-            setattr(rollup, param, getattr(rollup, param) + donation.quantity)
+        assert tpe == dc.OrderType.Donation
+        param = MAPPING.get(tpe)
+        setattr(rollup, param, getattr(rollup, param) + donation.quantity)
 
     inventory = Inventory.active()
     for item in inventory:

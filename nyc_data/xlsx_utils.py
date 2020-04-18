@@ -71,8 +71,6 @@ def guess_mapping(sheet: Path, possible_mappings: List[SheetMapping]):
         if all(col_name in first_row for col_name in col_names):
             final_mappings.append(mapping)
         elif mapping.sheet_name is not None:
-            import pdb;
-            pdb.set_trace()
             print(
                 "We expected: ",
                 set(col_names).difference(first_row.keys()),
