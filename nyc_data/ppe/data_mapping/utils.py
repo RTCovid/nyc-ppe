@@ -125,3 +125,10 @@ def parse_bool(inp: str, error_collector: ErrorCollector):
         return False
     else:
         error_collector.report_error(f"Failed to parse bool: {inp}")
+
+
+def parse_string_or_none(inp: str, error_collector: ErrorCollector):
+    if inp and len(inp):
+        return inp
+    else:
+        return "None"
