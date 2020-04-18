@@ -120,6 +120,7 @@ DONATION_DATA = SheetMapping(
         Mapping(
             sheet_column_name="Comments",
             obj_column_name="comments",
+            proc=utils.parse_string_or_none,
         )
     }, include_raw=True,
     obj_constructor=DonationRow

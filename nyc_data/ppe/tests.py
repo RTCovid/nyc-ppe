@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 
 from django.test import TestCase, override_settings
 from django.urls import reverse
+from freezegun import freeze_time
 
 from ppe import aggregations
 from ppe.aggregations import AssetRollup, DemandSrc
@@ -97,6 +98,7 @@ class TestAssetRollup(TestCase):
             item.source = self.data_import
             item.save()
 
+    @freeze_time("2020-04-12")
     def test_rollup(self):
         today = datetime(2020, 4, 12)
         rollup = aggregations.asset_rollup_legacy(today - timedelta(days=27), today)
