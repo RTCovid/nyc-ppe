@@ -242,7 +242,6 @@ class TestCategoryMappings(unittest.TestCase):
             )
 
 
-@override_settings(LOCKDOWN_ENABLED=False)
 class TestViews(TestCase):
     """Sanity that the views work at a basic level"""
 
