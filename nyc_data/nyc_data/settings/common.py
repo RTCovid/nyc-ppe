@@ -135,10 +135,15 @@ AUTHENTICATION_BACKENDS = [
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
-ACCOUNT_ADAPTER = 'nyc_data.auth.ClosedAccountAdapter'
-ACCOUNT_SESSION_REMEMBER = True
 LOGIN_REDIRECT_URL = '/'
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+ACCOUNT_ADAPTER = 'nyc_data.auth.ClosedAccountAdapter'  # Don't allow signups
+ACCOUNT_SESSION_REMEMBER = True  # Allow users to stay logged in
+ACCOUNT_EMAIL_VERIFICATION = 'none'  # Don't require email verification
+ACCOUNT_AUTHENTICATION_METHOD = 'username_email'  # log in with either username or email
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'https'
+
+
 
 # Third party config
 
