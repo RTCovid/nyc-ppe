@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta, date
 from typing import NamedTuple, Optional, Callable
 
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.forms import Form
 from django.http import HttpResponse, HttpResponseRedirect
 from django.http import JsonResponse
@@ -59,6 +61,7 @@ class StandardRequestParams(NamedTuple):
         )
 
 
+@login_required
 def default(request):
     params = StandardRequestParams.load_from_request(request)
 
@@ -85,6 +88,7 @@ def default(request):
     }
     return render(request, "dashboard.html", context)
 
+@login_required
 def drilldown(request):
     params = StandardRequestParams.load_from_request(request)
     category = request.GET.get("category")
@@ -158,6 +162,7 @@ def drilldown(request):
     return render(request, "drilldown.html", context)
 
 
+@login_required
 def supply_forecast(request):
     category = request.GET.get("category")
     if category is None:
@@ -191,7 +196,7 @@ class UploadContext(NamedTuple):
     import_in_progress: Optional[str] = None
 
 
-class Upload(View):
+class Upload(LoginRequiredMixin, View):
     def get(self, request):
         return render(request, "upload.html", UploadContext()._asdict())
 

@@ -35,7 +35,7 @@ SECRET_KEY = os.environ.get(
 DEBUG = ENVIRONMENT == "local"
 
 ALLOWED_HOSTS = ["*"]
-
+SITE_ID = 1
 
 # Application definition
 
@@ -47,9 +47,13 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "django_extensions",
-    "lockdown",
+    "django.contrib.sites",
+
     "ppe",
+
+    "django_extensions",
+    "allauth",
+    "allauth.account",
 ]
 
 MIDDLEWARE = [
@@ -67,6 +71,11 @@ MIDDLEWARE = [
 DJANGO_TABLES2_TEMPLATE = "django_tables2/semantic.html"
 
 ROOT_URLCONF = "nyc_data.urls"
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
 
 TEMPLATES = [
     {
@@ -137,4 +146,3 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 # Third party config
 
-LOCKDOWN_PASSWORDS = os.environ.get("LOCKDOWN_PASSWORD", "opensesame")
