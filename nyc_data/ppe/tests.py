@@ -110,7 +110,7 @@ class TestAssetRollup(TestCase):
                 asset=dc.Item.gown,
                 inventory=100,
                 demand_src={DemandSrc.real_demand},
-                demand=7654622,
+                demand=7052322,
                 sell=5,
             ),
         )
