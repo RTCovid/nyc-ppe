@@ -127,11 +127,6 @@ section.content {
     color: #CE4C23;
 }
 
-.error {
-    text-align: center;
-    display: block   
-}
-
 .balance-bar-red {
     background: #CE4C23;
 }
@@ -156,6 +151,11 @@ section.content {
 .lockdown, .upload { 
     display: flex;
     justify-content: center;
+}
+
+.upload .error {
+    text-align: center;
+    display: block   
 }
 
 .lockdown form, .upload form {
