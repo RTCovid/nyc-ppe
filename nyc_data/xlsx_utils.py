@@ -2,6 +2,7 @@ import csv
 import json
 from pathlib import Path
 from typing import NamedTuple, Any, Callable, List, Optional, Set
+from fuzzywuzzy import process
 
 from django.core.serializers.json import DjangoJSONEncoder
 from openpyxl import load_workbook
@@ -9,6 +10,7 @@ from openpyxl import load_workbook
 from ppe import errors
 from ppe.data_mapping.types import DataFile
 from ppe.data_mapping.utils import ErrorCollector
+from ppe.errors import ColumnNameMismatch, PartialFile
 
 
 def XLSXDictReader(sheet, header_row):
@@ -42,13 +44,24 @@ class SheetMapping(NamedTuple):
 RAW_DATA = "raw_data"
 
 
-def guess_mapping(sheet: Path, possible_mappings: List[SheetMapping]):
+def guess_mapping(sheet: Path, all_mappings: List[SheetMapping]):
     workbook = None
     if sheet.suffix == '.xlsx':
         workbook = load_workbook(sheet, data_only=True)
-        possible_mappings = [m for m in possible_mappings if m.sheet_name in workbook.sheetnames]
+        possible_mappings = [m for m in all_mappings if m.sheet_name in workbook.sheetnames]
+        if not possible_mappings:
+            known_sheetnames = [m.sheet_name for m in all_mappings]
+            matches = [(us, process.extractOne(us, known_sheetnames)) for us in workbook.sheetnames]
+            raise errors.SheetNameMismatch(workbook.sheetnames, (matches[0][0], matches[0][1][0]))
+        else:
+            df = possible_mappings[0].data_file
+
+            if len([m for m in all_mappings if m.data_file == df]) != len(possible_mappings):
+                expected = [m.sheet_name for m in all_mappings if m.data_file == df]
+                raise errors.PartialFile(expected_sheets=expected, actual_sheets=workbook.sheetnames)
+
     elif sheet.suffix == '.csv':
-        possible_mappings = [m for m in possible_mappings if m.sheet_name is None]
+        possible_mappings = [m for m in all_mappings if m.sheet_name is None]
     else:
         return []
     final_mappings = []
@@ -71,17 +84,10 @@ def guess_mapping(sheet: Path, possible_mappings: List[SheetMapping]):
         if all(col_name in first_row for col_name in col_names):
             final_mappings.append(mapping)
         elif mapping.sheet_name is not None:
-            print(
-                "We expected: ",
-                set(col_names).difference(first_row.keys()),
-                "we found: ",
-                first_row.keys(),
-            )
-            raise Exception(
-                f"Sheetname matches but column names do not {sheet} {mapping.data_file}"
-            )
+            raise ColumnNameMismatch(col_names, first_row.keys())
 
-    return final_mappings
+    if final_mappings:
+        return final_mappings
 
 
 def import_xlsx(

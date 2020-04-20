@@ -46,7 +46,7 @@ class StandardRequestParams(NamedTuple):
         err_collector = ErrorCollector()
         start_date = (parse_date(start_date, err_collector) or datetime.now()).date()
         end_date = (
-            parse_date(end_date, err_collector) or datetime.now() + timedelta(days=29)
+                parse_date(end_date, err_collector) or datetime.now() + timedelta(days=29)
         ).date()
 
         if params.get("rollup") in {"mayoral", "", None}:
@@ -71,7 +71,7 @@ def default(request):
         time_end=params.end_date,
         rollup_fn=params.rollup_fn,
     )
-    
+
     displayed_vals = ["donate", "sell", "make", "inventory"]
     cleaned_aggregation = [
         rollup
@@ -84,10 +84,11 @@ def default(request):
     context = {
         "aggregations": table,
         "days_in_view": dc.Period(params.start_date, params.end_date)
-        .inclusive_length()
-        .days,
+            .inclusive_length()
+            .days,
     }
     return render(request, "dashboard.html", context)
+
 
 @login_required
 def drilldown(request):
@@ -114,16 +115,16 @@ def drilldown(request):
         "purchases": purchases,
         "deliveries": deliveries,
         "inventory": inventory,
-        "donations" : donations,
-        "donations_total" : sum([d.quantity for d in donations]),
+        "donations": donations,
+        "donations_total": sum([d.quantity for d in donations]),
         "deliveries_past": received_deliveries,
         "deliveries_next_three": sum(
             [
                 d.quantity
                 for d in deliveries
                 if datetime.now().date()
-                <= d.delivery_date
-                <= datetime.now().date() + timedelta(days=2)
+                   <= d.delivery_date
+                   <= datetime.now().date() + timedelta(days=2)
             ]
         ),
         "deliveries_next_week": sum(
@@ -131,8 +132,8 @@ def drilldown(request):
                 d.quantity
                 for d in deliveries
                 if datetime.now().date()
-                <= d.delivery_date
-                <= datetime.now().date() + timedelta(days=6)
+                   <= d.delivery_date
+                   <= datetime.now().date() + timedelta(days=6)
             ]
         ),
         "deliveries_next_thirty": sum(
@@ -140,8 +141,8 @@ def drilldown(request):
                 d.quantity
                 for d in deliveries
                 if datetime.now().date()
-                <= d.delivery_date
-                <= datetime.now().date() + timedelta(days=29)
+                   <= d.delivery_date
+                   <= datetime.now().date() + timedelta(days=29)
             ]
         ),
         "scheduled_total": sum([d.quantity for d in deliveries]),
@@ -201,6 +202,30 @@ class Upload(LoginRequiredMixin, View):
     def get(self, request):
         return render(request, "upload.html", UploadContext()._asdict())
 
+    def handle_upload_error(self, err: Exception) -> UploadContext:
+        try:
+            raise err
+        except ppe.errors.ImportInProgressError as ex:
+            upload_context = UploadContext(
+                error="Import already in progress for this file type.",
+                import_in_progress=ex.import_id,
+            )
+        except ppe.errors.NoMappingForFileError as ex:
+            upload_context = UploadContext(error="We were unable to find an existing mapping for this file.")
+
+        except ppe.errors.SheetNameMismatch as ex:
+            upload_context = UploadContext(error=str(ex))
+        except ppe.errors.CsvImportError as ex:
+            upload_context = UploadContext(error=f"Error reading CSV file: {ex}.")
+        except ppe.errors.PartialFile as ex:
+            upload_context = UploadContext(error=str(ex))
+        except Exception as ex:
+            if settings.DEBUG:
+                raise
+            upload_context = UploadContext(error=f"There was an unknown error importing the file. {ex}")
+
+        return upload_context
+
     def post(self, request):
         form = forms.UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
@@ -211,29 +236,13 @@ class Upload(LoginRequiredMixin, View):
                 return HttpResponseRedirect(
                     reverse("verify", kwargs={"import_id": import_obj.id})
                 )
-            except ppe.errors.ImportInProgressError as ex:
-                return render(
-                    request,
-                    "upload.html",
-                    UploadContext(
-                        error="Import already in progress for this file type",
-                        import_in_progress=ex.import_id,
-                    )._asdict(),
-                )
-            except ppe.errors.NoMappingForFileError as ex:
-                return render(
-                    request,
-                    "upload.html",
-                    UploadContext(error="No mapping found for this file")._asdict(),
-                )
-            except ppe.errors.CsvImportError as ex:
-                return render(request, "upload.html",
-                              UploadContext(error="Error reading in CSV file")._asdict())
             except Exception as ex:
-                if settings.DEBUG:
-                    raise
-                return render(request, "upload.html",
-                              UploadContext(error=f"There was an unknown error importing the file -- we're looking into it! [{ex}]")._asdict())
+                context = self.handle_upload_error(ex)
+                context = context._replace(form = form)
+                return render(
+                    request,
+                    "upload.html",
+                    context._asdict())
         else:
             return render(request, "upload.html",
                           UploadContext(error=form.errors)._asdict())
