@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block titlebar %}
+    <h2>Sign In</h2>
+{% endblock %}
+
+{% block content %}
+<div class="lockdown">
+    <form class="login" method="POST" action="{% url 'account_login' %}">
+    {% csrf_token %}
+    {{ form.as_p }}
+    {% if redirect_field_value %}
+    <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+    {% endif %}
+    <button class="primaryAction" type="submit">Sign In</button>
+    <p><a class="button secondaryAction" href="{% url 'account_reset_password' %}">Forgot Password?</a></p>
+
+    </form>
+</div>
+{% endblock %}
+
+{% block footer %}For assistance with credentials, please contact the <a href="mailto:jiman@cto.nyc.gov?subject=NYCPPE%20access">CTO's office</a>.{% endblock %}

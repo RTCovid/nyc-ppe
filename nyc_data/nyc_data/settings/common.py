@@ -35,7 +35,7 @@ SECRET_KEY = os.environ.get(
 DEBUG = ENVIRONMENT == "local"
 
 ALLOWED_HOSTS = ["*"]
-
+SITE_ID = 1
 
 # Application definition
 
@@ -47,9 +47,14 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "django_extensions",
-    "lockdown",
+    "django.contrib.sites",
+
     "ppe",
+
+    "django_extensions",
+    "allauth",
+    "allauth.account",
+    'allauth.socialaccount',
 ]
 
 MIDDLEWARE = [
@@ -61,7 +66,6 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "lockdown.middleware.LockdownMiddleware",
 ]
 
 DJANGO_TABLES2_TEMPLATE = "django_tables2/semantic.html"
@@ -102,19 +106,6 @@ DATABASES = {
 }
 
 
-# Password validation
-# https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
-
-AUTH_PASSWORD_VALIDATORS = [
-    {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
-    },
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",},
-    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",},
-    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",},
-]
-
-
 # Internationalization
 # https://docs.djangoproject.com/en/3.0/topics/i18n/
 
@@ -135,6 +126,25 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
+# Authentication config
+
+AUTH_PASSWORD_VALIDATORS = []  # No password constraints
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
+LOGIN_REDIRECT_URL = '/'
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+ACCOUNT_ADAPTER = 'nyc_data.auth.ClosedAccountAdapter'  # Don't allow signups
+ACCOUNT_SESSION_REMEMBER = True  # Allow users to stay logged in
+ACCOUNT_EMAIL_VERIFICATION = 'none'  # Don't require email verification
+ACCOUNT_AUTHENTICATION_METHOD = 'username_email'  # log in with either username or email
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'https'  # links should use HTTPS
+ACCOUNT_LOGIN_ATTEMPTS_LIMIT =  5  # Timeout after this many failed attempts
+ACCOUNT_LOGIN_ATTEMPTS_TIMEOUT = 300  # Duration of timeout after failed attempts in seconds
+
+
 # Third party config
 
-LOCKDOWN_PASSWORDS = os.environ.get("LOCKDOWN_PASSWORD", "opensesame")

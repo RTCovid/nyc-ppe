@@ -30,7 +30,7 @@
     </section> 
     <section class="footer">
         <section class="container">
-            {% block footer %}
+            {% block footer %}{% if request.user.is_authenticated %}
             <dl>
                 <dt>Demand</dt>
                 <dd>A proxy for future demand, using multiple sources including previous deliveries and supply burndown data,
@@ -48,7 +48,9 @@
                 <dt>Donate</dt>
                 <dd>Pledged donations that have not yet been received, from DCAS. <a href="mailto:awichowski@cto.nyc.gov?subject=NYCPPE%20Data%20Update%20Requested&body=Please%20update%20the%20EDC%20PPE%20data%20at%20your%20earliest%20convenience.">[Request update]</a></dd>
             </dl>
-            {% endblock %}
+
+            <p><a href="{% url 'account_logout' %}">Log Out</a> | <a href="{% url 'account_change_password' %}">Change password</a></p>
+            {% endif %}{% endblock %}
         </section>
     </section>
     <script src="{% static 'script.js' %}"></script>

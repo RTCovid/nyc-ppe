@@ -1,6 +1,7 @@
 import unittest
 from datetime import datetime, timedelta
 
+from django.contrib import auth
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from freezegun import freeze_time
@@ -241,9 +242,11 @@ class TestCategoryMappings(unittest.TestCase):
             )
 
 
-@override_settings(LOCKDOWN_ENABLED=False)
 class TestViews(TestCase):
     """Sanity that the views work at a basic level"""
+
+    def setUp(self):
+        self.client.force_login(auth.get_user_model().objects.create_superuser(username='testuser'))
 
     def test_home(self):
         response = self.client.get(reverse("index"))
