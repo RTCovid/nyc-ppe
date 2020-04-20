@@ -1,4 +1,5 @@
 import unittest
+import json
 from datetime import datetime, timedelta
 
 from django.test import TestCase, override_settings
@@ -98,6 +99,9 @@ class TestAssetRollup(TestCase):
             item.source = self.data_import
             item.save()
 
+        with open("../public-data/hospitalization_projection_new_york_20200412.json", "r") as f:
+            aggregations.HOSPITALIZATION = json.load(f)
+
     @freeze_time("2020-04-12")
     def test_rollup(self):
         today = datetime(2020, 4, 12)
@@ -110,7 +114,7 @@ class TestAssetRollup(TestCase):
                 asset=dc.Item.gown,
                 inventory=100,
                 demand_src={DemandSrc.real_demand},
-                demand=7052322,
+                demand=7654622,
                 sell=5,
             ),
         )
