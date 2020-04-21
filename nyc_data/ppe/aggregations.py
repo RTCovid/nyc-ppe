@@ -5,26 +5,23 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Dict, Callable, NamedTuple, Set
 
-import django_tables2 as tables
 from django.db.models import Sum
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.http import urlencode
 from django.utils.safestring import mark_safe
+from django_tables2 import tables
 
 import ppe.dataclasses as dc
-from ppe.data_mapping.types import DataFile
 from ppe.dataclasses import Period, OrderType
 from ppe.models import (
     ScheduledDelivery,
     Inventory,
     FacilityDelivery,
     Demand,
-    DataImport,
     Purchase,
     current_as_of,
 )
-
 # NY Forecast from https://covid19.healthdata.org/united-states-of-america/new-york
 from ppe.utils import log_db_queries
 
@@ -37,9 +34,20 @@ DEMAND_MESSAGE = (
 )
 
 
+class AggColumn(str, Enum):
+    Donation = "donated"
+    Made = "made"
+    Ordered = "ordered"
+    Inventory = "inventory"
+
+    @classmethod
+    def all(cls):
+        return {cls.Donation, cls.Made, cls.Ordered, cls.Inventory}
+
+
 class DemandCalculationConfig(NamedTuple):
     use_real_demand: bool = True
-    use_hospitalization_projection: bool = True
+    use_hospitalization_projection: bool = False
     rollup_fn: Callable[[dc.Item], str] = lambda x: x
 
 
@@ -57,16 +65,29 @@ class DemandSrc(str, Enum):
 @dataclass
 class AssetRollup:
     asset: str
+    total_cols: Set["AggColumn"]
     demand: int = 0
     demand_src: Set[DemandSrc] = field(default_factory=set)
-    donate: int = 0
-    sell: int = 0
-    make: int = 0
+    donated: int = 0
+    ordered: int = 0
+    made: int = 0
     inventory: int = 0
+
+    def _value_at(self, agg_column: AggColumn):
+        if agg_column == AggColumn.Made:
+            return self.made
+        elif agg_column == AggColumn.Ordered:
+            return self.ordered
+        elif agg_column == AggColumn.Inventory:
+            return self.inventory
+        elif agg_column == AggColumn.Donation:
+            return self.donated
+        else:
+            raise Exception("Invalid agg column")
 
     @property
     def total(self):
-        return self.donate + self.sell + self.make + self.inventory
+        return sum(self._value_at(col) for col in self.total_cols)
 
     @property
     def absolute_balance(self):
@@ -79,11 +100,12 @@ class AssetRollup:
     def __add__(self, other: "AssetRollup"):
         return AssetRollup(
             asset=self.asset,
+            total_cols=self.total_cols,
             demand=self.demand + other.demand,
             demand_src=self.demand_src.union(other.demand_src),
-            donate=self.donate + other.donate,
-            sell=self.sell + other.sell,
-            make=self.make + other.make,
+            donated=self.donated + other.donated,
+            ordered=self.ordered + other.ordered,
+            made=self.made + other.made,
             inventory=self.inventory + other.inventory,
         )
 
@@ -96,9 +118,9 @@ class AssetRollup:
 
 
 MAPPING = {
-    dc.OrderType.Make: "make",
-    dc.OrderType.Purchase: "sell",
-    dc.OrderType.Donation: "donate",
+    dc.OrderType.Make: "made",
+    dc.OrderType.Purchase: "ordered",
+    dc.OrderType.Donation: "donated",
 }
 
 
@@ -110,8 +132,9 @@ def asset_rollup_legacy(
     rollup_fn: Callable[[dc.Item], str] = lambda x: x,
 ):
     return asset_rollup(
-        Period(time_start, time_end),
-        DemandCalculationConfig(
+        time_range=Period(time_start, time_end),
+        supply_cols=AggColumn.all(),
+        demand_calculation_config=DemandCalculationConfig(
             use_real_demand,
             use_hospitalization_projection=use_hospitalization_projection,
             rollup_fn=rollup_fn,
@@ -121,7 +144,9 @@ def asset_rollup_legacy(
 
 @log_db_queries
 def asset_rollup(
-    time_range: Period, demand_calculation_config: DemandCalculationConfig,
+    time_range: Period,
+    supply_cols: Set[AggColumn],
+    demand_calculation_config: DemandCalculationConfig,
 ) -> Dict[str, AssetRollup]:
     time_start, time_end = time_range.start, time_range.end
     relevant_deliveries = (
@@ -140,7 +165,7 @@ def asset_rollup(
 
     results: Dict[dc.Item, AssetRollup] = {}
     for _, item in dc.Item.__members__.items():
-        results[item] = AssetRollup(asset=item)
+        results[item] = AssetRollup(asset=item, total_cols=supply_cols)
 
     for delivery in relevant_deliveries:
         rollup = results[delivery.purchase.item]
@@ -171,7 +196,9 @@ def asset_rollup(
     for item, rollup in results.items():
         rolledup_category = demand_calculation_config.rollup_fn(item)
         if not rolledup_category in rollup_results:
-            rollup_results[rolledup_category] = AssetRollup(asset=rolledup_category)
+            rollup_results[rolledup_category] = AssetRollup(
+                asset=rolledup_category, total_cols=supply_cols
+            )
         rollup_results[rolledup_category] += rollup
 
     return rollup_results
@@ -348,7 +375,7 @@ class AggregationTable(tables.Table):
         verbose_name="Supply",
         attrs={
             "th": {
-                "class": "tooltip",
+                "class": "tooltip supply-col",
                 "aria-label": "Sum of inventory, ordered, and made.",
             }
         },
@@ -358,35 +385,51 @@ class AggregationTable(tables.Table):
             "th": {
                 "class": "tooltip",
                 "aria-label": lambda: f"DOHMH [{Inventory.as_of_latest()}]",
-            }
+                "data-supply-col": lambda bound_column: bound_column.name,
+            },
+            "td": {
+                "data-supply-col": lambda bound_column: bound_column.name,
+            },
         }
     )
-    donate = NumericalColumn(
+    donated = NumericalColumn(
         verbose_name="Donated",
         attrs={
             "th": {
                 "class": "tooltip",
                 "aria-label": lambda: f"DCAS pending pledges [{current_as_of(Purchase.active().filter(order_type=dc.OrderType.Donation))}]",
+                "data-supply-col": lambda bound_column: bound_column.name,
             },
+            "td": {
+                "data-supply-col": lambda bound_column: bound_column.name,
+            }
         },
     )
-    sell = NumericalColumn(
+    ordered = NumericalColumn(
         verbose_name="Ordered",
         attrs={
             "th": {
                 "class": "tooltip",
                 "aria-label": lambda: f"DCAS scheduled orders [{current_as_of(Purchase.active().filter(order_type=dc.OrderType.Purchase))}]",
+                "data-supply-col": lambda bound_column: bound_column.name,
+            },
+            "td": {
+                "data-supply-col": lambda bound_column: bound_column.name,
             },
         },
     )
 
-    make = NumericalColumn(
+    made = NumericalColumn(
         verbose_name="Made",
         attrs={
             "th": {
                 "class": "tooltip",
                 "aria-label": lambda: f"EDC scheduled deliveries [{current_as_of(Purchase.active().filter(order_type=dc.OrderType.Make))}]",
-            }
+                "data-supply-col": lambda bound_column: bound_column.name,
+            },
+            "td": {
+                "data-supply-col": lambda bound_column: bound_column.name,
+            },
         },
     )
 
@@ -459,16 +502,6 @@ class AggregationTable(tables.Table):
             pos_delta=50 - max(min(int(percent * 50), 50), 0),
         )
 
-        # """
-        # <span>
-        #    <span class="value balance-col {color_class}">{value}</span><span class="unit">{unit}</span>
-        #    <span>&nbsp;<span class="value-divider">/</span>&nbsp;</span>
-        #    <span>
-        #        <span class="value {color_class} balance-col">{percent}</span><span class="unit">%</span>
-        #    </span>
-        # </span>
-        # """
-
     class Meta:
         order_by = ("balance",)
         sequence = (
@@ -477,9 +510,9 @@ class AggregationTable(tables.Table):
             "total",
             "balance",
             "inventory",
-            "sell",
-            "make",
-            "donate",
+            "ordered",
+            "made",
+            "donated",
         )
 
 

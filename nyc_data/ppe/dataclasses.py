@@ -11,12 +11,14 @@ class MayoralCategory(str, Enum):
     ventilators_full_service = "Ventilators - Full Service"
     ventilators_non_full_service = "Ventilators - Non Full Service"
     gloves = "Gloves"
-    iso_gowns = "ISO Gowns"
+    iso_gowns = "Gowns & Coverings"
     n95_masks = "N95 Masks"
-    non_surgical_masks = "Non - Surgical Masks"
+    non_surgical_masks = "Face Coverings"
     other_ppe = "Other PPE"
     surgical_masks = "Surgical Masks"
+    body_bags = "Post Mortem Bags"
     other_medical_supplies = "Other Medical Supplies"
+
     uncategorized = "Uncategorized"
 
     def display(self):
@@ -125,7 +127,7 @@ ITEM_TO_DISPLAYNAME = {
     Item.coveralls: "Coveralls",
     Item.ponchos: "Ponchos",
     Item.scrubs: "Scrubs",
-    Item.n95_mask_non_surgical: "Non-surgical N95 Masks",
+    Item.n95_mask_non_surgical: "Face coverings",
     Item.n95_mask_surgical: "Surgical N95 Masks",
     Item.kn95_mask: "KN95 Masks",
     Item.surgical_mask: "Surgical Masks",
@@ -145,7 +147,7 @@ ITEM_TO_MAYORAL = {
     Item.faceshield: MayoralCategory.eye_protection,
     Item.gown: MayoralCategory.iso_gowns,
     Item.gown_material: MayoralCategory.uncategorized,
-    Item.coveralls: MayoralCategory.other_ppe,
+    Item.coveralls: MayoralCategory.iso_gowns,
     Item.ponchos: MayoralCategory.other_ppe,
     Item.scrubs: MayoralCategory.other_ppe,
     Item.n95_mask_non_surgical: MayoralCategory.non_surgical_masks,
@@ -162,7 +164,7 @@ ITEM_TO_MAYORAL = {
     Item.bipap_machines: MayoralCategory.uncategorized,
     Item.ppe_other: MayoralCategory.other_ppe,
     Item.unknown: MayoralCategory.uncategorized,
-    Item.body_bags: MayoralCategory.uncategorized,
+    Item.body_bags: MayoralCategory.body_bags,
 }
 
 

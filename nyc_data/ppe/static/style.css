@@ -127,11 +127,6 @@ section.content {
     color: #CE4C23;
 }
 
-.error {
-    text-align: center;
-    display: block   
-}
-
 .balance-bar-red {
     background: #CE4C23;
 }
@@ -156,6 +151,11 @@ section.content {
 .lockdown, .upload { 
     display: flex;
     justify-content: center;
+}
+
+.upload .error {
+    text-align: center;
+    display: block   
 }
 
 .lockdown form, .upload form {
@@ -397,6 +397,10 @@ body.drilldown .dashboard-table {
     text-align: left;
 }
 
+.dashboard-table td.disabled .value, .dashboard-table td.disabled .unit, .dashboard-table th.disabled a, .dashboard-table td.disabled {
+    color: #ccc;
+}
+
 .dashboard-table td {
     white-space: pre;
 }
@@ -538,4 +542,60 @@ body.drilldown .dashboard-table {
     background: #0a5796;
     border: 1px solid #ddd;
     color: #fff;
+}
+
+/* Supply controls */
+
+.supply-col svg {
+    height: 14px;
+    width: 14px;
+    cursor: pointer;
+}
+
+.supply-col svg path { fill: #888; }
+.supply-col svg.active path { fill: #8c8; }
+
+.supply-controls {
+    display: none;
+    position: absolute;
+    background: #fff;
+    box-shadow: 0px 0px 20px #0003;
+    border-radius: 5px;
+    min-width: 200px;
+    margin-top: 10px;
+}
+
+.supply-controls h3 {
+    padding: 5px 10px;
+    font-size: 14px;
+    font-weight: 333;
+    margin: 0 0 10px 0;
+    background: #333;
+    color: #fff;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+}
+
+.supply-controls ul {
+    list-style-type: none;
+    margin: 5px 10px;
+    padding: 0;
+}
+
+.supply-controls li {
+    font-weight: 300;
+    font-size: 14px;
+    padding-bottom: 5px;
+}
+
+.supply-controls button {
+    background: #888;
+    color: #fff;
+    border-radius: 20px;
+    padding: 5px 10px;
+    margin: 10px 0;
+}
+
+.supply-controls input {
+    margin-right: 10px;
 }

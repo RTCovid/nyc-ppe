@@ -24,6 +24,14 @@ from ppe.errors import (
     NoMappingForFileError,
     PartialFile,
     ImportInProgressError,
+<<<<<<< HEAD
+=======
+)
+from ppe.models import (
+    ImportStatus,
+    DataImport,
+    FacilityDelivery,
+>>>>>>> 023c1b716b87f6ee3554ac5bc25dd04214364dbb
 )
 from ppe.models import ImportStatus, DataImport, FacilityDelivery, FailedImport
 from xlsx_utils import import_xlsx
@@ -95,7 +103,6 @@ def import_data(
     uploaded_by: Optional[str] = None,
     overwrite_in_prog=False,
 ):
-    df = mappings[0].data_file
     error_collector = ErrorCollector()
     data_file = {mapping.data_file for mapping in mappings}
     if len(data_file) != 1:

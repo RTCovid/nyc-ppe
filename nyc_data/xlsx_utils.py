@@ -1,16 +1,17 @@
 import csv
 import json
+import re
 from pathlib import Path
-from typing import NamedTuple, Any, Callable, List, Optional, Set
-from fuzzywuzzy import process
+from typing import NamedTuple, Any, Callable, List, Optional, Set, Union
 
 from django.core.serializers.json import DjangoJSONEncoder
+from fuzzywuzzy import process
 from openpyxl import load_workbook
 
 from ppe import errors
 from ppe.data_mapping.types import DataFile
 from ppe.data_mapping.utils import ErrorCollector
-from ppe.errors import ColumnNameMismatch, PartialFile
+from ppe.errors import ColumnNameMismatch
 
 
 def XLSXDictReader(sheet, header_row):
@@ -35,13 +36,65 @@ class Mapping(NamedTuple):
     proc: Optional[Callable[[str, ErrorCollector], Any]] = None
 
 
+def ExactMatch(sheet_name: str):
+    def matcher(names):
+        if sheet_name in names:
+            return sheet_name
+        else:
+            return None
+
+    return matcher
+
+
+class RegexMatch:
+    def __init__(self, patt):
+        self.patt = patt
+
+    def __repr__(self):
+        return self.patt
+
+    def __call__(self, names):
+        opts = [name for name in names if re.match(self.patt, name)]
+        if len(opts) == 1:
+            return opts[0]
+        if len(opts) > 1:
+            raise Exception("Too many matches for sheet pattern")
+        return None
+
+
 class SheetMapping(NamedTuple):
     data_file: DataFile
-    sheet_name: Optional[str]  # None for CSV
+    sheet_name: Optional[Union[Callable[[List[str]], Optional[str]], str]]
     mappings: Set[Mapping]
     include_raw: bool
     obj_constructor: Optional[Callable[[Any], "ImportedRow"]]
     header_row_idx: int = 1
+
+    def load_data(self, path: Path):
+        if self.sheet_name is None:
+            try:
+                with open(path, encoding="latin-1") as csvfile:
+                    text = csvfile.read()
+            except Exception as exc:
+                raise errors.CsvImportError("Error reading in CSV file") from exc
+
+            return csv.DictReader(text.splitlines())
+        else:
+            workbook = load_workbook(path, data_only=True)
+            actual_sheet = self.can_import(workbook.sheetnames)
+            if actual_sheet is None:
+                raise Exception(
+                    "Tried to import a sheet with a data mapping that does not match"
+                )
+            return XLSXDictReader(workbook[actual_sheet], self.header_row_idx)
+
+    def can_import(self, sheet_names):
+        if isinstance(self.sheet_name, str):
+            return ExactMatch(self.sheet_name)(sheet_names)
+        elif self.sheet_name is None:
+            return None
+        else:
+            return self.sheet_name(sheet_names)
 
     def key_columns(self):
         return (mapping.sheet_column_name for mapping in self.mappings)
@@ -55,7 +108,7 @@ def guess_mapping(sheet: Path, all_mappings: List[SheetMapping]):
     if sheet.suffix == ".xlsx":
         workbook = load_workbook(sheet, data_only=True)
         possible_mappings = [
-            m for m in all_mappings if m.sheet_name in workbook.sheetnames
+        m for m in all_mappings if m.can_import(workbook.sheetnames)
         ]
         if not possible_mappings:
             known_sheetnames = [m.sheet_name for m in all_mappings]
@@ -84,20 +137,7 @@ def guess_mapping(sheet: Path, all_mappings: List[SheetMapping]):
     final_mappings = []
 
     for mapping in possible_mappings:
-        if mapping.sheet_name is not None and workbook:
-            sheet = workbook[mapping.sheet_name]
-            first_row = next(
-                XLSXDictReader(sheet, header_row=mapping.header_row_idx or 1)
-            )
-        else:
-            try:
-                with open(sheet, encoding="latin-1") as csvfile:
-                    text = csvfile.read()
-            except Exception as exc:
-                raise errors.CsvImportError("Error reading in CSV file") from exc
-
-            reader = csv.DictReader(text.splitlines())
-            first_row = next(reader)
+        first_row = next(mapping.load_data(sheet))
 
         col_names = [m.sheet_column_name for m in mapping.mappings]
         if all(col_name in first_row for col_name in col_names):
@@ -110,18 +150,11 @@ def guess_mapping(sheet: Path, all_mappings: List[SheetMapping]):
 
 
 def import_xlsx(
-    sheet: Path,
+    path: Path,
     sheet_mapping: SheetMapping,
     error_collector: ErrorCollector = lambda: ErrorCollector(),
 ):
-    if sheet_mapping.sheet_name is not None:
-        workbook = load_workbook(sheet, data_only=True)
-        sheet = workbook[sheet_mapping.sheet_name]
-        as_dicts = XLSXDictReader(sheet, sheet_mapping.header_row_idx)
-    else:
-        with open(sheet, encoding="latin-1") as csvfile:
-            reader = csv.DictReader(csvfile)
-            as_dicts = list(reader)
+    as_dicts = list(sheet_mapping.load_data(path))
 
     for row in as_dicts:
         mapped_row = {}

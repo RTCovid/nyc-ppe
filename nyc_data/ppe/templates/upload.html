@@ -21,6 +21,9 @@ We have been notified about this error and will resolve any issues with your upl
     {% endif %}
     <form enctype="multipart/form-data" method="post" action="/upload/">
         {% csrf_token %}
+        {% if error != None %}
+            <h3 class="error red">Error! {{ error }}</h3>
+        {% endif %}
         {{ form }}
         <button class="standard-button" type="submit">Submit</button>
     </form>

@@ -2,18 +2,18 @@ import unittest
 from datetime import datetime, timedelta
 
 from django.contrib import auth
-from django.test import TestCase, override_settings
+from django.test import TestCase
 from django.urls import reverse
 from freezegun import freeze_time
 
+import ppe.dataclasses as dc
 from ppe import aggregations
-from ppe.aggregations import AssetRollup, DemandSrc
-from ppe.dataclasses import Period
-from ppe.data_mapping.types import DataFile
+from ppe.aggregations import AssetRollup, DemandSrc, AggColumn
 from ppe.data_mapping.mappers.dcas_sourcing import SourcingRow
 from ppe.data_mapping.mappers.hospital_demands import DemandRow
-import ppe.dataclasses as dc
+from ppe.data_mapping.types import DataFile
 from ppe.data_mapping.utils import ErrorCollector
+from ppe.dataclasses import Period
 from ppe.models import (
     DataImport,
     ImportStatus,
@@ -109,10 +109,11 @@ class TestAssetRollup(TestCase):
             rollup[dc.Item.gown],
             AssetRollup(
                 asset=dc.Item.gown,
+                total_cols=AggColumn.all(),
                 inventory=100,
                 demand_src={DemandSrc.real_demand},
                 demand=7654622,
-                sell=5,
+                ordered=5,
             ),
         )
 
@@ -124,10 +125,11 @@ class TestAssetRollup(TestCase):
             rollup[dc.Item.gown],
             AssetRollup(
                 asset=dc.Item.gown,
+                total_cols=AggColumn.all(),
                 inventory=100,
                 demand_src={DemandSrc.real_demand},
                 demand=2457000 * 4,
-                sell=5,
+                ordered=5,
             ),
         )
 
@@ -136,10 +138,11 @@ class TestAssetRollup(TestCase):
             rollup[dc.Item.faceshield],
             AssetRollup(
                 asset=dc.Item.faceshield,
+                total_cols=AggColumn.all(),
                 inventory=0,
                 demand_src={DemandSrc.past_deliveries},
                 demand=123 * 4,
-                sell=0,
+                ordered=0,
             ),
         )
 
@@ -156,8 +159,9 @@ class TestAssetRollup(TestCase):
             future_rollup[dc.Item.gown],
             AssetRollup(
                 asset=dc.Item.gown,
+                total_cols=AggColumn.all(),
                 demand=1234 * 4,
-                sell=1000,
+                ordered=1000,
                 demand_src={DemandSrc.past_deliveries},
                 inventory=100,
             ),
@@ -184,7 +188,10 @@ class TestAssetRollup(TestCase):
             self.assertEqual(aggregations.known_recent_demand(), {})
             rollup = aggregations.asset_rollup_legacy(today - timedelta(days=28), today)
             self.assertEqual(
-                rollup[dc.Item.gown], AssetRollup(asset=dc.Item.gown, demand=0, sell=0)
+                rollup[dc.Item.gown],
+                AssetRollup(
+                    asset=dc.Item.gown, total_cols=AggColumn.all(), demand=0, ordered=0
+                ),
             )
         finally:
             self.data_import.status = ImportStatus.active
@@ -278,3 +285,18 @@ class TestPeriod(unittest.TestCase):
             Period(start, start + timedelta(days=6)).inclusive_length(),
             timedelta(days=7),
         )
+
+
+class TestRollupObj(unittest.TestCase):
+    def test_rollup_obj(self):
+        rollup = AssetRollup(
+            asset=dc.Item.gown,
+            total_cols={AggColumn.Ordered, AggColumn.Made},
+            donated=100,
+            made=456,
+            ordered=789,
+            demand=0,
+            demand_src=set(),
+        )
+
+        self.assertEqual(rollup.total, 789 + 456)

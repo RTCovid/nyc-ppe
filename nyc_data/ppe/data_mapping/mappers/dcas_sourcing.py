@@ -10,7 +10,7 @@ from ppe.data_mapping.utils import (
     ErrorCollector,
 )
 from ppe.dataclasses import Item, OrderType
-from xlsx_utils import SheetMapping, Mapping
+from xlsx_utils import SheetMapping, Mapping, RegexMatch
 
 
 class SourcingRow(ImportedRow, NamedTuple):
@@ -92,7 +92,11 @@ class SourcingRow(ImportedRow, NamedTuple):
 
 
 DCAS_DAILY_SOURCING = SheetMapping(
+<<<<<<< HEAD
     sheet_name="DCAS 4-12 3PM",
+=======
+    sheet_name=RegexMatch("DCAS \d-\d+ \d+[AP]M"),  #'DCAS 4-12 3PM',
+>>>>>>> 023c1b716b87f6ee3554ac5bc25dd04214364dbb
     data_file=DataFile.PPE_ORDERINGCHARTS_DATE_XLSX,
     mappings={
         Mapping(
