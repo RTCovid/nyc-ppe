@@ -1,3 +1,4 @@
+from datetime import date
 from pathlib import Path
 
 import ppe.errors
@@ -18,7 +19,10 @@ def run(path=None):
         try:
             print(f"---- Importing {file} ----")
             import_obj = data_import.smart_import(
-                file, "Uploaded via CLI", overwrite_in_prog=True
+                path=file,
+                uploader_name="Uploaded via CLI",
+                current_as_of=date.today(),
+                overwrite_in_prog=True,
             )
             data_import.complete_import(import_obj)
         except ppe.errors.NoMappingForFileError:
