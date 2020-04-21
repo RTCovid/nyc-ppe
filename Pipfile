@@ -21,6 +21,7 @@ black = "*"
 sentry-sdk = "*"
 django-allauth = "*"
 freezegun = "*"
+werkzeug = "*"
 
 [requires]
 python_version = "3.8"
