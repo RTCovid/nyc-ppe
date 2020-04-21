@@ -45,9 +45,12 @@ class StandardRequestParams(NamedTuple):
         end_date = params.get("end_date")
 
         err_collector = ErrorCollector()
-        start_date = (parse_date(start_date, err_collector) or datetime.now()).date()
+        # Python defaults to Monday. Subtract one extra day to get us to Sunday
+        default_start = datetime.today() + timedelta(weeks=1) - timedelta(days=datetime.today().weekday() + 1)
+        default_end = default_start + timedelta(days=6)
+        start_date = (parse_date(start_date, err_collector) or default_start).date()
         end_date = (
-            parse_date(end_date, err_collector) or datetime.now() + timedelta(days=29)
+            parse_date(end_date, err_collector) or default_end
         ).date()
 
         if params.get("rollup") in {"mayoral", "", None}:

@@ -127,7 +127,7 @@ ITEM_TO_DISPLAYNAME = {
     Item.coveralls: "Coveralls",
     Item.ponchos: "Ponchos",
     Item.scrubs: "Scrubs",
-    Item.n95_mask_non_surgical: "Non-surgical N95 Masks",
+    Item.n95_mask_non_surgical: "Face coverings",
     Item.n95_mask_surgical: "Surgical N95 Masks",
     Item.kn95_mask: "KN95 Masks",
     Item.surgical_mask: "Surgical Masks",
