@@ -36,7 +36,7 @@ $(function(){
         $(function() {
             var start, end;
 
-            start = searchParams.get('start_date') ? moment(searchParams.get('start_date')) : moment().add(1, 'week').startOf('week'),;
+            start = searchParams.get('start_date') ? moment(searchParams.get('start_date')) : moment().add(1, 'week').startOf('week');
             end = searchParams.get('end_date') ? moment(searchParams.get('end_date')) : moment().add(1, 'week').endOf('week');
         
             function cb(start, end) {
