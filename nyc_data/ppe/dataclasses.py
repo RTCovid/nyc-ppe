@@ -16,7 +16,9 @@ class MayoralCategory(str, Enum):
     non_surgical_masks = "Face Coverings"
     other_ppe = "Other PPE"
     surgical_masks = "Surgical Masks"
+    body_bags = "Post Mortem Bags"
     other_medical_supplies = "Other Medical Supplies"
+
     uncategorized = "Uncategorized"
 
     def display(self):
@@ -162,7 +164,7 @@ ITEM_TO_MAYORAL = {
     Item.bipap_machines: MayoralCategory.uncategorized,
     Item.ppe_other: MayoralCategory.other_ppe,
     Item.unknown: MayoralCategory.uncategorized,
-    Item.body_bags: MayoralCategory.uncategorized,
+    Item.body_bags: MayoralCategory.body_bags,
 }
 
 
