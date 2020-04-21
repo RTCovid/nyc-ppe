@@ -116,8 +116,8 @@ class UploadDelta(NamedTuple):
 
 def current_as_of(qs: QuerySet):
     if qs.count() == 0:
-        return 'Unknown'
-    return qs.first().source.current_as_of or 'Unknown'
+        return "Unknown"
+    return qs.first().source.current_as_of or "Unknown"
 
 
 class ImportedDataModel(models.Model):

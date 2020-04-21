@@ -16,9 +16,15 @@ def XLSXDictReader(sheet, header_row):
     cols = sheet.max_column
 
     def item(i, j):
-        return sheet.cell(row=header_row, column=j).value, sheet.cell(row=i, column=j).value
+        return (
+            sheet.cell(row=header_row, column=j).value,
+            sheet.cell(row=i, column=j).value,
+        )
 
-    return (dict(item(i, j) for j in range(1, cols + 1)) for i in range(header_row + 1, rows + 1))
+    return (
+        dict(item(i, j) for j in range(1, cols + 1))
+        for i in range(header_row + 1, rows + 1)
+    )
 
 
 class Mapping(NamedTuple):
@@ -44,10 +50,12 @@ RAW_DATA = "raw_data"
 
 def guess_mapping(sheet: Path, possible_mappings: List[SheetMapping]):
     workbook = None
-    if sheet.suffix == '.xlsx':
+    if sheet.suffix == ".xlsx":
         workbook = load_workbook(sheet, data_only=True)
-        possible_mappings = [m for m in possible_mappings if m.sheet_name in workbook.sheetnames]
-    elif sheet.suffix == '.csv':
+        possible_mappings = [
+            m for m in possible_mappings if m.sheet_name in workbook.sheetnames
+        ]
+    elif sheet.suffix == ".csv":
         possible_mappings = [m for m in possible_mappings if m.sheet_name is None]
     else:
         return []
@@ -56,13 +64,15 @@ def guess_mapping(sheet: Path, possible_mappings: List[SheetMapping]):
     for mapping in possible_mappings:
         if mapping.sheet_name is not None and workbook:
             sheet = workbook[mapping.sheet_name]
-            first_row = next(XLSXDictReader(sheet, header_row=mapping.header_row_idx or 1))
+            first_row = next(
+                XLSXDictReader(sheet, header_row=mapping.header_row_idx or 1)
+            )
         else:
             try:
                 with open(sheet, encoding="latin-1") as csvfile:
                     text = csvfile.read()
             except Exception as exc:
-                raise errors.CsvImportError('Error reading in CSV file') from exc
+                raise errors.CsvImportError("Error reading in CSV file") from exc
 
             reader = csv.DictReader(text.splitlines())
             first_row = next(reader)
@@ -71,7 +81,8 @@ def guess_mapping(sheet: Path, possible_mappings: List[SheetMapping]):
         if all(col_name in first_row for col_name in col_names):
             final_mappings.append(mapping)
         elif mapping.sheet_name is not None:
-            import pdb;
+            import pdb
+
             pdb.set_trace()
             print(
                 "We expected: ",
@@ -87,9 +98,9 @@ def guess_mapping(sheet: Path, possible_mappings: List[SheetMapping]):
 
 
 def import_xlsx(
-        sheet: Path,
-        sheet_mapping: SheetMapping,
-        error_collector: ErrorCollector = lambda: ErrorCollector(),
+    sheet: Path,
+    sheet_mapping: SheetMapping,
+    error_collector: ErrorCollector = lambda: ErrorCollector(),
 ):
     if sheet_mapping.sheet_name is not None:
         workbook = load_workbook(sheet, data_only=True)

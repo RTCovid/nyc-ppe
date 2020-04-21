@@ -6,7 +6,8 @@ from ppe.data_mapping.types import ImportedRow, repr_no_raw, DataFile
 from ppe.data_mapping.utils import (
     parse_int,
     parse_date,
-    ErrorCollector, parse_bool,
+    ErrorCollector,
+    parse_bool,
 )
 from ppe.dataclasses import Item, OrderType
 from xlsx_utils import SheetMapping, Mapping
@@ -35,12 +36,14 @@ class VentilatorRow(ImportedRow, NamedTuple):
         if self.eta is None:
             return []
 
-        if self.functionality in {'FULL', 'CRITICAL CARE'}:
+        if self.functionality in {"FULL", "CRITICAL CARE"}:
             item = Item.ventilators_full_service
-        elif self.functionality == 'LIMITED':
+        elif self.functionality == "LIMITED":
             item = Item.ventilators_non_full_service
         else:
-            error_collector.report_error(f'Unknown ventilator type: {self.functionality}')
+            error_collector.report_error(
+                f"Unknown ventilator type: {self.functionality}"
+            )
             return []
 
         if self.delivered:
@@ -53,16 +56,14 @@ class VentilatorRow(ImportedRow, NamedTuple):
             item=item,
             quantity=self.quantity,
             received_quantity=received_quantity,
-            description=f'Ventilator {self.type} ({self.functionality})',
-            raw_data=self.raw_data
+            description=f"Ventilator {self.type} ({self.functionality})",
+            raw_data=self.raw_data,
         )
         deliveries = []
         if self.eta is not None:
             deliveries.append(
                 models.ScheduledDelivery(
-                    purchase=purchase,
-                    delivery_date=self.eta,
-                    quantity=self.quantity
+                    purchase=purchase, delivery_date=self.eta, quantity=self.quantity
                 )
             )
 
@@ -70,29 +71,21 @@ class VentilatorRow(ImportedRow, NamedTuple):
 
 
 HNH_VENTS = SheetMapping(
-    sheet_name='H+H 4-3 3PM',
+    sheet_name="H+H 4-3 3PM",
     data_file=DataFile.PPE_ORDERINGCHARTS_DATE_XLSX,
     mappings={
+        Mapping(sheet_column_name="Type", obj_column_name="type",),
         Mapping(
-            sheet_column_name='Type',
-            obj_column_name='type',
+            sheet_column_name="Adjusted ETA", obj_column_name="eta", proc=parse_date
         ),
         Mapping(
-            sheet_column_name='Adjusted ETA',
-            obj_column_name='eta',
-            proc=parse_date
+            sheet_column_name="Quantity", obj_column_name="quantity", proc=parse_int,
         ),
-        Mapping(
-            sheet_column_name="Quantity",
-            obj_column_name="quantity",
-            proc=parse_int,
-        ),
-        Mapping(
-            sheet_column_name='Functionality',
-            obj_column_name='functionality'
-        ),
+        Mapping(sheet_column_name="Functionality", obj_column_name="functionality"),
         Mapping(sheet_column_name="Vendor", obj_column_name="vendor"),
-        Mapping(sheet_column_name="Delivered?", obj_column_name="delivered", proc=parse_bool),
+        Mapping(
+            sheet_column_name="Delivered?", obj_column_name="delivered", proc=parse_bool
+        ),
     },
     include_raw=True,
     obj_constructor=VentilatorRow,

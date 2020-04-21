@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('ppe', '0016_auto_20200414_1528'),
+        ("ppe", "0016_auto_20200414_1528"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='dataimport',
-            name='current_as_of',
+            model_name="dataimport",
+            name="current_as_of",
             field=models.DateField(null=True),
         ),
     ]

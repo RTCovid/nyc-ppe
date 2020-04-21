@@ -6,9 +6,8 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('ppe', '0017_dataimport_current_as_of'),
-        ('ppe', '0017_auto_20200416_2258'),
+        ("ppe", "0017_dataimport_current_as_of"),
+        ("ppe", "0017_auto_20200416_2258"),
     ]
 
-    operations = [
-    ]
+    operations = []
