@@ -14,6 +14,7 @@ from django_tables2 import RequestConfig
 import ppe.errors
 from ppe import aggregations, dataclasses as dc
 from ppe import forms, data_import
+from ppe.aggregations import DemandCalculationConfig
 from ppe.data_mapping.utils import parse_date, ErrorCollector
 from ppe.drilldown import drilldown_result
 from ppe.models import DataImport
@@ -65,10 +66,9 @@ class StandardRequestParams(NamedTuple):
 def default(request):
     params = StandardRequestParams.load_from_request(request)
 
-    aggregation = aggregations.asset_rollup_legacy(
-        time_start=params.start_date,
-        time_end=params.end_date,
-        rollup_fn=params.rollup_fn,
+    aggregation = aggregations.asset_rollup(
+        time_range=params.time_range(),
+        demand_calculation_config=DemandCalculationConfig(rollup_fn=params.rollup_fn),
     )
 
     displayed_vals = ["donate", "sell", "make", "inventory"]

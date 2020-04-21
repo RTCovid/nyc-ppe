@@ -39,7 +39,7 @@ DEMAND_MESSAGE = (
 
 class DemandCalculationConfig(NamedTuple):
     use_real_demand: bool = True
-    use_hospitalization_projection: bool = True
+    use_hospitalization_projection: bool = False
     rollup_fn: Callable[[dc.Item], str] = lambda x: x
 
 
