@@ -33,24 +33,29 @@ def drilldown_result(
 
     donations = [
         d
-        for d in purchases if rollup_fn(dc.Item(d.item)) == item_type and d.order_type == OrderType.Donation and not d.complete
+        for d in purchases
+        if rollup_fn(dc.Item(d.item)) == item_type
+        and d.order_type == OrderType.Donation
+        and not d.complete
     ]
 
     for don in donations:
-        days_since_pledge =  (date.today() - don.donation_date).days
+        days_since_pledge = (date.today() - don.donation_date).days
         if days_since_pledge >= 7:
             pledge_status = "error"
         elif days_since_pledge > 3:
             pledge_status = "warning"
         else:
-            pledge_status = "pending" 
+            pledge_status = "pending"
         setattr(don, "pledge_status", pledge_status)
         setattr(don, "days_since_pledge", days_since_pledge)
 
     purchases = [
         p
         for p in purchases
-        if rollup_fn(dc.Item(p.item)) == item_type and not p.complete and p.order_type != OrderType.Donation
+        if rollup_fn(dc.Item(p.item)) == item_type
+        and not p.complete
+        and p.order_type != OrderType.Donation
     ]
 
     deliveries = [list(p.deliveries.all()) for p in purchases]

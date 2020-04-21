@@ -27,7 +27,7 @@ class ErrorCollector:
 
 def asset_name_to_item(asset_name: str, error_collector: ErrorCollector) -> Item:
     if asset_name is None:
-        error_collector.report_error('Null asset name')
+        error_collector.report_error("Null asset name")
         return Item.unknown
     mapping = {
         "KN95 Masks": Item.kn95_mask,
