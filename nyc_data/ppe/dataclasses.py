@@ -11,7 +11,7 @@ class MayoralCategory(str, Enum):
     ventilators_full_service = "Ventilators - Full Service"
     ventilators_non_full_service = "Ventilators - Non Full Service"
     gloves = "Gloves"
-    iso_gowns = "ISO Gowns"
+    iso_gowns = "Gowns & Coverings"
     n95_masks = "N95 Masks"
     non_surgical_masks = "Face Coverings"
     other_ppe = "Other PPE"
@@ -147,7 +147,7 @@ ITEM_TO_MAYORAL = {
     Item.faceshield: MayoralCategory.eye_protection,
     Item.gown: MayoralCategory.iso_gowns,
     Item.gown_material: MayoralCategory.uncategorized,
-    Item.coveralls: MayoralCategory.other_ppe,
+    Item.coveralls: MayoralCategory.iso_gowns,
     Item.ponchos: MayoralCategory.other_ppe,
     Item.scrubs: MayoralCategory.other_ppe,
     Item.n95_mask_non_surgical: MayoralCategory.non_surgical_masks,
