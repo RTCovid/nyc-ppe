@@ -4,6 +4,9 @@ from datetime import date
 from pathlib import Path
 from typing import Optional, List
 
+import sentry_sdk
+from django.contrib.auth.models import User
+
 import xlsx_utils
 from ppe.data_mapping.mappers import (
     dcas_make,
@@ -19,14 +22,9 @@ from ppe.data_mapping.utils import ErrorCollector
 from ppe.errors import (
     DataImportError,
     NoMappingForFileError,
-    PartialFile,
     ImportInProgressError,
 )
-from ppe.models import (
-    ImportStatus,
-    DataImport,
-    FacilityDelivery,
-)
+from ppe.models import ImportStatus, DataImport, FacilityDelivery, FailedImport
 from xlsx_utils import import_xlsx
 
 ALL_MAPPINGS = [
@@ -40,14 +38,28 @@ ALL_MAPPINGS = [
 ]
 
 
-def handle_upload(f, uploader_name: str, current_as_of: date) -> DataImport:
+def handle_upload(f, current_as_of: date, user: User) -> DataImport:
     with tempfile.NamedTemporaryFile(
         "w+b", delete=False, suffix=f.name
     ) as upload_target:
         for chunk in f.chunks():
             upload_target.write(chunk)
         upload_target.flush()
-        return smart_import(Path(upload_target.name), uploader_name, current_as_of)
+        try:
+            return smart_import(Path(upload_target.name), user.email, current_as_of)
+        except Exception as ex:
+            # Capture all upload errors -- we will never 500 the UI
+            sentry_sdk.capture_message("Failed upload (see exception)")
+            sentry_sdk.capture_exception(ex)
+            # reset back to beginning so we can read the file into the DB
+            upload_target.seek(0)
+            FailedImport(
+                data=upload_target.read(),
+                file_name=f.name,
+                uploaded_by=user,
+                current_as_of=current_as_of,
+            ).save()
+            raise
 
 
 def import_in_progress(data_file: DataFile):
@@ -55,7 +67,11 @@ def import_in_progress(data_file: DataFile):
 
 
 def smart_import(
-    path: Path, uploader_name: str, current_as_of: date, overwrite_in_prog: bool = False
+    path: Path,
+    uploader_name: str,
+    current_as_of: date,
+    overwrite_in_prog: bool = False,
+    user_provided_name: Optional[str] = None,
 ) -> DataImport:
     possible_mappings = xlsx_utils.guess_mapping(path, ALL_MAPPINGS)
     if len(possible_mappings) == 0:
@@ -66,6 +82,7 @@ def smart_import(
         current_as_of=current_as_of,
         uploaded_by=uploader_name,
         overwrite_in_prog=overwrite_in_prog,
+        user_provided_filename=user_provided_name,
     )
 
 
@@ -73,16 +90,10 @@ def import_data(
     path: Path,
     mappings: List[xlsx_utils.SheetMapping],
     current_as_of: date,
+    user_provided_filename: Optional[str],
     uploaded_by: Optional[str] = None,
     overwrite_in_prog=False,
 ):
-    df = mappings[0].data_file
-    if len([m for m in ALL_MAPPINGS if m.data_file == df]) != len(mappings):
-        expected = [m.sheet_name for m in ALL_MAPPINGS if m.data_file == df]
-        actual = [m.sheet_name for m in mappings]
-        raise PartialFile(
-            f"Importing a file, but only got one of the expected sheets (Expected: {expected}, Actual: {actual}"
-        )
     error_collector = ErrorCollector()
     data_file = {mapping.data_file for mapping in mappings}
     if len(data_file) != 1:
@@ -108,7 +119,7 @@ def import_data(
         data_file=data_file,
         uploaded_by=uploaded_by,
         file_checksum=checksum,
-        file_name=path.name,
+        file_name=user_provided_filename or path.name,
     )
     data_import.save()
 
@@ -116,15 +127,21 @@ def import_data(
         try:
             data = import_xlsx(path, mapping, error_collector)
             data = list(data)
+            # there are a lot of deliveries, pull them out for bulk import
             deliveries = []
-            demands = []
             for item in data:
-                for obj in item.to_objects(error_collector):
-                    obj.source = data_import
-                    if isinstance(obj, FacilityDelivery):
-                        deliveries.append(obj)
-                    else:
-                        obj.save()
+                try:
+                    for obj in item.to_objects(error_collector):
+                        obj.source = data_import
+                        if isinstance(obj, FacilityDelivery):
+                            deliveries.append(obj)
+                        else:
+                            obj.save()
+                except Exception as ex:
+                    error_collector.report_error(
+                        f"Failure importing row. This is a bug: {ex}"
+                    )
+                    sentry_sdk.capture_exception(ex)
 
             FacilityDelivery.objects.bulk_create(deliveries)
 
@@ -137,7 +154,7 @@ def import_data(
     return data_import
 
 
-def complete_import(data_import: DataImport):
+def finalize_import(data_import: DataImport):
     current_active = DataImport.objects.filter(
         data_file=data_import.data_file, status=ImportStatus.active
     )

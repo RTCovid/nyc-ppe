@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, date
 from typing import NamedTuple, Optional, Callable, Set
 
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.forms import Form
@@ -218,37 +219,52 @@ class Upload(LoginRequiredMixin, View):
     def get(self, request):
         return render(request, "upload.html", UploadContext()._asdict())
 
+    def handle_upload_error(self, err: Exception) -> UploadContext:
+        try:
+            raise err
+        except ppe.errors.ImportInProgressError as ex:
+            upload_context = UploadContext(
+                error="Import already in progress for this file type.",
+                import_in_progress=ex.import_id,
+            )
+        except ppe.errors.NoMappingForFileError as ex:
+            upload_context = UploadContext(
+                error="We were unable to find an existing mapping for this file."
+            )
+
+        except ppe.errors.SheetNameMismatch as ex:
+            upload_context = UploadContext(error=str(ex))
+        except ppe.errors.CsvImportError as ex:
+            upload_context = UploadContext(error=f"Error reading CSV file: {ex}.")
+        except ppe.errors.PartialFile as ex:
+            upload_context = UploadContext(error=str(ex))
+        except ppe.errors.ColumnNameMismatch as ex:
+            upload_context = UploadContext(error=str(ex))
+        except Exception as ex:
+            if settings.DEBUG:
+                raise
+            upload_context = UploadContext(
+                error=f"There was an unknown error importing the file. {ex}"
+            )
+
+        return upload_context
+
     def post(self, request):
         form = forms.UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
             try:
                 import_obj = data_import.handle_upload(
-                    request.FILES["file"], form.data["name"], form.data["data_current"]
+                    f=request.FILES["file"],
+                    user=request.user,
+                    current_as_of=form.data["data_current"],
                 )
                 return HttpResponseRedirect(
                     reverse("verify", kwargs={"import_id": import_obj.id})
                 )
-            except ppe.errors.ImportInProgressError as ex:
-                return render(
-                    request,
-                    "upload.html",
-                    UploadContext(
-                        error="Import already in progress for this file type",
-                        import_in_progress=ex.import_id,
-                    )._asdict(),
-                )
-            except ppe.errors.NoMappingForFileError as ex:
-                return render(
-                    request,
-                    "upload.html",
-                    UploadContext(error="No mapping found for this file")._asdict(),
-                )
-            except ppe.errors.CsvImportError as ex:
-                return render(
-                    request,
-                    "upload.html",
-                    UploadContext(error="Error reading in CSV file")._asdict(),
-                )
+            except Exception as ex:
+                context = self.handle_upload_error(ex)
+                context = context._replace(form=form)
+                return render(request, "upload.html", context._asdict())
         else:
             return render(
                 request, "upload.html", UploadContext(error=form.errors)._asdict()
@@ -265,7 +281,7 @@ class Verify(LoginRequiredMixin, View):
         )
 
     def post(self, request, import_id):
-        data_import.complete_import(DataImport.objects.get(id=import_id))
+        data_import.finalize_import(DataImport.objects.get(id=import_id))
         return HttpResponseRedirect(reverse("index"))
 
 

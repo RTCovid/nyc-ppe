@@ -5,6 +5,12 @@
 {% endblock %}
 
 {% block content %}
+
+{% if error != None %}
+<h3 class="error red">{{ error }}</h3>
+We have been notified about this error and will resolve any issues with your upload as soon as possible. We will be in touch over email if there are any issues.
+{% endif %}
+
 <div class="upload">
     {% if import_in_progress %}
     <form enctype="multipart/form-data" method="post" action="/cancel/{{ import_in_progress }}/">
@@ -15,9 +21,6 @@
     {% endif %}
     <form enctype="multipart/form-data" method="post" action="/upload/">
         {% csrf_token %}
-        {% if error != None %}
-            <h3 class="error red">Error! {{ error }}</h3>
-        {% endif %}
         {{ form }}
         <button class="standard-button" type="submit">Submit</button>
     </form>

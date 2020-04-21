@@ -5,12 +5,12 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Dict, Callable, NamedTuple, Set
 
-import django_tables2 as tables
 from django.db.models import Sum
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.http import urlencode
 from django.utils.safestring import mark_safe
+import django_tables2 as tables
 
 import ppe.dataclasses as dc
 from ppe.dataclasses import Period, OrderType
@@ -22,7 +22,6 @@ from ppe.models import (
     Purchase,
     current_as_of,
 )
-
 # NY Forecast from https://covid19.healthdata.org/united-states-of-america/new-york
 from ppe.utils import log_db_queries
 
@@ -182,12 +181,9 @@ def asset_rollup(
     for donation in relevant_donations:
         rollup = results[donation.purchase.item]
         tpe = donation.purchase.order_type
-
-        if tpe != dc.OrderType.Donation:
-            continue
-        else:
-            param = MAPPING.get(tpe)
-            setattr(rollup, param, getattr(rollup, param) + donation.quantity)
+        assert tpe == dc.OrderType.Donation
+        param = MAPPING.get(tpe)
+        setattr(rollup, param, getattr(rollup, param) + donation.quantity)
 
     inventory = Inventory.active()
     for item in inventory:

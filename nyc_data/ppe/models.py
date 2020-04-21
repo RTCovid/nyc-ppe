@@ -1,7 +1,10 @@
+import tempfile
 import uuid
 from enum import Enum
+from pathlib import Path
 from typing import NamedTuple, Dict
 
+from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.db.models import Sum, Max, QuerySet
@@ -203,6 +206,35 @@ class Inventory(ImportedDataModel):
     @classmethod
     def active(cls):
         return super().active().filter(as_of=cls.as_of_latest())
+
+
+class FailedImport(models.Model):
+    data = models.BinaryField(blank=False)
+    file_name = models.TextField()
+    uploaded_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    current_as_of = models.DateField()
+    fixed = models.BooleanField(default=False)
+
+    def retry(self):
+        with tempfile.NamedTemporaryFile(
+            "w+b", delete=False, suffix=self.file_name
+        ) as f:
+            f.write(self.data)
+            f.flush()
+
+            from ppe.data_import import smart_import, finalize_import
+
+            import_obj = smart_import(
+                path=Path(f.name),
+                uploader_name=self.uploaded_by.username,
+                current_as_of=self.current_as_of,
+                user_provided_name=self.file_name,
+                overwrite_in_prog=True
+            )
+            finalize_import(import_obj)
+            self.fixed = True
+            self.save()
 
 
 class ScheduledDelivery(ImportedDataModel):

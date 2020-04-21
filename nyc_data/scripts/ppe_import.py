@@ -24,7 +24,7 @@ def run(path=None):
                 current_as_of=date.today(),
                 overwrite_in_prog=True,
             )
-            data_import.complete_import(import_obj)
+            data_import.finalize_import(import_obj)
         except ppe.errors.NoMappingForFileError:
             print(f"{file} does not appear to be a format we recognize")
         except ppe.errors.PartialFile:
