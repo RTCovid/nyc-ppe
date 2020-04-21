@@ -186,7 +186,7 @@ def asset_rollup(
         if tpe != dc.OrderType.Donation:
             continue
         else:
-            param = param = MAPPING.get(tpe)
+            param = MAPPING.get(tpe)
             setattr(rollup, param, getattr(rollup, param) + donation.quantity)
 
     inventory = Inventory.active()

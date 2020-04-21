@@ -13,7 +13,7 @@ class MayoralCategory(str, Enum):
     gloves = "Gloves"
     iso_gowns = "ISO Gowns"
     n95_masks = "N95 Masks"
-    non_surgical_masks = "Non - Surgical Masks"
+    non_surgical_masks = "Face coverings"
     other_ppe = "Other PPE"
     surgical_masks = "Surgical Masks"
     other_medical_supplies = "Other Medical Supplies"
@@ -125,7 +125,7 @@ ITEM_TO_DISPLAYNAME = {
     Item.coveralls: "Coveralls",
     Item.ponchos: "Ponchos",
     Item.scrubs: "Scrubs",
-    Item.n95_mask_non_surgical: "Non-surgical N95 Masks",
+    Item.n95_mask_non_surgical: "Face coverings",
     Item.n95_mask_surgical: "Surgical N95 Masks",
     Item.kn95_mask: "KN95 Masks",
     Item.surgical_mask: "Surgical Masks",

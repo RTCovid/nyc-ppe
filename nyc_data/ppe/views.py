@@ -47,7 +47,7 @@ class StandardRequestParams(NamedTuple):
         err_collector = ErrorCollector()
         start_date = (parse_date(start_date, err_collector) or datetime.now()).date()
         end_date = (
-            parse_date(end_date, err_collector) or datetime.now() + timedelta(days=29)
+            parse_date(end_date, err_collector) or datetime.now() + timedelta(days=6)
         ).date()
 
         if params.get("rollup") in {"mayoral", "", None}:
