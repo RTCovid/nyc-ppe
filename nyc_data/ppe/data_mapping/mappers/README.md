@@ -40,5 +40,3 @@ class Mapping(NamedTuple):
 Of interest is the `proc` argument, an optional function to map a string to structured data. Many `proc` functions are provided
 in `data_mapping.utils`. These functions properly handle collating errors to eventually display in the UI if this is widely used.
 
-### Gotchas
-* We can't handle formulas in excel sheets. If the sheet has formulas, we'll need to convert it to a CSV instead.
