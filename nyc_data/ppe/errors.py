@@ -61,11 +61,11 @@ class ColumnNameMismatch(DataImportError):
             ret[column] = possible_rename
         return ret
 
-    def __repr__(self):
+    def __str__(self):
         delta = self.delta()
         matches = "\n".join(
             [
-                f'We were looking for {us} (we found "{them}" which looked similar)'
+                f'We were looking for "{us}" (we found "{them}" which looked similar)'
                 for (us, them) in delta.items()
             ]
         )

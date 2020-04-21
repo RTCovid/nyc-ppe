@@ -104,12 +104,12 @@ DONATION_DATA = SheetMapping(
             proc=utils.parse_int,
         ),
         Mapping(
-            sheet_column_name="Picked up by DOHMH at Storehouse",
+            sheet_column_name="Status Shipped DOHMH  Y/N   ",
             obj_column_name="picked_up",
             proc=utils.parse_bool,
         ),
         Mapping(
-            sheet_column_name="DOHMH Received Date",
+            sheet_column_name="Received at CSH",
             obj_column_name="received_date",
             proc=date_or_pending,
         ),

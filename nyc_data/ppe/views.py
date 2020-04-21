@@ -238,6 +238,8 @@ class Upload(LoginRequiredMixin, View):
             upload_context = UploadContext(error=f"Error reading CSV file: {ex}.")
         except ppe.errors.PartialFile as ex:
             upload_context = UploadContext(error=str(ex))
+        except ppe.errors.ColumnNameMismatch as ex:
+            upload_context = UploadContext(error=str(ex))
         except Exception as ex:
             if settings.DEBUG:
                 raise

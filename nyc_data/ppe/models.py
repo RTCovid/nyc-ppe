@@ -227,12 +227,14 @@ class FailedImport(models.Model):
 
             import_obj = smart_import(
                 path=Path(f.name),
-                uploader_name=self.uploaded_by,
+                uploader_name=self.uploaded_by.username,
                 current_as_of=self.current_as_of,
                 user_provided_name=self.file_name,
+                overwrite_in_prog=True
             )
             finalize_import(import_obj)
             self.fixed = True
+            self.save()
 
 
 class ScheduledDelivery(ImportedDataModel):
