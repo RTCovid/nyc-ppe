@@ -17,9 +17,15 @@ def XLSXDictReader(sheet, header_row):
     cols = sheet.max_column
 
     def item(i, j):
-        return sheet.cell(row=header_row, column=j).value, sheet.cell(row=i, column=j).value
+        return (
+            sheet.cell(row=header_row, column=j).value,
+            sheet.cell(row=i, column=j).value,
+        )
 
-    return (dict(item(i, j) for j in range(1, cols + 1)) for i in range(header_row + 1, rows + 1))
+    return (
+        dict(item(i, j) for j in range(1, cols + 1))
+        for i in range(header_row + 1, rows + 1)
+    )
 
 
 class Mapping(NamedTuple):
@@ -54,7 +60,6 @@ class RegexMatch:
         return None
 
 
-
 class SheetMapping(NamedTuple):
     data_file: DataFile
     sheet_name: Optional[Union[Callable[[List[str]], Optional[str]], str]]
@@ -69,14 +74,16 @@ class SheetMapping(NamedTuple):
                 with open(path, encoding="latin-1") as csvfile:
                     text = csvfile.read()
             except Exception as exc:
-                raise errors.CsvImportError('Error reading in CSV file') from exc
+                raise errors.CsvImportError("Error reading in CSV file") from exc
 
             return csv.DictReader(text.splitlines())
         else:
             workbook = load_workbook(path, data_only=True)
             actual_sheet = self.can_import(workbook.sheetnames)
             if actual_sheet is None:
-                raise Exception('Tried to import a sheet with a data mapping that does not match')
+                raise Exception(
+                    "Tried to import a sheet with a data mapping that does not match"
+                )
             return XLSXDictReader(workbook[actual_sheet], self.header_row_idx)
 
     def can_import(self, sheet_names):
@@ -96,10 +103,12 @@ RAW_DATA = "raw_data"
 
 def guess_mapping(sheet: Path, possible_mappings: List[SheetMapping]):
     workbook = None
-    if sheet.suffix == '.xlsx':
+    if sheet.suffix == ".xlsx":
         workbook = load_workbook(sheet, data_only=True)
-        possible_mappings = [m for m in possible_mappings if m.can_import(workbook.sheetnames)]
-    elif sheet.suffix == '.csv':
+        possible_mappings = [
+            m for m in possible_mappings if m.can_import(workbook.sheetnames)
+        ]
+    elif sheet.suffix == ".csv":
         possible_mappings = [m for m in possible_mappings if m.sheet_name is None]
     else:
         return []
@@ -126,9 +135,9 @@ def guess_mapping(sheet: Path, possible_mappings: List[SheetMapping]):
 
 
 def import_xlsx(
-        path: Path,
-        sheet_mapping: SheetMapping,
-        error_collector: ErrorCollector = lambda: ErrorCollector(),
+    path: Path,
+    sheet_mapping: SheetMapping,
+    error_collector: ErrorCollector = lambda: ErrorCollector(),
 ):
     as_dicts = list(sheet_mapping.load_data(path))
 

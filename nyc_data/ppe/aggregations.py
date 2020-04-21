@@ -19,7 +19,10 @@ from ppe.models import (
     ScheduledDelivery,
     Inventory,
     FacilityDelivery,
-    Demand, DataImport, Purchase, current_as_of,
+    Demand,
+    DataImport,
+    Purchase,
+    current_as_of,
 )
 
 # NY Forecast from https://covid19.healthdata.org/united-states-of-america/new-york
@@ -92,15 +95,19 @@ class AssetRollup:
             return "No demand data available"
 
 
-MAPPING = {dc.OrderType.Make: "make", dc.OrderType.Purchase: "sell", dc.OrderType.Donation: "donate"}
+MAPPING = {
+    dc.OrderType.Make: "make",
+    dc.OrderType.Purchase: "sell",
+    dc.OrderType.Donation: "donate",
+}
 
 
 def asset_rollup_legacy(
-        time_start: datetime,
-        time_end: datetime,
-        use_hospitalization_projection=True,
-        use_real_demand=True,
-        rollup_fn: Callable[[dc.Item], str] = lambda x: x,
+    time_start: datetime,
+    time_end: datetime,
+    use_hospitalization_projection=True,
+    use_real_demand=True,
+    rollup_fn: Callable[[dc.Item], str] = lambda x: x,
 ):
     return asset_rollup(
         Period(time_start, time_end),
@@ -114,28 +121,26 @@ def asset_rollup_legacy(
 
 @log_db_queries
 def asset_rollup(
-        time_range: Period, demand_calculation_config: DemandCalculationConfig,
+    time_range: Period, demand_calculation_config: DemandCalculationConfig,
 ) -> Dict[str, AssetRollup]:
     time_start, time_end = time_range.start, time_range.end
     relevant_deliveries = (
         ScheduledDelivery.active()
-            .prefetch_related("purchase")
-            .filter(delivery_date__gte=time_start, delivery_date__lte=time_end)
-            .exclude(purchase__order_type=OrderType.Donation)
+        .prefetch_related("purchase")
+        .filter(delivery_date__gte=time_start, delivery_date__lte=time_end)
+        .exclude(purchase__order_type=OrderType.Donation)
     )
 
-    #i'm sorry. will improve this later :)
+    # i'm sorry. will improve this later :)
     relevant_donations = (
         ScheduledDelivery.active()
-            .prefetch_related("purchase")
-            .filter(
-                purchase__order_type=OrderType.Donation)
+        .prefetch_related("purchase")
+        .filter(purchase__order_type=OrderType.Donation)
     )
 
     results: Dict[dc.Item, AssetRollup] = {}
     for _, item in dc.Item.__members__.items():
         results[item] = AssetRollup(asset=item)
-
 
     for delivery in relevant_deliveries:
         rollup = results[delivery.purchase.item]
@@ -143,11 +148,11 @@ def asset_rollup(
 
         if tpe != dc.OrderType.Donation:
             param = MAPPING.get(tpe)
-            
+
             if param is None:
                 raise Exception(f"unexpected purchase type: `{tpe}`")
             setattr(rollup, param, getattr(rollup, param) + delivery.quantity)
-    
+
     for donation in relevant_donations:
         rollup = results[donation.purchase.item]
         tpe = donation.purchase.order_type
@@ -185,9 +190,9 @@ def deliveries_for_period(time_start: datetime, time_end: datetime):
     """
     demand_by_day = (
         FacilityDelivery.active()
-            .filter(date__gte=time_start, date__lte=time_end)
-            .values("item")
-            .annotate(Sum("quantity"))
+        .filter(date__gte=time_start, date__lte=time_end)
+        .values("item")
+        .annotate(Sum("quantity"))
     )
     rollup = collections.defaultdict(lambda: 0)
     for row in demand_by_day:
@@ -211,9 +216,9 @@ def known_recent_demand() -> Dict[dc.Item, Demand]:
 
 
 def compute_scaling_factor(
-        past_period: Period,
-        projection_period: Period,
-        demand_calculation_config: DemandCalculationConfig,
+    past_period: Period,
+    projection_period: Period,
+    demand_calculation_config: DemandCalculationConfig,
 ) -> float:
     if demand_calculation_config.use_hospitalization_projection:
         # Get last week'ks total hospitalization
@@ -229,10 +234,10 @@ def compute_scaling_factor(
 
 
 def add_demand_estimate(
-        time_start: datetime,
-        time_end: datetime,
-        asset_rollup: Dict[dc.Item, AssetRollup],
-        demand_calculation_config: DemandCalculationConfig,
+    time_start: datetime,
+    time_end: datetime,
+    asset_rollup: Dict[dc.Item, AssetRollup],
+    demand_calculation_config: DemandCalculationConfig,
 ):
     last_week_start = datetime.datetime.today() - datetime.timedelta(days=7)
     last_week_end = last_week_start + datetime.timedelta(days=6)
@@ -306,19 +311,20 @@ def split_value_unit(value):
 class NumericalColumn(tables.Column):
     def render(self, value):
         if value == 0:
-            return '—'
+            return "—"
         else:
             return pretty_render_numeric(value)
-    
+
     def render_footer(self, bound_column, table):
         if table.has_footer:
-            return pretty_render_numeric(sum(bound_column.accessor.resolve(row) for row in table.data))
-
+            return pretty_render_numeric(
+                sum(bound_column.accessor.resolve(row) for row in table.data)
+            )
 
 
 class AggregationTable(tables.Table):
     has_footer = False
-    asset = tables.Column(footer='Total')
+    asset = tables.Column(footer="Total")
     projected_demand = NumericalColumn(
         accessor="demand",
         verbose_name="Demand Proxy",
@@ -358,7 +364,8 @@ class AggregationTable(tables.Table):
             }
         }
     )
-    donate = NumericalColumn(verbose_name="Donated",
+    donate = NumericalColumn(
+        verbose_name="Donated",
         attrs={
             "th": {
                 "class": "tooltip",
@@ -402,8 +409,10 @@ class AggregationTable(tables.Table):
         param_str = urlencode(params, doseq=True)
         base_url = reverse("drilldown")
         return format_html(
-            '<a href="{base_url}?{param_str}">{display_name}', base_url=base_url, param_str=mark_safe(param_str),
-            display_name=value.display()
+            '<a href="{base_url}?{param_str}">{display_name}',
+            base_url=base_url,
+            param_str=mark_safe(param_str),
+            display_name=value.display(),
         )
 
     def render_balance(self, record: AssetRollup):
@@ -473,8 +482,9 @@ class AggregationTable(tables.Table):
             "inventory",
             "sell",
             "make",
-            "donate"
+            "donate",
         )
+
 
 class TotaledAggregationTable(AggregationTable):
     has_footer = True

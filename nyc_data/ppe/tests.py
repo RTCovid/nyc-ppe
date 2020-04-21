@@ -246,7 +246,9 @@ class TestViews(TestCase):
     """Sanity that the views work at a basic level"""
 
     def setUp(self):
-        self.client.force_login(auth.get_user_model().objects.create_superuser(username='testuser'))
+        self.client.force_login(
+            auth.get_user_model().objects.create_superuser(username="testuser")
+        )
 
     def test_home(self):
         response = self.client.get(reverse("index"))

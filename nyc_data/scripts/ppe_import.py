@@ -19,7 +19,10 @@ def run(path=None):
         try:
             print(f"---- Importing {file} ----")
             import_obj = data_import.smart_import(
-                path=file, uploader_name="Uploaded via CLI", current_as_of=date.today(), overwrite_in_prog=True
+                path=file,
+                uploader_name="Uploaded via CLI",
+                current_as_of=date.today(),
+                overwrite_in_prog=True,
             )
             data_import.complete_import(import_obj)
         except ppe.errors.NoMappingForFileError:

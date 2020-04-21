@@ -11,10 +11,17 @@ from ppe.data_mapping.mappers import (
     inventory_from_facilities,
     hospital_deliveries,
     hospital_demands,
-    donations, dcas_vents)
+    donations,
+    dcas_vents,
+)
 from ppe.data_mapping.types import DataFile
 from ppe.data_mapping.utils import ErrorCollector
-from ppe.errors import DataImportError, NoMappingForFileError, PartialFile, ImportInProgressError
+from ppe.errors import (
+    DataImportError,
+    NoMappingForFileError,
+    PartialFile,
+    ImportInProgressError,
+)
 from ppe.models import (
     ImportStatus,
     DataImport,
@@ -29,13 +36,13 @@ ALL_MAPPINGS = [
     inventory_from_facilities.INVENTORY,
     hospital_deliveries.FACILITY_DELIVERIES,
     hospital_demands.WEEKLY_DEMANDS,
-    donations.DONATION_DATA
+    donations.DONATION_DATA,
 ]
 
 
 def handle_upload(f, uploader_name: str, current_as_of: date) -> DataImport:
     with tempfile.NamedTemporaryFile(
-            "w+b", delete=False, suffix=f.name
+        "w+b", delete=False, suffix=f.name
     ) as upload_target:
         for chunk in f.chunks():
             upload_target.write(chunk)
@@ -48,27 +55,34 @@ def import_in_progress(data_file: DataFile):
 
 
 def smart_import(
-        path: Path, uploader_name: str, current_as_of: date, overwrite_in_prog: bool = False
+    path: Path, uploader_name: str, current_as_of: date, overwrite_in_prog: bool = False
 ) -> DataImport:
     possible_mappings = xlsx_utils.guess_mapping(path, ALL_MAPPINGS)
     if len(possible_mappings) == 0:
         raise NoMappingForFileError()
-    return import_data(path, possible_mappings, current_as_of=current_as_of, uploaded_by=uploader_name,
-                       overwrite_in_prog=overwrite_in_prog)
+    return import_data(
+        path,
+        possible_mappings,
+        current_as_of=current_as_of,
+        uploaded_by=uploader_name,
+        overwrite_in_prog=overwrite_in_prog,
+    )
 
 
 def import_data(
-        path: Path,
-        mappings: List[xlsx_utils.SheetMapping],
-        current_as_of: date,
-        uploaded_by: Optional[str] = None,
-        overwrite_in_prog=False,
+    path: Path,
+    mappings: List[xlsx_utils.SheetMapping],
+    current_as_of: date,
+    uploaded_by: Optional[str] = None,
+    overwrite_in_prog=False,
 ):
     df = mappings[0].data_file
     if len([m for m in ALL_MAPPINGS if m.data_file == df]) != len(mappings):
         expected = [m.sheet_name for m in ALL_MAPPINGS if m.data_file == df]
         actual = [m.sheet_name for m in mappings]
-        raise PartialFile(f"Importing a file, but only got one of the expected sheets (Expected: {expected}, Actual: {actual}")
+        raise PartialFile(
+            f"Importing a file, but only got one of the expected sheets (Expected: {expected}, Actual: {actual}"
+        )
     error_collector = ErrorCollector()
     data_file = {mapping.data_file for mapping in mappings}
     if len(data_file) != 1:

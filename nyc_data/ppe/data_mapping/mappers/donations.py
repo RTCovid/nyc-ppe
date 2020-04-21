@@ -51,7 +51,7 @@ class DonationRow(ImportedRow, NamedTuple):
             vendor=self.donor,
             comment=self.comments,
             raw_data=self.raw_data,
-            donation_date=self.notification_date
+            donation_date=self.notification_date,
         )
 
         objs = [purchase]
@@ -61,14 +61,14 @@ class DonationRow(ImportedRow, NamedTuple):
                 ScheduledDelivery(
                     purchase=purchase,
                     delivery_date=delivery_date,
-                    quantity=self.quantity
+                    quantity=self.quantity,
                 )
             )
         return objs
 
 
 def date_or_pending(s: str, error_collector: ErrorCollector):
-    if isinstance(s, str) and 'pending' in s.lower():
+    if isinstance(s, str) and "pending" in s.lower():
         return None
     else:
         utils.parse_date(s, error_collector)
@@ -79,19 +79,15 @@ DONATION_DATA = SheetMapping(
     sheet_name="List of Donations",
     header_row_idx=2,
     mappings={
-        Mapping(
-            sheet_column_name="Donor",
-            obj_column_name="donor",
-        ),
+        Mapping(sheet_column_name="Donor", obj_column_name="donor",),
         Mapping(
             # NOTE: typo. They might fix.
             sheet_column_name="Donation notifcation Date",
             obj_column_name="notification_date",
-            proc=utils.parse_date
+            proc=utils.parse_date,
         ),
         Mapping(
-            sheet_column_name="Person of Contact",
-            obj_column_name="contact_person",
+            sheet_column_name="Person of Contact", obj_column_name="contact_person",
         ),
         Mapping(
             sheet_column_name="Detailed item description",
@@ -100,28 +96,29 @@ DONATION_DATA = SheetMapping(
         Mapping(
             sheet_column_name="Critical Asset",
             obj_column_name="item",
-            proc=utils.asset_name_to_item
+            proc=utils.asset_name_to_item,
         ),
         Mapping(
             sheet_column_name="Total Quantity ",
             obj_column_name="quantity",
-            proc=utils.parse_int
+            proc=utils.parse_int,
         ),
         Mapping(
             sheet_column_name="Picked up by DOHMH at Storehouse",
             obj_column_name="picked_up",
-            proc=utils.parse_bool
+            proc=utils.parse_bool,
         ),
         Mapping(
             sheet_column_name="DOHMH Received Date",
             obj_column_name="received_date",
-            proc=date_or_pending
+            proc=date_or_pending,
         ),
         Mapping(
             sheet_column_name="Comments",
             obj_column_name="comments",
             proc=utils.parse_string_or_none,
-        )
-    }, include_raw=True,
-    obj_constructor=DonationRow
+        ),
+    },
+    include_raw=True,
+    obj_constructor=DonationRow,
 )

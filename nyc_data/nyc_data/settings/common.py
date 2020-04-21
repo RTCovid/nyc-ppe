@@ -48,13 +48,11 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.sites",
-
     "ppe",
-
     "django_extensions",
     "allauth",
     "allauth.account",
-    'allauth.socialaccount',
+    "allauth.socialaccount",
 ]
 
 MIDDLEWARE = [
@@ -124,27 +122,28 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = "/static/"
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
 # Authentication config
 
 AUTH_PASSWORD_VALIDATORS = []  # No password constraints
 
 AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.ModelBackend',
-    'allauth.account.auth_backends.AuthenticationBackend',
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
-LOGIN_REDIRECT_URL = '/'
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-ACCOUNT_ADAPTER = 'nyc_data.auth.ClosedAccountAdapter'  # Don't allow signups
+LOGIN_REDIRECT_URL = "/"
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+ACCOUNT_ADAPTER = "nyc_data.auth.ClosedAccountAdapter"  # Don't allow signups
 ACCOUNT_SESSION_REMEMBER = True  # Allow users to stay logged in
-ACCOUNT_EMAIL_VERIFICATION = 'none'  # Don't require email verification
-ACCOUNT_AUTHENTICATION_METHOD = 'username_email'  # log in with either username or email
-ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'https'  # links should use HTTPS
-ACCOUNT_LOGIN_ATTEMPTS_LIMIT =  5  # Timeout after this many failed attempts
-ACCOUNT_LOGIN_ATTEMPTS_TIMEOUT = 300  # Duration of timeout after failed attempts in seconds
+ACCOUNT_EMAIL_VERIFICATION = "none"  # Don't require email verification
+ACCOUNT_AUTHENTICATION_METHOD = "username_email"  # log in with either username or email
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"  # links should use HTTPS
+ACCOUNT_LOGIN_ATTEMPTS_LIMIT = 5  # Timeout after this many failed attempts
+ACCOUNT_LOGIN_ATTEMPTS_TIMEOUT = (
+    300  # Duration of timeout after failed attempts in seconds
+)
 
 
 # Third party config
-

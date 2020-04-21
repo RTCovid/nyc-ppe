@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('ppe', '0018_merge_20200417_0336'),
+        ("ppe", "0018_merge_20200417_0336"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='purchase',
-            name='donation_date',
+            model_name="purchase",
+            name="donation_date",
             field=models.DateField(blank=True, default=None, null=True),
         ),
     ]

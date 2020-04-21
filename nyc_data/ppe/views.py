@@ -70,7 +70,7 @@ def default(request):
         time_end=params.end_date,
         rollup_fn=params.rollup_fn,
     )
-    
+
     displayed_vals = ["donate", "sell", "make", "inventory"]
     cleaned_aggregation = [
         rollup
@@ -87,6 +87,7 @@ def default(request):
         .days,
     }
     return render(request, "dashboard.html", context)
+
 
 @login_required
 def drilldown(request):
@@ -113,8 +114,8 @@ def drilldown(request):
         "purchases": purchases,
         "deliveries": deliveries,
         "inventory": inventory,
-        "donations" : donations,
-        "donations_total" : sum([d.quantity for d in donations]),
+        "donations": donations,
+        "donations_total": sum([d.quantity for d in donations]),
         "deliveries_past": received_deliveries,
         "deliveries_next_three": sum(
             [
@@ -226,11 +227,15 @@ class Upload(LoginRequiredMixin, View):
                     UploadContext(error="No mapping found for this file")._asdict(),
                 )
             except ppe.errors.CsvImportError as ex:
-                return render(request, "upload.html",
-                              UploadContext(error="Error reading in CSV file")._asdict())
+                return render(
+                    request,
+                    "upload.html",
+                    UploadContext(error="Error reading in CSV file")._asdict(),
+                )
         else:
-            return render(request, "upload.html",
-                          UploadContext(error=form.errors)._asdict())
+            return render(
+                request, "upload.html", UploadContext(error=form.errors)._asdict()
+            )
 
 
 class Verify(LoginRequiredMixin, View):
