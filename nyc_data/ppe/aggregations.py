@@ -36,7 +36,7 @@ DEMAND_MESSAGE = (
 
 
 class AggColumn(str, Enum):
-    Donation = "donation"
+    Donation = "donated"
     Made = "made"
     Ordered = "ordered"
     Inventory = "inventory"
@@ -379,7 +379,7 @@ class AggregationTable(tables.Table):
         verbose_name="Supply",
         attrs={
             "th": {
-                "class": "tooltip",
+                "class": "tooltip supply-col",
                 "aria-label": "Sum of inventory, ordered, and made.",
             }
         },
