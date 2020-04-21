@@ -389,7 +389,11 @@ class AggregationTable(tables.Table):
             "th": {
                 "class": "tooltip",
                 "aria-label": lambda: f"DOHMH [{Inventory.as_of_latest()}]",
-            }
+                "data-supply-col": lambda bound_column: bound_column.name,
+            },
+            "td": {
+                "data-supply-col": lambda bound_column: bound_column.name,
+            },
         }
     )
     donated = NumericalColumn(
@@ -398,7 +402,11 @@ class AggregationTable(tables.Table):
             "th": {
                 "class": "tooltip",
                 "aria-label": lambda: f"DCAS pending pledges [{current_as_of(Purchase.active().filter(order_type=dc.OrderType.Donation))}]",
+                "data-supply-col": lambda bound_column: bound_column.name,
             },
+            "td": {
+                "data-supply-col": lambda bound_column: bound_column.name,
+            }
         },
     )
     ordered = NumericalColumn(
@@ -407,6 +415,10 @@ class AggregationTable(tables.Table):
             "th": {
                 "class": "tooltip",
                 "aria-label": lambda: f"DCAS scheduled orders [{current_as_of(Purchase.active().filter(order_type=dc.OrderType.Purchase))}]",
+                "data-supply-col": lambda bound_column: bound_column.name,
+            },
+            "td": {
+                "data-supply-col": lambda bound_column: bound_column.name,
             },
         },
     )
@@ -417,7 +429,11 @@ class AggregationTable(tables.Table):
             "th": {
                 "class": "tooltip",
                 "aria-label": lambda: f"EDC scheduled deliveries [{current_as_of(Purchase.active().filter(order_type=dc.OrderType.Make))}]",
-            }
+                "data-supply-col": lambda bound_column: bound_column.name,
+            },
+            "td": {
+                "data-supply-col": lambda bound_column: bound_column.name,
+            },
         },
     )
 

@@ -77,7 +77,6 @@ $(function(){
                 daystring = matches[1].replace(/-/g,'');
                 day = moment(daystring);
                 days = moment().diff(day, 'days');
-                console.log($(this), days);
                 if (days > 3) {
                     $(this).addClass('error');
                     $(this).find('a').after(svgClock);
@@ -87,6 +86,24 @@ $(function(){
                 } 
             } 
         });
+    }
+
+    // Supply data column configuration
+    if($('.dashboard-table').length > 0){
+        var enabledSupply = searchParams.get('supply') ? searchParams.get('supply').split(',') : [];
+        var allSupply = [];
+        if (enabledSupply.length) {
+            $('th[data-supply-col]').each(function(){
+                allSupply.push($(this).attr('data-supply-col'));
+            });
+
+            disabledSupply = [...allSupply].filter(x => !enabledSupply.includes(x));
+
+            // Mute disabled columns
+            for (var disabledColumn of disabledSupply) {
+                $(`[data-supply-col=${disabledColumn}]`).addClass('disabled');
+            }
+        }
     }
 });
 

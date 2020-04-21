@@ -397,6 +397,10 @@ body.drilldown .dashboard-table {
     text-align: left;
 }
 
+.dashboard-table td.disabled .value, .dashboard-table td.disabled .unit, .dashboard-table th.disabled a, .dashboard-table td.disabled {
+    color: #ccc;
+}
+
 .dashboard-table td {
     white-space: pre;
 }
