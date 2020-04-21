@@ -13,7 +13,7 @@ class MayoralCategory(str, Enum):
     gloves = "Gloves"
     iso_gowns = "ISO Gowns"
     n95_masks = "N95 Masks"
-    non_surgical_masks = "Non - Surgical Masks"
+    non_surgical_masks = "Face Coverings"
     other_ppe = "Other PPE"
     surgical_masks = "Surgical Masks"
     other_medical_supplies = "Other Medical Supplies"
