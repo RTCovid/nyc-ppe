@@ -10,7 +10,7 @@ from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.http import urlencode
 from django.utils.safestring import mark_safe
-from django_tables2 import tables
+import django_tables2 as tables
 
 import ppe.dataclasses as dc
 from ppe.dataclasses import Period, OrderType

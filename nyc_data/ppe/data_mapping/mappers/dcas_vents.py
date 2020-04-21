@@ -78,8 +78,6 @@ HNH_VENTS = SheetMapping(
             obj_column_name="quantity",
             proc=parse_int,
         ),
-        Mapping(sheet_column_name="Functionality", obj_column_name="functionality"),
-        Mapping(sheet_column_name="Vendor", obj_column_name="vendor"),
         Mapping(
             sheet_column_name="Quantity Delivered",
             obj_column_name="quantity_delivered",

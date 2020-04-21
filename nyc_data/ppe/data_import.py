@@ -22,16 +22,7 @@ from ppe.data_mapping.utils import ErrorCollector
 from ppe.errors import (
     DataImportError,
     NoMappingForFileError,
-    PartialFile,
     ImportInProgressError,
-<<<<<<< HEAD
-=======
-)
-from ppe.models import (
-    ImportStatus,
-    DataImport,
-    FacilityDelivery,
->>>>>>> 023c1b716b87f6ee3554ac5bc25dd04214364dbb
 )
 from ppe.models import ImportStatus, DataImport, FacilityDelivery, FailedImport
 from xlsx_utils import import_xlsx
