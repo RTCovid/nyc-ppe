@@ -9,7 +9,7 @@ from ppe.data_mapping.utils import (
     ErrorCollector, parse_bool,
 )
 from ppe.dataclasses import Item, OrderType
-from xlsx_utils import SheetMapping, Mapping
+from xlsx_utils import SheetMapping, Mapping, RegexMatch
 
 
 class VentilatorRow(ImportedRow, NamedTuple):
@@ -17,19 +17,19 @@ class VentilatorRow(ImportedRow, NamedTuple):
     functionality: str
     vendor: str
     quantity: int
+    quantity_delivered: int
 
     eta: date
 
-    delivered: bool
+    delivered: str
 
     raw_data: Dict[str, any]
 
     def __repr__(self):
-        # return super().repr_no_raw()
         return repr_no_raw(self)
 
     def to_objects(self, error_collector: ErrorCollector):
-        if self.delivered:
+        if self.delivered == 'Yes':
             return []
 
         if self.eta is None:
@@ -43,16 +43,12 @@ class VentilatorRow(ImportedRow, NamedTuple):
             error_collector.report_error(f'Unknown ventilator type: {self.functionality}')
             return []
 
-        if self.delivered:
-            received_quantity = self.quantity
-        else:
-            received_quantity = 0
 
         purchase = models.Purchase(
             order_type=OrderType.Purchase,
             item=item,
             quantity=self.quantity,
-            received_quantity=received_quantity,
+            received_quantity=self.quantity_delivered,
             description=f'Ventilator {self.type} ({self.functionality})',
             raw_data=self.raw_data
         )
@@ -70,11 +66,11 @@ class VentilatorRow(ImportedRow, NamedTuple):
 
 
 HNH_VENTS = SheetMapping(
-    sheet_name='H+H 4-3 3PM',
+    sheet_name=RegexMatch('H\+H \d+-\d+ \d+[AP]M'),  # 'H+H 4-3 3PM',
     data_file=DataFile.PPE_ORDERINGCHARTS_DATE_XLSX,
     mappings={
         Mapping(
-            sheet_column_name='Type',
+            sheet_column_name='Equipment Detail',
             obj_column_name='type',
         ),
         Mapping(
@@ -83,16 +79,21 @@ HNH_VENTS = SheetMapping(
             proc=parse_date
         ),
         Mapping(
-            sheet_column_name="Quantity",
+            sheet_column_name="Quantity Ordered",
             obj_column_name="quantity",
+            proc=parse_int,
+        ),
+        Mapping(
+            sheet_column_name="Quantity Delivered",
+            obj_column_name="quantity_delivered",
             proc=parse_int,
         ),
         Mapping(
             sheet_column_name='Functionality',
             obj_column_name='functionality'
         ),
-        Mapping(sheet_column_name="Vendor", obj_column_name="vendor"),
-        Mapping(sheet_column_name="Delivered?", obj_column_name="delivered", proc=parse_bool),
+        Mapping(sheet_column_name="Supplier", obj_column_name="vendor"),
+        Mapping(sheet_column_name="Delivered?", obj_column_name="delivered"),
     },
     include_raw=True,
     obj_constructor=VentilatorRow,

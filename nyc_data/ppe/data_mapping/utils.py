@@ -75,6 +75,7 @@ def parse_date(date: any, error_collector: ErrorCollector):
         ("%Y-%m-%d", lambda x: x),  # 2020-04-10
         ("%d-%b", lambda d: d.replace(year=2020)),  # 30-Apr
         ("%m/%d", lambda d: d.replace(year=2020)),  # 4/15
+        ("%m-%d", lambda d: d.replace(year=2020)),  # 04-13
         ("%m-%d-%Y", lambda x: x),
     ]
     if isinstance(date, str):
@@ -119,12 +120,13 @@ def parse_int(inp: str, error_collector: ErrorCollector):
 
 def parse_bool(inp: str, error_collector: ErrorCollector):
     # TODO: would probably be useful to show more than just true/false
-    if inp.lower() in {"y", "yes"}:
+    inp = inp.lower().strip()
+    if inp in {"y", "yes"}:
         return True
-    elif inp.lower() in {"n", "no"}:
+    elif inp in {"n", "no"}:
         return False
     else:
-        error_collector.report_error(f"Failed to parse bool: {inp}")
+        error_collector.report_error(f"Failed to parse bool: `{inp}`")
 
 
 def parse_string_or_none(inp: str, error_collector: ErrorCollector):
