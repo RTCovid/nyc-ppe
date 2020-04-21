@@ -2,10 +2,10 @@ import ppe.dataclasses as dc
 from datetime import datetime, timedelta, date
 
 from ppe import aggregations
-from ppe.aggregations import AssetRollup, DemandCalculationConfig
+from ppe.aggregations import AssetRollup, DemandCalculationConfig, AggColumn
 from ppe.models import ScheduledDelivery, Purchase, Inventory
 from ppe.dataclasses import OrderType
-from typing import List, Callable, NamedTuple, Dict
+from typing import List, Callable, NamedTuple, Dict, Set
 
 from ppe.utils import log_db_queries
 
@@ -20,11 +20,11 @@ class DrilldownResult(NamedTuple):
 
 @log_db_queries
 def drilldown_result(
-    item_type: str, rollup_fn: Callable[[dc.Item], str], time_range: dc.Period = None
+    item_type: str,
+    rollup_fn: Callable[[dc.Item], str],
+    supply_cols: Set[AggColumn],
+    time_range: dc.Period,
 ):
-    # could do this in SQL but probably unecessary
-    if time_range is None:
-        time_range = dc.Period(datetime.today(), datetime.today() + timedelta(days=30))
     purchases = (
         Purchase.active()
         .prefetch_related("deliveries")
@@ -67,7 +67,9 @@ def drilldown_result(
     ]
 
     aggregation = aggregations.asset_rollup(
-        time_range=time_range, demand_calculation_config=DemandCalculationConfig()
+        time_range=time_range,
+        demand_calculation_config=DemandCalculationConfig(),
+        supply_cols=supply_cols,
     )
     filtered_aggregation = {
         item: agg for item, agg in aggregation.items() if rollup_fn(item) == item_type

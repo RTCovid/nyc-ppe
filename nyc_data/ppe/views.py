@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, date
-from typing import NamedTuple, Optional, Callable
+from typing import NamedTuple, Optional, Callable, Set
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -14,7 +14,7 @@ from django_tables2 import RequestConfig
 import ppe.errors
 from ppe import aggregations, dataclasses as dc
 from ppe import forms, data_import
-from ppe.aggregations import DemandCalculationConfig
+from ppe.aggregations import DemandCalculationConfig, AggColumn
 from ppe.data_mapping.utils import parse_date, ErrorCollector
 from ppe.drilldown import drilldown_result
 from ppe.models import DataImport
@@ -29,6 +29,7 @@ class StandardRequestParams(NamedTuple):
     start_date: date  # usually today
     end_date: date  # usually today + n days
     rollup_fn: Callable[[str], str]
+    supply_components: Set[AggColumn]
 
     def time_range(self):
         return dc.Period(self.start_date, self.end_date)
@@ -54,11 +55,21 @@ class StandardRequestParams(NamedTuple):
         else:
             rollup_fn = lambda x: x
 
+        if params.get("supply"):
+            supply_components = {
+                AggColumn(col) for col in params.get("supply").split(",")
+            }
+        else:
+            supply_components = AggColumn.all()
+
         print(f"Parsed request as {start_date}->{end_date}")
         if len(err_collector) > 0:
             err_collector.dump()
         return StandardRequestParams(
-            start_date=start_date, end_date=end_date, rollup_fn=rollup_fn
+            start_date=start_date,
+            end_date=end_date,
+            rollup_fn=rollup_fn,
+            supply_components=supply_components,
         )
 
 
@@ -68,14 +79,14 @@ def default(request):
 
     aggregation = aggregations.asset_rollup(
         time_range=params.time_range(),
+        supply_cols=params.supply_components,
         demand_calculation_config=DemandCalculationConfig(rollup_fn=params.rollup_fn),
     )
 
-    displayed_vals = ["donate", "sell", "make", "inventory"]
     cleaned_aggregation = [
         rollup
         for rollup in list(aggregation.values())
-        if not all([getattr(rollup, val) == 0 for val in displayed_vals])
+        if not all([rollup._value_at(col) == 0 for col in AggColumn.all()])
     ]
 
     table = aggregations.AggregationTable(cleaned_aggregation)
@@ -97,7 +108,10 @@ def drilldown(request):
         return HttpResponse("Need an asset category param", status=400)
 
     drilldown_res = drilldown_result(
-        category, params.rollup_fn, time_range=params.time_range()
+        category,
+        params.rollup_fn,
+        time_range=params.time_range(),
+        supply_cols=params.supply_components,
     )
     table = aggregations.TotaledAggregationTable(drilldown_res.aggregation.values())
     RequestConfig(request).configure(table)
