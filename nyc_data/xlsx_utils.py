@@ -18,9 +18,15 @@ def XLSXDictReader(sheet, header_row):
     cols = sheet.max_column
 
     def item(i, j):
-        return sheet.cell(row=header_row, column=j).value, sheet.cell(row=i, column=j).value
+        return (
+            sheet.cell(row=header_row, column=j).value,
+            sheet.cell(row=i, column=j).value,
+        )
 
-    return (dict(item(i, j) for j in range(1, cols + 1)) for i in range(header_row + 1, rows + 1))
+    return (
+        dict(item(i, j) for j in range(1, cols + 1))
+        for i in range(header_row + 1, rows + 1)
+    )
 
 
 class Mapping(NamedTuple):
@@ -46,21 +52,32 @@ RAW_DATA = "raw_data"
 
 def guess_mapping(sheet: Path, all_mappings: List[SheetMapping]):
     workbook = None
-    if sheet.suffix == '.xlsx':
+    if sheet.suffix == ".xlsx":
         workbook = load_workbook(sheet, data_only=True)
-        possible_mappings = [m for m in all_mappings if m.sheet_name in workbook.sheetnames]
+        possible_mappings = [
+            m for m in all_mappings if m.sheet_name in workbook.sheetnames
+        ]
         if not possible_mappings:
             known_sheetnames = [m.sheet_name for m in all_mappings]
-            matches = [(us, process.extractOne(us, known_sheetnames)) for us in workbook.sheetnames]
-            raise errors.SheetNameMismatch(workbook.sheetnames, (matches[0][0], matches[0][1][0]))
+            matches = [
+                (us, process.extractOne(us, known_sheetnames))
+                for us in workbook.sheetnames
+            ]
+            raise errors.SheetNameMismatch(
+                workbook.sheetnames, (matches[0][0], matches[0][1][0])
+            )
         else:
             df = possible_mappings[0].data_file
 
-            if len([m for m in all_mappings if m.data_file == df]) != len(possible_mappings):
+            if len([m for m in all_mappings if m.data_file == df]) != len(
+                possible_mappings
+            ):
                 expected = [m.sheet_name for m in all_mappings if m.data_file == df]
-                raise errors.PartialFile(expected_sheets=expected, actual_sheets=workbook.sheetnames)
+                raise errors.PartialFile(
+                    expected_sheets=expected, actual_sheets=workbook.sheetnames
+                )
 
-    elif sheet.suffix == '.csv':
+    elif sheet.suffix == ".csv":
         possible_mappings = [m for m in all_mappings if m.sheet_name is None]
     else:
         return []
@@ -69,13 +86,15 @@ def guess_mapping(sheet: Path, all_mappings: List[SheetMapping]):
     for mapping in possible_mappings:
         if mapping.sheet_name is not None and workbook:
             sheet = workbook[mapping.sheet_name]
-            first_row = next(XLSXDictReader(sheet, header_row=mapping.header_row_idx or 1))
+            first_row = next(
+                XLSXDictReader(sheet, header_row=mapping.header_row_idx or 1)
+            )
         else:
             try:
                 with open(sheet, encoding="latin-1") as csvfile:
                     text = csvfile.read()
             except Exception as exc:
-                raise errors.CsvImportError('Error reading in CSV file') from exc
+                raise errors.CsvImportError("Error reading in CSV file") from exc
 
             reader = csv.DictReader(text.splitlines())
             first_row = next(reader)
@@ -91,9 +110,9 @@ def guess_mapping(sheet: Path, all_mappings: List[SheetMapping]):
 
 
 def import_xlsx(
-        sheet: Path,
-        sheet_mapping: SheetMapping,
-        error_collector: ErrorCollector = lambda: ErrorCollector(),
+    sheet: Path,
+    sheet_mapping: SheetMapping,
+    error_collector: ErrorCollector = lambda: ErrorCollector(),
 ):
     if sheet_mapping.sheet_name is not None:
         workbook = load_workbook(sheet, data_only=True)

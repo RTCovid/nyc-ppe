@@ -9,19 +9,33 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('ppe', '0019_purchase_donation_date'),
+        ("ppe", "0019_purchase_donation_date"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='FailedImport',
+            name="FailedImport",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('data', models.BinaryField()),
-                ('file_name', models.TextField()),
-                ('uploaded_at', models.DateTimeField(auto_now_add=True, db_index=True)),
-                ('current_as_of', models.DateField()),
-                ('uploaded_by', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("data", models.BinaryField()),
+                ("file_name", models.TextField()),
+                ("uploaded_at", models.DateTimeField(auto_now_add=True, db_index=True)),
+                ("current_as_of", models.DateField()),
+                (
+                    "uploaded_by",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
     ]

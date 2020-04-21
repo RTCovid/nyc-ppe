@@ -46,7 +46,7 @@ class StandardRequestParams(NamedTuple):
         err_collector = ErrorCollector()
         start_date = (parse_date(start_date, err_collector) or datetime.now()).date()
         end_date = (
-                parse_date(end_date, err_collector) or datetime.now() + timedelta(days=29)
+            parse_date(end_date, err_collector) or datetime.now() + timedelta(days=29)
         ).date()
 
         if params.get("rollup") in {"mayoral", "", None}:
@@ -84,8 +84,8 @@ def default(request):
     context = {
         "aggregations": table,
         "days_in_view": dc.Period(params.start_date, params.end_date)
-            .inclusive_length()
-            .days,
+        .inclusive_length()
+        .days,
     }
     return render(request, "dashboard.html", context)
 
@@ -123,8 +123,8 @@ def drilldown(request):
                 d.quantity
                 for d in deliveries
                 if datetime.now().date()
-                   <= d.delivery_date
-                   <= datetime.now().date() + timedelta(days=2)
+                <= d.delivery_date
+                <= datetime.now().date() + timedelta(days=2)
             ]
         ),
         "deliveries_next_week": sum(
@@ -132,8 +132,8 @@ def drilldown(request):
                 d.quantity
                 for d in deliveries
                 if datetime.now().date()
-                   <= d.delivery_date
-                   <= datetime.now().date() + timedelta(days=6)
+                <= d.delivery_date
+                <= datetime.now().date() + timedelta(days=6)
             ]
         ),
         "deliveries_next_thirty": sum(
@@ -141,8 +141,8 @@ def drilldown(request):
                 d.quantity
                 for d in deliveries
                 if datetime.now().date()
-                   <= d.delivery_date
-                   <= datetime.now().date() + timedelta(days=29)
+                <= d.delivery_date
+                <= datetime.now().date() + timedelta(days=29)
             ]
         ),
         "scheduled_total": sum([d.quantity for d in deliveries]),
@@ -211,7 +211,9 @@ class Upload(LoginRequiredMixin, View):
                 import_in_progress=ex.import_id,
             )
         except ppe.errors.NoMappingForFileError as ex:
-            upload_context = UploadContext(error="We were unable to find an existing mapping for this file.")
+            upload_context = UploadContext(
+                error="We were unable to find an existing mapping for this file."
+            )
 
         except ppe.errors.SheetNameMismatch as ex:
             upload_context = UploadContext(error=str(ex))
@@ -222,7 +224,9 @@ class Upload(LoginRequiredMixin, View):
         except Exception as ex:
             if settings.DEBUG:
                 raise
-            upload_context = UploadContext(error=f"There was an unknown error importing the file. {ex}")
+            upload_context = UploadContext(
+                error=f"There was an unknown error importing the file. {ex}"
+            )
 
         return upload_context
 
@@ -231,21 +235,21 @@ class Upload(LoginRequiredMixin, View):
         if form.is_valid():
             try:
                 import_obj = data_import.handle_upload(
-                    f=request.FILES["file"], user=request.user, current_as_of=form.data["data_current"]
+                    f=request.FILES["file"],
+                    user=request.user,
+                    current_as_of=form.data["data_current"],
                 )
                 return HttpResponseRedirect(
                     reverse("verify", kwargs={"import_id": import_obj.id})
                 )
             except Exception as ex:
                 context = self.handle_upload_error(ex)
-                context = context._replace(form = form)
-                return render(
-                    request,
-                    "upload.html",
-                    context._asdict())
+                context = context._replace(form=form)
+                return render(request, "upload.html", context._asdict())
         else:
-            return render(request, "upload.html",
-                          UploadContext(error=form.errors)._asdict())
+            return render(
+                request, "upload.html", UploadContext(error=form.errors)._asdict()
+            )
 
 
 class Verify(LoginRequiredMixin, View):

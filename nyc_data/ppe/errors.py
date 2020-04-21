@@ -18,7 +18,9 @@ class PartialFile(DataImportError):
 
     def __str__(self):
         delta = delta_hint(self.expected_sheets, self.actual_sheets)
-        hint = '\n'.join([f"Did you rename '{k}' to '{v}'?" for k, (v, _) in delta.items()])
+        hint = "\n".join(
+            [f"Did you rename '{k}' to '{v}'?" for k, (v, _) in delta.items()]
+        )
         return f"We expected to find {self.expected_sheets} in this file, but we found {self.actual_sheets}. Hint: {hint}"
 
 
@@ -61,8 +63,12 @@ class ColumnNameMismatch(DataImportError):
 
     def __repr__(self):
         delta = self.delta()
-        matches = '\n'.join(
-            [f'We were looking for {us} (we found "{them}" which looked similar)' for (us, them) in delta.items()])
+        matches = "\n".join(
+            [
+                f'We were looking for {us} (we found "{them}" which looked similar)'
+                for (us, them) in delta.items()
+            ]
+        )
         return f"{len(delta)} missing columns. {matches}"
 
 

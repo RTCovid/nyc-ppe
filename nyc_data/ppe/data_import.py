@@ -14,15 +14,18 @@ from ppe.data_mapping.mappers import (
     inventory_from_facilities,
     hospital_deliveries,
     hospital_demands,
-    donations, dcas_vents)
+    donations,
+    dcas_vents,
+)
 from ppe.data_mapping.types import DataFile
 from ppe.data_mapping.utils import ErrorCollector
-from ppe.errors import DataImportError, NoMappingForFileError, PartialFile, ImportInProgressError
-from ppe.models import (
-    ImportStatus,
-    DataImport,
-    FacilityDelivery,
-    FailedImport)
+from ppe.errors import (
+    DataImportError,
+    NoMappingForFileError,
+    PartialFile,
+    ImportInProgressError,
+)
+from ppe.models import ImportStatus, DataImport, FacilityDelivery, FailedImport
 from xlsx_utils import import_xlsx
 
 ALL_MAPPINGS = [
@@ -32,13 +35,13 @@ ALL_MAPPINGS = [
     inventory_from_facilities.INVENTORY,
     hospital_deliveries.FACILITY_DELIVERIES,
     hospital_demands.WEEKLY_DEMANDS,
-    donations.DONATION_DATA
+    donations.DONATION_DATA,
 ]
 
 
 def handle_upload(f, current_as_of: date, user: User) -> DataImport:
     with tempfile.NamedTemporaryFile(
-            "w+b", delete=False, suffix=f.name
+        "w+b", delete=False, suffix=f.name
     ) as upload_target:
         for chunk in f.chunks():
             upload_target.write(chunk)
@@ -51,7 +54,12 @@ def handle_upload(f, current_as_of: date, user: User) -> DataImport:
             sentry_sdk.capture_exception(ex)
             # reset back to beginning so we can read the file into the DB
             upload_target.seek(0)
-            FailedImport(data=upload_target.read(), file_name=f.name, uploaded_by=user, current_as_of=current_as_of).save()
+            FailedImport(
+                data=upload_target.read(),
+                file_name=f.name,
+                uploaded_by=user,
+                current_as_of=current_as_of,
+            ).save()
             raise
 
 
@@ -60,22 +68,32 @@ def import_in_progress(data_file: DataFile):
 
 
 def smart_import(
-        path: Path, uploader_name: str, current_as_of: date, overwrite_in_prog: bool = False, user_provided_name: Optional[str] = None
+    path: Path,
+    uploader_name: str,
+    current_as_of: date,
+    overwrite_in_prog: bool = False,
+    user_provided_name: Optional[str] = None,
 ) -> DataImport:
     possible_mappings = xlsx_utils.guess_mapping(path, ALL_MAPPINGS)
     if len(possible_mappings) == 0:
         raise NoMappingForFileError()
-    return import_data(path, possible_mappings, current_as_of=current_as_of, uploaded_by=uploader_name,
-                       overwrite_in_prog=overwrite_in_prog, user_provided_filename=user_provided_name)
+    return import_data(
+        path,
+        possible_mappings,
+        current_as_of=current_as_of,
+        uploaded_by=uploader_name,
+        overwrite_in_prog=overwrite_in_prog,
+        user_provided_filename=user_provided_name,
+    )
 
 
 def import_data(
-        path: Path,
-        mappings: List[xlsx_utils.SheetMapping],
-        current_as_of: date,
-        user_provided_filename: Optional[str],
-        uploaded_by: Optional[str] = None,
-        overwrite_in_prog=False,
+    path: Path,
+    mappings: List[xlsx_utils.SheetMapping],
+    current_as_of: date,
+    user_provided_filename: Optional[str],
+    uploaded_by: Optional[str] = None,
+    overwrite_in_prog=False,
 ):
     df = mappings[0].data_file
     error_collector = ErrorCollector()
@@ -122,9 +140,10 @@ def import_data(
                         else:
                             obj.save()
                 except Exception as ex:
-                    error_collector.report_error(f'Failure importing row. This is a bug: {ex}')
+                    error_collector.report_error(
+                        f"Failure importing row. This is a bug: {ex}"
+                    )
                     sentry_sdk.capture_exception(ex)
-
 
             FacilityDelivery.objects.bulk_create(deliveries)
 

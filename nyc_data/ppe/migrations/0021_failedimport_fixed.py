@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('ppe', '0020_failedimport'),
+        ("ppe", "0020_failedimport"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='failedimport',
-            name='fixed',
+            model_name="failedimport",
+            name="fixed",
             field=models.BooleanField(default=False),
         ),
     ]

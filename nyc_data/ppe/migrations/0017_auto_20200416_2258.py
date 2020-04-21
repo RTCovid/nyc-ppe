@@ -6,23 +6,38 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('ppe', '0016_auto_20200414_1528'),
+        ("ppe", "0016_auto_20200414_1528"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='purchase',
-            name='comment',
-            field=models.TextField(blank=True),
+            model_name="purchase", name="comment", field=models.TextField(blank=True),
         ),
         migrations.AlterField(
-            model_name='dataimport',
-            name='data_file',
-            field=models.TextField(choices=[('PPE_ORDERINGCHARTS_DATE_XLSX', 'PPE_ORDERINGCHARTS_DATE_XLSX'), ('SUPPLIERS_PARTNERS_XLSX', 'SUPPLIERS_PARTNERS_XLSX'), ('INVENTORY', 'INVENTORY'), ('FACILITY_DELIVERIES', 'FACILITY_DELIVERIES'), ('HOSPITAL_DEMANDS', 'HOSPITAL_DEMANDS'), ('CSH_DONATIONS', 'CSH_DONATIONS')], default=None),
+            model_name="dataimport",
+            name="data_file",
+            field=models.TextField(
+                choices=[
+                    ("PPE_ORDERINGCHARTS_DATE_XLSX", "PPE_ORDERINGCHARTS_DATE_XLSX"),
+                    ("SUPPLIERS_PARTNERS_XLSX", "SUPPLIERS_PARTNERS_XLSX"),
+                    ("INVENTORY", "INVENTORY"),
+                    ("FACILITY_DELIVERIES", "FACILITY_DELIVERIES"),
+                    ("HOSPITAL_DEMANDS", "HOSPITAL_DEMANDS"),
+                    ("CSH_DONATIONS", "CSH_DONATIONS"),
+                ],
+                default=None,
+            ),
         ),
         migrations.AlterField(
-            model_name='purchase',
-            name='order_type',
-            field=models.TextField(choices=[('Purchase', 'Purchase'), ('Make', 'Make'), ('Donation', 'Donation')], default=None),
+            model_name="purchase",
+            name="order_type",
+            field=models.TextField(
+                choices=[
+                    ("Purchase", "Purchase"),
+                    ("Make", "Make"),
+                    ("Donation", "Donation"),
+                ],
+                default=None,
+            ),
         ),
     ]

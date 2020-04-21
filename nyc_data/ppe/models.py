@@ -119,8 +119,8 @@ class UploadDelta(NamedTuple):
 
 def current_as_of(qs: QuerySet):
     if qs.count() == 0:
-        return 'Unknown'
-    return qs.first().source.current_as_of or 'Unknown'
+        return "Unknown"
+    return qs.first().source.current_as_of or "Unknown"
 
 
 class ImportedDataModel(models.Model):
@@ -218,19 +218,21 @@ class FailedImport(models.Model):
 
     def retry(self):
         with tempfile.NamedTemporaryFile(
-                "w+b", delete=False, suffix=self.file_name
+            "w+b", delete=False, suffix=self.file_name
         ) as f:
             f.write(self.data)
             f.flush()
 
             from ppe.data_import import smart_import, finalize_import
-            import_obj = smart_import(path=Path(f.name),
-                         uploader_name=self.uploaded_by,
-                         current_as_of=self.current_as_of,
-                         user_provided_name=self.file_name)
+
+            import_obj = smart_import(
+                path=Path(f.name),
+                uploader_name=self.uploaded_by,
+                current_as_of=self.current_as_of,
+                user_provided_name=self.file_name,
+            )
             finalize_import(import_obj)
             self.fixed = True
-
 
 
 class ScheduledDelivery(ImportedDataModel):
