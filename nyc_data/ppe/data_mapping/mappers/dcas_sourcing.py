@@ -32,7 +32,6 @@ class SourcingRow(ImportedRow, NamedTuple):
     raw_data: Dict[str, any]
 
     def __repr__(self):
-        # return super().repr_no_raw()
         return repr_no_raw(self)
 
     def sanity(self, error_collector: ErrorCollector):

@@ -120,6 +120,9 @@ def parse_int(inp: str, error_collector: ErrorCollector):
 
 def parse_bool(inp: str, error_collector: ErrorCollector):
     # TODO: would probably be useful to show more than just true/false
+    if inp is None:
+        error_collector.report_error('Bool input was None')
+        return None
     inp = inp.lower().strip()
     if inp in {"y", "yes"}:
         return True
