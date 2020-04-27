@@ -25,43 +25,48 @@ class ErrorCollector:
         return f"{len(self.errors)} errors and {len(self.warnings)} warnings"
 
 
+NAME_ITEM_MAPPING = {
+    "bipap": Item.bipap_machines,
+    "bipapmachines": Item.bipap_machines,
+    "bodybags": Item.body_bags,
+    "coveralls": Item.coveralls,
+    "eyewear": Item.generic_eyeware,
+    "facecoverings-nonmedical": Item.mask_other,
+    "facemasks": Item.mask_other,
+    "facemasks-other": Item.mask_other,
+    "faceshield": Item.faceshield,
+    "faceshields": Item.faceshield,
+    "fullserviceventilators": Item.ventilators_full_service,
+    "gloves": Item.gloves,
+    "gloves-latex": Item.gloves,
+    "swabkit": Item.swab_kit,
+    "goggles": Item.goggles,
+    "gowns": Item.gown,
+    "isolationgowns": Item.gown,
+    "kn95masks": Item.kn95_mask,
+    "materialsforgowns": Item.gown_material,
+    "misc": Item.ppe_other,
+    "multipurposeppe": Item.ppe_other,
+    "n95": Item.n95_mask_surgical,
+    "n95respirators": Item.n95_mask_surgical,
+    "n95respiratormasks": Item.n95_mask_surgical,
+    "non-surgicalgraden95smasks": Item.n95_mask_non_surgical,
+    "nonfullserviceventilators": Item.ventilators_non_full_service,
+    "otherppe,healthcare": Item.ppe_other,
+    "postmortembags": Item.body_bags,
+    "surgicalgraden95smasks": Item.n95_mask_surgical,
+    "surgicalmasks": Item.surgical_mask,
+    "vents": Item.ventilators_full_service,
+    "ponchos": Item.ponchos,
+    "other": Item.unknown
+}
+
+
 def asset_name_to_item(asset_name: str, error_collector: ErrorCollector) -> Item:
     if asset_name is None:
         error_collector.report_error("Null asset name")
         return Item.unknown
-    mapping = {
-        "KN95 Masks": Item.kn95_mask,
-        "Face Masks-Other": Item.mask_other,
-        "Surgical Grade N95s Masks": Item.n95_mask_surgical,
-        "Non-Surgical Grade N95s Masks": Item.n95_mask_non_surgical,
-        "Isolation Gowns": Item.gown,
-        "Gowns": Item.gown,
-        "Materials for Gowns": Item.gown_material,
-        "Coveralls": Item.coveralls,
-        "Non Full Service Ventilators": Item.ventilators_non_full_service,
-        "Face Coverings-Non Medical": Item.mask_other,
-        "Goggles": Item.goggles,
-        "Other PPE, Healthcare": Item.ppe_other,
-        "Full Service Ventilators": Item.ventilators_full_service,
-        "Face Shields": Item.faceshield,
-        "Faceshield": Item.faceshield,
-        "Face Shield": Item.faceshield,
-        "Gloves": Item.gloves,
-        "Surgical Masks": Item.surgical_mask,
-        "N95": Item.n95_mask_surgical,
-        "Facemasks": Item.mask_other,
-        "Eyewear": Item.generic_eyeware,
-        "Vents": Item.ventilators_full_service,
-        "BiPAP Machines": Item.bipap_machines,
-        "Body Bags": Item.body_bags,
-        "Face Masks": Item.mask_other,
-        "Post Mortem Bags": Item.body_bags,
-        "N95 Respirators": Item.n95_mask_surgical,
-        "BiPap": Item.bipap_machines,
-        "Misc": Item.ppe_other,
-        "Multipurpose PPE": Item.ppe_other,
-    }
-    match = mapping.get(asset_name.strip())
+    match = NAME_ITEM_MAPPING.get(asset_name.lower().replace(' ', ''))
     if match is not None:
         return match
     error_collector.report_warning(f"Unknown type: {asset_name}")

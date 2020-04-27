@@ -36,9 +36,9 @@ class VentilatorRow(ImportedRow, NamedTuple):
         if self.eta is None:
             return []
 
-        if self.functionality in {"FULL", "CRITICAL CARE"}:
+        if self.functionality.lower() in {"full", "critical care"}:
             item = Item.ventilators_full_service
-        elif self.functionality == "LIMITED":
+        elif self.functionality.lower() == "limited":
             item = Item.ventilators_non_full_service
         else:
             error_collector.report_error(
@@ -66,7 +66,7 @@ class VentilatorRow(ImportedRow, NamedTuple):
 
 
 HNH_VENTS = SheetMapping(
-    sheet_name=RegexMatch("H\+H \d+-\d+ \d+[AP]M"),  # 'H+H 4-3 3PM',
+    sheet_name=RegexMatch("H\+H (\d+-\d+) \d+[AP]M", take_latest=True),  # 'H+H 4-3 3PM',
     data_file=DataFile.PPE_ORDERINGCHARTS_DATE_XLSX,
     mappings={
         Mapping(sheet_column_name="Equipment Detail", obj_column_name="type",),

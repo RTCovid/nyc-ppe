@@ -10,7 +10,7 @@ from openpyxl import load_workbook
 
 from ppe import errors
 from ppe.data_mapping.types import DataFile
-from ppe.data_mapping.utils import ErrorCollector
+from ppe.data_mapping.utils import ErrorCollector, parse_date
 from ppe.errors import ColumnNameMismatch
 
 
@@ -47,8 +47,9 @@ def ExactMatch(sheet_name: str):
 
 
 class RegexMatch:
-    def __init__(self, patt):
+    def __init__(self, patt, take_latest=True):
         self.patt = patt
+        self.take_latest=take_latest
 
     def __repr__(self):
         return self.patt
@@ -57,8 +58,13 @@ class RegexMatch:
         opts = [name for name in names if re.match(self.patt, name)]
         if len(opts) == 1:
             return opts[0]
-        if len(opts) > 1:
-            raise Exception("Too many matches for sheet pattern")
+        if len(opts) > 1 and self.take_latest:
+            date_strs = [(opt, re.search(self.patt, opt).group(1)) for opt in opts] # [(opt, ('4-23',)), ...]
+            parsed_dates = [(opt, parse_date(date_str, ErrorCollector())) for (opt, date_str) in date_strs]
+            sorted_by_date = sorted(parsed_dates, key=lambda opt_date: opt_date[1])
+            # We want to highest date
+            print(sorted_by_date)
+            return sorted_by_date[-1][0]
         return None
 
 
