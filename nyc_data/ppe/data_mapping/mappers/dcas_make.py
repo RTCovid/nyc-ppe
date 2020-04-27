@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from enum import Enum
 from typing import NamedTuple, Dict, Optional
 
 from ppe import models
@@ -12,6 +13,19 @@ from ppe.data_mapping.utils import (
 from ppe.dataclasses import Item, OrderType
 from xlsx_utils import SheetMapping, Mapping
 
+class ContractStatus(str, Enum):
+    executed = "executed"
+    in_progress = "inprogress"
+    preliminary = "preliminary"
+
+def parse_contract_status(status, error_collector: ErrorCollector):
+    status=(status or '').replace(' ', '').lower()
+    try:
+        return ContractStatus(status)
+    except ValueError:
+        error_collector.report_error(f'Unknown contract status: "{status}"')
+        return None
+
 
 class MakeRow(ImportedRow, NamedTuple):
     item: Item
@@ -23,6 +37,8 @@ class MakeRow(ImportedRow, NamedTuple):
 
     vendor: Optional[str]
 
+    contract_status: ContractStatus
+
     def __repr__(self):
         return repr_no_raw(self)
 
@@ -33,6 +49,8 @@ class MakeRow(ImportedRow, NamedTuple):
             return ["Vendor is none"]
 
     def to_objects(self, error_collector: ErrorCollector):
+        if self.contract_status != ContractStatus.executed:
+            return []
         errors = self.sanity()
         if errors:
             error_collector.report_error(
@@ -94,6 +112,11 @@ SUPPLIERS_AND_PARTNERS = SheetMapping(
             sheet_column_name="Counterparty Name (for procurement)",
             obj_column_name="vendor",
         ),
+        Mapping(
+            sheet_column_name="Contract Status",
+            obj_column_name="contract_status",
+            proc=parse_contract_status
+        )
     },
     include_raw=True,
     obj_constructor=MakeRow,
