@@ -57,6 +57,8 @@ class Item(str, Enum):
 
     gloves = "gloves"
 
+    swab_kit = "swab_kit"
+
     ventilators_full_service = "ventilators_full"
     ventilators_non_full_service = "ventilators_non_full"
     bipap_machines = "bipap_machines"
@@ -122,6 +124,7 @@ class FacilityType(str, Enum):
 
 ITEM_TO_DISPLAYNAME = {
     Item.faceshield: "Face Shields",
+    Item.swab_kit: "Swab kit",
     Item.gown: "Gowns",
     Item.gown_material: "Gown Material",
     Item.coveralls: "Coveralls",
@@ -145,6 +148,7 @@ ITEM_TO_DISPLAYNAME = {
 
 ITEM_TO_MAYORAL = {
     Item.faceshield: MayoralCategory.eye_protection,
+    Item.swab_kit: MayoralCategory.uncategorized,
     Item.gown: MayoralCategory.iso_gowns,
     Item.gown_material: MayoralCategory.uncategorized,
     Item.coveralls: MayoralCategory.iso_gowns,

@@ -91,7 +91,7 @@ class SourcingRow(ImportedRow, NamedTuple):
 
 
 DCAS_DAILY_SOURCING = SheetMapping(
-    sheet_name=RegexMatch("DCAS \d-\d+ \d+[AP]M"),  #'DCAS 4-12 3PM',
+    sheet_name=RegexMatch("DCAS (\d+-\d+) \d+[AP]M", take_latest=True),  #'DCAS 4-12 3PM',
     data_file=DataFile.PPE_ORDERINGCHARTS_DATE_XLSX,
     mappings={
         Mapping(
@@ -135,4 +135,5 @@ DCAS_DAILY_SOURCING = SheetMapping(
     },
     include_raw=True,
     obj_constructor=SourcingRow,
+    header_row_idx=2,
 )
