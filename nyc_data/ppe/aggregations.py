@@ -74,7 +74,7 @@ class WeeklyRollupTable(tables.Table):
         extra_columns = [("total", NumericalColumn())]
         extra_columns += [
             (
-                f"{start_date + datetime.timedelta(weeks=n)}",
+                (start_date + datetime.timedelta(weeks=n)).strftime("%m/%d"),
                 NumericalColumn(accessor=f"week_{n}"),
             )
             for n in range(num_weeks)
