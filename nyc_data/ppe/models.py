@@ -230,7 +230,7 @@ class FailedImport(models.Model):
                 uploader_name=self.uploaded_by.username,
                 current_as_of=self.current_as_of,
                 user_provided_name=self.file_name,
-                overwrite_in_prog=True
+                overwrite_in_prog=True,
             )
             finalize_import(import_obj)
             self.fixed = True

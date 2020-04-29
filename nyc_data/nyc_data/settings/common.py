@@ -127,18 +127,27 @@ STATIC_ROOT = os.path.join(BASE_DIR, "static")
 # Authentication config
 
 PASSWORD_HASHERS = [  # NYC Standard 4
-    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
-    'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
-    'django.contrib.auth.hashers.Argon2PasswordHasher',
-    'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
+    "django.contrib.auth.hashers.PBKDF2PasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher",
+    "django.contrib.auth.hashers.Argon2PasswordHasher",
+    "django.contrib.auth.hashers.BCryptSHA256PasswordHasher",
 ]
 
 AUTH_PASSWORD_VALIDATORS = [
-    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",},  # NYC Standard 11
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", "OPTIONS": {'min_length': 8,}},  # NYC Standard 9
-    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",},  # NYC Standard 11
-    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",},  # NYC Standard 8
-    {"NAME": "nyc_data.auth.CharacterComplexityValidator",}, # NYC Standard 10
+    {
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+    },  # NYC Standard 11
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "OPTIONS": {"min_length": 8,},
+    },  # NYC Standard 9
+    {
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+    },  # NYC Standard 11
+    {
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+    },  # NYC Standard 8
+    {"NAME": "nyc_data.auth.CharacterComplexityValidator",},  # NYC Standard 10
 ]
 
 AUTHENTICATION_BACKENDS = [
@@ -153,7 +162,9 @@ ACCOUNT_SESSION_REMEMBER = True  # Allow users to stay logged in
 ACCOUNT_EMAIL_VERIFICATION = "none"  # Don't require email verification
 ACCOUNT_AUTHENTICATION_METHOD = "username_email"  # log in with either username or email
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"  # links should use HTTPS - NYC Standard 4
-ACCOUNT_LOGIN_ATTEMPTS_LIMIT = 5  # Timeout after this many failed attempts - NYC Standard 7
+ACCOUNT_LOGIN_ATTEMPTS_LIMIT = (
+    5  # Timeout after this many failed attempts - NYC Standard 7
+)
 ACCOUNT_LOGIN_ATTEMPTS_TIMEOUT = (
     900  # Duration of timeout after failed attempts in seconds - NYC Standard 7
 )

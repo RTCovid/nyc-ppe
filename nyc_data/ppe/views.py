@@ -48,12 +48,14 @@ class StandardRequestParams(NamedTuple):
 
         err_collector = ErrorCollector()
         # Python defaults to Monday. Subtract one extra day to get us to Sunday
-        default_start = datetime.today() + timedelta(weeks=1) - timedelta(days=datetime.today().weekday() + 1)
+        default_start = (
+            datetime.today()
+            + timedelta(weeks=1)
+            - timedelta(days=datetime.today().weekday() + 1)
+        )
         default_end = default_start + timedelta(days=6)
         start_date = (parse_date(start_date, err_collector) or default_start).date()
-        end_date = (
-                parse_date(end_date, err_collector) or default_end
-        ).date()
+        end_date = (parse_date(end_date, err_collector) or default_end).date()
 
         if params.get("rollup") in {"mayoral", "", None}:
             rollup_fn = mayoral_rollup
@@ -99,8 +101,8 @@ def default(request):
     context = {
         "aggregations": table,
         "days_in_view": dc.Period(params.start_date, params.end_date)
-            .inclusive_length()
-            .days,
+        .inclusive_length()
+        .days,
     }
     return render(request, "dashboard.html", context)
 
@@ -141,8 +143,8 @@ def drilldown(request):
                 d.quantity
                 for d in deliveries
                 if datetime.now().date()
-                   <= d.delivery_date
-                   <= datetime.now().date() + timedelta(days=2)
+                <= d.delivery_date
+                <= datetime.now().date() + timedelta(days=2)
             ]
         ),
         "deliveries_next_week": sum(
@@ -150,8 +152,8 @@ def drilldown(request):
                 d.quantity
                 for d in deliveries
                 if datetime.now().date()
-                   <= d.delivery_date
-                   <= datetime.now().date() + timedelta(days=6)
+                <= d.delivery_date
+                <= datetime.now().date() + timedelta(days=6)
             ]
         ),
         "deliveries_next_thirty": sum(
@@ -159,8 +161,8 @@ def drilldown(request):
                 d.quantity
                 for d in deliveries
                 if datetime.now().date()
-                   <= d.delivery_date
-                   <= datetime.now().date() + timedelta(days=29)
+                <= d.delivery_date
+                <= datetime.now().date() + timedelta(days=29)
             ]
         ),
         "scheduled_total": sum([d.quantity for d in deliveries]),
@@ -186,7 +188,9 @@ def drilldown(request):
 def week_breakdown(request):
     params = StandardRequestParams.load_from_request(request)
     # TODO: enable specifying order type in URL param
-    data = aggregations.build_week_breakdown(params.rollup_fn, 8, order_type=OrderType.Purchase)
+    data = aggregations.build_week_breakdown(
+        params.rollup_fn, 8, order_type=OrderType.Purchase
+    )
     table = aggregations.WeeklyRollupTable.make_table(5, data=data)
     return render(request, "week_breakdown.html", {"week_breakdown": table})
 

@@ -14,8 +14,15 @@ retry_upload.short_description = "Retry a failed upload"
 class FailedImportAdmin(admin.ModelAdmin):
     actions = [retry_upload]
 
+
 class DataImportAdmin(admin.ModelAdmin):
-    list_display = ("import_date", "status", "current_as_of", "uploaded_by", "file_name")
+    list_display = (
+        "import_date",
+        "status",
+        "current_as_of",
+        "uploaded_by",
+        "file_name",
+    )
     ordering = ("status",)
 
 

@@ -10,7 +10,7 @@ class ClosedAccountAdapter(DefaultAccountAdapter):
 
 
 class CharacterComplexityValidator:
-    PATTERN = r'^(?=.*[A-Za-z].*)(?=.*[0-9{}\[\],.<>;:\'\"?\/|\\`~!@#$^&*()_\-+=].*).*$'
+    PATTERN = r"^(?=.*[A-Za-z].*)(?=.*[0-9{}\[\],.<>;:\'\"?\/|\\`~!@#$^&*()_\-+=].*).*$"
 
     def __init__(self, min_length=8):
         self.min_length = min_length

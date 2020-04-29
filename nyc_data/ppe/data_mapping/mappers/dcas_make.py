@@ -13,13 +13,15 @@ from ppe.data_mapping.utils import (
 from ppe.dataclasses import Item, OrderType
 from xlsx_utils import SheetMapping, Mapping
 
+
 class ContractStatus(str, Enum):
     executed = "executed"
     in_progress = "inprogress"
     preliminary = "preliminary"
 
+
 def parse_contract_status(status, error_collector: ErrorCollector):
-    status=(status or '').replace(' ', '').lower()
+    status = (status or "").replace(" ", "").lower()
     try:
         return ContractStatus(status)
     except ValueError:
@@ -115,8 +117,8 @@ SUPPLIERS_AND_PARTNERS = SheetMapping(
         Mapping(
             sheet_column_name="Contract Status",
             obj_column_name="contract_status",
-            proc=parse_contract_status
-        )
+            proc=parse_contract_status,
+        ),
     },
     include_raw=True,
     obj_constructor=MakeRow,
