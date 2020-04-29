@@ -191,7 +191,9 @@ def week_breakdown(request):
     data = aggregations.build_week_breakdown(
         params.rollup_fn, 8, order_type=OrderType.Purchase
     )
-    table = aggregations.WeeklyRollupTable.make_table(5, data=data)
+    table = aggregations.WeeklyRollupTable.make_table(
+        num_weeks=5, data=data, start_date=params.start_date
+    )
     return render(request, "week_breakdown.html", {"week_breakdown": table})
 
 

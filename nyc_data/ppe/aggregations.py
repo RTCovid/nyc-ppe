@@ -70,10 +70,14 @@ class WeeklyRollupTable(tables.Table):
         return value.display()
 
     @classmethod
-    def make_table(self, num_weeks: int, *args, **kwargs):
-        extra_columns = [("Total", NumericalColumn(accessor=f"total_{num_weeks}"))]
+    def make_table(self, start_date: datetime.date, num_weeks: int, *args, **kwargs):
+        extra_columns = [("total", NumericalColumn())]
         extra_columns += [
-            (f"{n}", NumericalColumn(accessor=f"week_{n}")) for n in range(num_weeks)
+            (
+                f"{start_date + datetime.timedelta(weeks=n)}",
+                NumericalColumn(accessor=f"week_{n}"),
+            )
+            for n in range(num_weeks)
         ]
         return WeeklyRollupTable(*args, **kwargs, extra_columns=extra_columns)
 
@@ -91,11 +95,6 @@ class WeeklyRollup:
             n = int(n)
             assert week == "week"
             return self.week(n)
-        elif "total" in item:
-            total, n = item.split("_")
-            n = int(n)
-            return self.total(n)
-
         else:
             raise KeyError
 
@@ -106,7 +105,7 @@ class WeeklyRollup:
             [d.quantity for d in self.deliveries if start <= d.delivery_date <= end]
         )
 
-    def total(self, n_weeks: int):
+    def total(self):
         return sum([d.quantity for d in self.deliveries])
 
 
