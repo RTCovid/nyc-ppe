@@ -62,6 +62,67 @@ class DemandSrc(str, Enum):
             return "supply burndown information"
 
 
+class WeeklyRollupTable(tables.Table):
+    asset = tables.Column(accessor='asset')
+
+    def render_asset(self, value):
+        return value.display()
+
+    @classmethod
+    def make_table(self, num_weeks: int, *args, **kwargs):
+        extra_columns = [('Total', NumericalColumn(accessor=f'total_{num_weeks}'))]
+        extra_columns += [(f'{n}', NumericalColumn(accessor=f'week_{n}')) for n in range(num_weeks)]
+        return WeeklyRollupTable(*args, **kwargs, extra_columns=extra_columns)
+
+
+class WeeklyRollup:
+    def __init__(self, asset, deliveries, start_date: datetime.date):
+        self.asset = asset
+        self.deliveries = deliveries
+        self.start_date = start_date
+
+    def __getitem__(self, item):
+        # django tables 2 isn't very flexible so...hackhackhack
+        if 'week' in item:
+            week, n = item.split('_')
+            n = int(n)
+            assert week == 'week'
+            return self.week(n)
+        elif 'total' in item:
+            total, n = item.split('_')
+            n = int(n)
+            return self.total(n)
+
+        else:
+            raise KeyError
+
+    def week(self, n: int):
+        start = self.start_date + n * datetime.timedelta(weeks=n)
+        end = start + datetime.timedelta(days=6)
+        return sum([d.quantity for d in self.deliveries if start <= d.delivery_date <= end])
+
+    def total(self, n_weeks: int):
+        return sum([d.quantity for d in self.deliveries])
+
+
+def build_week_breakdown(rollup_fn, num_weeks: int, order_type:OrderType):
+    start_date = datetime.date.today()
+    end_date = start_date + datetime.timedelta(weeks=num_weeks)
+    relevant_deliveries = (
+        ScheduledDelivery.active()
+            .prefetch_related("purchase")
+            .filter(delivery_date__gte=start_date, delivery_date__lte=end_date)
+            .filter(purchase__order_type=order_type)
+    )
+
+    broken_down = collections.defaultdict(list)
+    for delivery in relevant_deliveries:
+        broken_down[rollup_fn(delivery.item)].append(delivery)
+
+    return [WeeklyRollup(asset_cat, deliveries=deliveries, start_date=start_date) for asset_cat, deliveries in
+            broken_down.items()]
+
+
 @dataclass
 class AssetRollup:
     asset: str
@@ -125,11 +186,11 @@ MAPPING = {
 
 
 def asset_rollup_legacy(
-    time_start: datetime,
-    time_end: datetime,
-    use_hospitalization_projection=True,
-    use_real_demand=True,
-    rollup_fn: Callable[[dc.Item], str] = lambda x: x,
+        time_start: datetime,
+        time_end: datetime,
+        use_hospitalization_projection=True,
+        use_real_demand=True,
+        rollup_fn: Callable[[dc.Item], str] = lambda x: x,
 ):
     return asset_rollup(
         time_range=Period(time_start, time_end),
@@ -144,23 +205,23 @@ def asset_rollup_legacy(
 
 @log_db_queries
 def asset_rollup(
-    time_range: Period,
-    supply_cols: Set[AggColumn],
-    demand_calculation_config: DemandCalculationConfig,
+        time_range: Period,
+        supply_cols: Set[AggColumn],
+        demand_calculation_config: DemandCalculationConfig,
 ) -> Dict[str, AssetRollup]:
     time_start, time_end = time_range.start, time_range.end
     relevant_deliveries = (
         ScheduledDelivery.active()
-        .prefetch_related("purchase")
-        .filter(delivery_date__gte=time_start, delivery_date__lte=time_end)
-        .exclude(purchase__order_type=OrderType.Donation)
+            .prefetch_related("purchase")
+            .filter(delivery_date__gte=time_start, delivery_date__lte=time_end)
+            .exclude(purchase__order_type=OrderType.Donation)
     )
 
     # i'm sorry. will improve this later :)
     relevant_donations = (
         ScheduledDelivery.active()
-        .prefetch_related("purchase")
-        .filter(purchase__order_type=OrderType.Donation)
+            .prefetch_related("purchase")
+            .filter(purchase__order_type=OrderType.Donation)
     )
 
     results: Dict[dc.Item, AssetRollup] = {}
@@ -214,9 +275,9 @@ def deliveries_for_period(time_start: datetime, time_end: datetime):
     """
     demand_by_day = (
         FacilityDelivery.active()
-        .filter(date__gte=time_start, date__lte=time_end)
-        .values("item")
-        .annotate(Sum("quantity"))
+            .filter(date__gte=time_start, date__lte=time_end)
+            .values("item")
+            .annotate(Sum("quantity"))
     )
     rollup = collections.defaultdict(lambda: 0)
     for row in demand_by_day:
@@ -240,9 +301,9 @@ def known_recent_demand() -> Dict[dc.Item, Demand]:
 
 
 def compute_scaling_factor(
-    past_period: Period,
-    projection_period: Period,
-    demand_calculation_config: DemandCalculationConfig,
+        past_period: Period,
+        projection_period: Period,
+        demand_calculation_config: DemandCalculationConfig,
 ) -> float:
     if demand_calculation_config.use_hospitalization_projection:
         # Get last week'ks total hospitalization
@@ -258,10 +319,10 @@ def compute_scaling_factor(
 
 
 def add_demand_estimate(
-    time_start: datetime,
-    time_end: datetime,
-    asset_rollup: Dict[dc.Item, AssetRollup],
-    demand_calculation_config: DemandCalculationConfig,
+        time_start: datetime,
+        time_end: datetime,
+        asset_rollup: Dict[dc.Item, AssetRollup],
+        demand_calculation_config: DemandCalculationConfig,
 ):
     last_week_start = datetime.datetime.today() - datetime.timedelta(days=7)
     last_week_end = last_week_start + datetime.timedelta(days=6)

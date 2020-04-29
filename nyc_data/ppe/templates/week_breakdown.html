@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% load render_table from django_tables2 %}
+
+{% block titlebar %}
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-table">
+    {% render_table week_breakdown %}
+</div>
+{% endblock %}
