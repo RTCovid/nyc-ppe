@@ -22,6 +22,7 @@ from ppe.models import (
     Purchase,
     current_as_of,
 )
+
 # NY Forecast from https://covid19.healthdata.org/united-states-of-america/new-york
 from ppe.utils import log_db_queries
 
@@ -60,6 +61,72 @@ class DemandSrc(str, Enum):
             return "previous deliveries"
         elif self == DemandSrc.real_demand:
             return "supply burndown information"
+
+
+class WeeklyRollupTable(tables.Table):
+    asset = tables.Column(accessor="asset")
+
+    def render_asset(self, value):
+        return value.display()
+
+    @classmethod
+    def make_table(self, start_date: datetime.date, num_weeks: int, *args, **kwargs):
+        extra_columns = [("total", NumericalColumn())]
+        extra_columns += [
+            (
+                (start_date + datetime.timedelta(weeks=n)).strftime("%m/%d"),
+                NumericalColumn(accessor=f"week_{n}"),
+            )
+            for n in range(num_weeks)
+        ]
+        return WeeklyRollupTable(*args, **kwargs, extra_columns=extra_columns)
+
+
+class WeeklyRollup:
+    def __init__(self, asset, deliveries, start_date: datetime.date):
+        self.asset = asset
+        self.deliveries = deliveries
+        self.start_date = start_date
+
+    def __getitem__(self, item):
+        # django tables 2 isn't very flexible so...hackhackhack
+        if "week" in item:
+            week, n = item.split("_")
+            n = int(n)
+            assert week == "week"
+            return self.week(n)
+        else:
+            raise KeyError
+
+    def week(self, n: int):
+        start = self.start_date + n * datetime.timedelta(weeks=n)
+        end = start + datetime.timedelta(days=6)
+        return sum(
+            [d.quantity for d in self.deliveries if start <= d.delivery_date <= end]
+        )
+
+    def total(self):
+        return sum([d.quantity for d in self.deliveries])
+
+
+def build_week_breakdown(rollup_fn, num_weeks: int, order_type: OrderType):
+    start_date = datetime.date.today()
+    end_date = start_date + datetime.timedelta(weeks=num_weeks)
+    relevant_deliveries = (
+        ScheduledDelivery.active()
+        .prefetch_related("purchase")
+        .filter(delivery_date__gte=start_date, delivery_date__lte=end_date)
+        .filter(purchase__order_type=order_type)
+    )
+
+    broken_down = collections.defaultdict(list)
+    for delivery in relevant_deliveries:
+        broken_down[rollup_fn(delivery.item)].append(delivery)
+
+    return [
+        WeeklyRollup(asset_cat, deliveries=deliveries, start_date=start_date)
+        for asset_cat, deliveries in broken_down.items()
+    ]
 
 
 @dataclass
@@ -387,9 +454,7 @@ class AggregationTable(tables.Table):
                 "aria-label": lambda: f"DOHMH [{Inventory.as_of_latest()}]",
                 "data-supply-col": lambda bound_column: bound_column.name,
             },
-            "td": {
-                "data-supply-col": lambda bound_column: bound_column.name,
-            },
+            "td": {"data-supply-col": lambda bound_column: bound_column.name,},
         }
     )
     donated = NumericalColumn(
@@ -400,9 +465,7 @@ class AggregationTable(tables.Table):
                 "aria-label": lambda: f"DCAS pending pledges [{current_as_of(Purchase.active().filter(order_type=dc.OrderType.Donation))}]",
                 "data-supply-col": lambda bound_column: bound_column.name,
             },
-            "td": {
-                "data-supply-col": lambda bound_column: bound_column.name,
-            }
+            "td": {"data-supply-col": lambda bound_column: bound_column.name,},
         },
     )
     ordered = NumericalColumn(
@@ -413,9 +476,7 @@ class AggregationTable(tables.Table):
                 "aria-label": lambda: f"DCAS scheduled orders [{current_as_of(Purchase.active().filter(order_type=dc.OrderType.Purchase))}]",
                 "data-supply-col": lambda bound_column: bound_column.name,
             },
-            "td": {
-                "data-supply-col": lambda bound_column: bound_column.name,
-            },
+            "td": {"data-supply-col": lambda bound_column: bound_column.name,},
         },
     )
 
@@ -427,9 +488,7 @@ class AggregationTable(tables.Table):
                 "aria-label": lambda: f"EDC scheduled deliveries [{current_as_of(Purchase.active().filter(order_type=dc.OrderType.Make))}]",
                 "data-supply-col": lambda bound_column: bound_column.name,
             },
-            "td": {
-                "data-supply-col": lambda bound_column: bound_column.name,
-            },
+            "td": {"data-supply-col": lambda bound_column: bound_column.name,},
         },
     )
 

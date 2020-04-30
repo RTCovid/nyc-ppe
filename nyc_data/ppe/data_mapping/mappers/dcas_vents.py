@@ -66,7 +66,9 @@ class VentilatorRow(ImportedRow, NamedTuple):
 
 
 HNH_VENTS = SheetMapping(
-    sheet_name=RegexMatch("H\+H (\d+-\d+) \d+[AP]M", take_latest=True),  # 'H+H 4-3 3PM',
+    sheet_name=RegexMatch(
+        "H\+H (\d+-\d+) \d+[AP]M", take_latest=True
+    ),  # 'H+H 4-3 3PM',
     data_file=DataFile.PPE_ORDERINGCHARTS_DATE_XLSX,
     mappings={
         Mapping(sheet_column_name="Equipment Detail", obj_column_name="type",),

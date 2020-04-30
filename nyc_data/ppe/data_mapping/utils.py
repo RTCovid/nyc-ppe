@@ -58,7 +58,7 @@ NAME_ITEM_MAPPING = {
     "surgicalmasks": Item.surgical_mask,
     "vents": Item.ventilators_full_service,
     "ponchos": Item.ponchos,
-    "other": Item.unknown
+    "other": Item.unknown,
 }
 
 
@@ -66,7 +66,7 @@ def asset_name_to_item(asset_name: str, error_collector: ErrorCollector) -> Item
     if asset_name is None:
         error_collector.report_error("Null asset name")
         return Item.unknown
-    match = NAME_ITEM_MAPPING.get(asset_name.lower().replace(' ', ''))
+    match = NAME_ITEM_MAPPING.get(asset_name.lower().replace(" ", ""))
     if match is not None:
         return match
     error_collector.report_warning(f"Unknown type: {asset_name}")
@@ -126,7 +126,7 @@ def parse_int(inp: str, error_collector: ErrorCollector):
 def parse_bool(inp: str, error_collector: ErrorCollector):
     # TODO: would probably be useful to show more than just true/false
     if inp is None:
-        error_collector.report_error('Bool input was None')
+        error_collector.report_error("Bool input was None")
         return None
     inp = inp.lower().strip()
     if inp in {"y", "yes"}:

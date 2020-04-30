@@ -17,8 +17,9 @@ from ppe import aggregations, dataclasses as dc
 from ppe import forms, data_import
 from ppe.aggregations import DemandCalculationConfig, AggColumn
 from ppe.data_mapping.utils import parse_date, ErrorCollector
+from ppe.dataclasses import OrderType
 from ppe.drilldown import drilldown_result
-from ppe.models import DataImport
+from ppe.models import DataImport, ScheduledDelivery
 from ppe.optimization import generate_forecast
 
 
@@ -47,12 +48,14 @@ class StandardRequestParams(NamedTuple):
 
         err_collector = ErrorCollector()
         # Python defaults to Monday. Subtract one extra day to get us to Sunday
-        default_start = datetime.today() + timedelta(weeks=1) - timedelta(days=datetime.today().weekday() + 1)
+        default_start = (
+            datetime.today()
+            + timedelta(weeks=1)
+            - timedelta(days=datetime.today().weekday() + 1)
+        )
         default_end = default_start + timedelta(days=6)
         start_date = (parse_date(start_date, err_collector) or default_start).date()
-        end_date = (
-            parse_date(end_date, err_collector) or default_end
-        ).date()
+        end_date = (parse_date(end_date, err_collector) or default_end).date()
 
         if params.get("rollup") in {"mayoral", "", None}:
             rollup_fn = mayoral_rollup
@@ -179,6 +182,19 @@ def drilldown(request):
         },
     }
     return render(request, "drilldown.html", context)
+
+
+@login_required
+def week_breakdown(request):
+    params = StandardRequestParams.load_from_request(request)
+    # TODO: enable specifying order type in URL param
+    data = aggregations.build_week_breakdown(
+        params.rollup_fn, 8, order_type=OrderType.Purchase
+    )
+    table = aggregations.WeeklyRollupTable.make_table(
+        num_weeks=5, data=data, start_date=params.start_date
+    )
+    return render(request, "week_breakdown.html", {"week_breakdown": table})
 
 
 @login_required
