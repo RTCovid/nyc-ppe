@@ -278,7 +278,7 @@ class InboundReceipt(ImportedDataModel):
 
 
 class Facility(ImportedDataModel):
-    name = models.TextField()
+    name = models.TextField(db_index=True)
     tpe = ChoiceField(dc.FacilityType)
 
 
