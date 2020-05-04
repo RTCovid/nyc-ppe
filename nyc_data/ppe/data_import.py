@@ -8,8 +8,8 @@ import sentry_sdk
 from django.contrib.auth.models import User
 
 import xlsx_utils
+from ppe import edc_po_tracker
 from ppe.data_mapping.mappers import (
-    dcas_make,
     dcas_sourcing,
     inventory_from_facilities,
     hospital_deliveries,
@@ -28,7 +28,7 @@ from ppe.models import ImportStatus, DataImport, FacilityDelivery, FailedImport
 from xlsx_utils import import_xlsx
 
 ALL_MAPPINGS = [
-    dcas_make.SUPPLIERS_AND_PARTNERS,
+    edc_po_tracker.EDC_PO_TRACKER,
     dcas_sourcing.DCAS_DAILY_SOURCING,
     dcas_vents.HNH_VENTS,
     inventory_from_facilities.INVENTORY,
