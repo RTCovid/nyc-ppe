@@ -9,6 +9,7 @@ services:
     entrypoint: ["sleep", "infinity"]
     links:
       - db
+      - redis
     ports:
       - "8000:8000"
     volumes:
@@ -26,6 +27,12 @@ services:
       - db.env
     volumes:
       - local-db:/var/lib/postgresql/data
+  
+  redis:
+    restart: always
+    ports:
+      - "6379:6379"
+    image: redis:6-alpine
 
 volumes:
   local-db:
