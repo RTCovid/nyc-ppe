@@ -169,5 +169,6 @@ ACCOUNT_LOGIN_ATTEMPTS_TIMEOUT = (
     900  # Duration of timeout after failed attempts in seconds - NYC Standard 7
 )
 
-
 # Third party config
+
+CELERY_BROKER_URL = os.environ.get("REDIS_URL", 'redis://redis:6379/0')

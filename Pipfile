@@ -23,6 +23,8 @@ django-allauth = "*"
 freezegun = "*"
 fuzzywuzzy = "*"
 werkzeug = "*"
+celery = "*"
+redis = "*"
 
 [requires]
 python_version = "3.8"
