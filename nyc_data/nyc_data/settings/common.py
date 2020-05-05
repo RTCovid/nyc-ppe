@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
+    "django_celery_results",
 ]
 
 MIDDLEWARE = [
@@ -172,3 +173,4 @@ ACCOUNT_LOGIN_ATTEMPTS_TIMEOUT = (
 # Third party config
 
 CELERY_BROKER_URL = os.environ.get("REDIS_URL", 'redis://redis:6379/0')
+CELERY_RESULT_BACKEND = 'django-db'

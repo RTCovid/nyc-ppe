@@ -25,6 +25,7 @@ fuzzywuzzy = "*"
 werkzeug = "*"
 celery = "*"
 redis = "*"
+django-celery-results = "*"
 
 [requires]
 python_version = "3.8"
