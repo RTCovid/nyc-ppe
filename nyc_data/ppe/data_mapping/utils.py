@@ -43,6 +43,7 @@ NAME_ITEM_MAPPING = {
     "goggles": Item.goggles,
     "gowns": Item.gown,
     "isolationgowns": Item.gown,
+    "isogowns": Item.gown,
     "kn95masks": Item.kn95_mask,
     "materialsforgowns": Item.gown_material,
     "misc": Item.ppe_other,
