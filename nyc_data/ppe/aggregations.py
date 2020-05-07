@@ -187,7 +187,6 @@ class AssetRollup:
 MAPPING = {
     dc.OrderType.Make: "made",
     dc.OrderType.Purchase: "ordered",
-    dc.OrderType.Donation: "donated",
 }
 
 
@@ -220,15 +219,10 @@ def asset_rollup(
         ScheduledDelivery.active()
         .prefetch_related("purchase")
         .filter(delivery_date__gte=time_start, delivery_date__lte=time_end)
-        .exclude(purchase__order_type=OrderType.Donation)
     )
 
-    # i'm sorry. will improve this later :)
-    relevant_donations = (
-        ScheduledDelivery.active()
-        .prefetch_related("purchase")
-        .filter(purchase__order_type=OrderType.Donation)
-    )
+    relevant_donations = Purchase.active().filter(order_type=OrderType.Donation)
+
 
     results: Dict[dc.Item, AssetRollup] = {}
     for _, item in dc.Item.__members__.items():
@@ -246,11 +240,10 @@ def asset_rollup(
             setattr(rollup, param, getattr(rollup, param) + delivery.quantity)
 
     for donation in relevant_donations:
-        rollup = results[donation.purchase.item]
-        tpe = donation.purchase.order_type
-        assert tpe == dc.OrderType.Donation
-        param = MAPPING.get(tpe)
-        setattr(rollup, param, getattr(rollup, param) + donation.quantity)
+        rollup = results[donation.item]
+        if donation.quantity != donation.received_quantity:
+            print(donation.item, donation.quantity, donation.received_quantity)
+        rollup.donated += donation.quantity - donation.received_quantity
 
     inventory = Inventory.active()
     for item in inventory:
