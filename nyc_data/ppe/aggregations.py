@@ -241,8 +241,6 @@ def asset_rollup(
 
     for donation in relevant_donations:
         rollup = results[donation.item]
-        if donation.quantity != donation.received_quantity:
-            print(donation.item, donation.quantity, donation.received_quantity)
         rollup.donated += donation.quantity - donation.received_quantity
 
     inventory = Inventory.active()
