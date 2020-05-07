@@ -14,51 +14,37 @@ NUM_FUTURE_DAYS_GUESS = 5
 
 class DonationRow(ImportedRow, NamedTuple):
     item: Item
-    quantity: int
     raw_data: Dict[str, any]
 
     donor: str
     contact_person: str
     description: str
-    picked_up: bool
-    received_date: Optional[date]
     notification_date: date
+    # quantity delivered to end recipient (already in inventory, concievably)
+    total_distributed_quantity: int
 
-    comments: str
+    # quantity pledged by donor
+    total_pledged_quantity: int
+
+    distributed_to: str
+    distribution_status: str
 
     def __repr__(self):
         return repr_no_raw(self)
 
-
     def to_objects(self, error_collector: ErrorCollector):
-        if self.picked_up:
-            return []
-        if self.quantity is None:
-            error_collector.report_warning("Ignoring donation row with no quantity")
-            return []
         purchase = Purchase(
             order_type=OrderType.Donation,
             item=self.item,
             description=self.description,
-            quantity=self.quantity,
-            received_quantity=self.quantity if self.picked_up else 0,
+            quantity=self.total_pledged_quantity,
+            received_quantity=self.total_distributed_quantity,
             vendor=self.donor,
-            comment=self.comments,
             raw_data=self.raw_data,
             donation_date=self.notification_date,
         )
 
-        objs = [purchase]
-        delivery_date = self.guess_delivery_date(error_collector)
-        if delivery_date is not None:
-            objs.append(
-                ScheduledDelivery(
-                    purchase=purchase,
-                    delivery_date=delivery_date,
-                    quantity=self.quantity,
-                )
-            )
-        return objs
+        return [purchase]
 
 
 def date_or_pending(s: str, error_collector: ErrorCollector):
@@ -80,7 +66,7 @@ DONATION_DATA = SheetMapping(
             proc=utils.parse_date,
         ),
         Mapping(
-            sheet_column_name="Person of Contact", obj_column_name="contact_person",
+            sheet_column_name="Person Of Contact", obj_column_name="contact_person",
         ),
         Mapping(
             sheet_column_name="Detailed Item Description",
@@ -92,24 +78,24 @@ DONATION_DATA = SheetMapping(
             proc=utils.asset_name_to_item,
         ),
         Mapping(
-            sheet_column_name="Total Quantity ",
-            obj_column_name="quantity",
+            sheet_column_name="Total Notified Quantity",
+            obj_column_name="total_pledged_quantity",
             proc=utils.parse_int,
+        ),
+        Mapping(
+            sheet_column_name="Total Distributed Quantity",
+            obj_column_name="total_distributed_quantity",
+            proc=utils.parse_int_or_zero,
         ),
         Mapping(
             sheet_column_name="Distribution Status",
             obj_column_name="distribution_status",
+
         ),
         Mapping(
-            sheet_column_name="Receiving Status",
-            obj_column_name="received_date",
-            proc=date_or_pending,
-        ),
-        Mapping(
-            sheet_column_name="Comments",
-            obj_column_name="comments",
-            proc=utils.parse_string_or_none,
-        ),
+            sheet_column_name="Distributed To",
+            obj_column_name="distributed_to"
+        )
     },
     include_raw=True,
     obj_constructor=DonationRow,
