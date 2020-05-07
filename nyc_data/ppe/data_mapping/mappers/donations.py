@@ -29,12 +29,6 @@ class DonationRow(ImportedRow, NamedTuple):
     def __repr__(self):
         return repr_no_raw(self)
 
-    def guess_delivery_date(self, error_collector: ErrorCollector):
-        date_like = re.search("""\d+[/\-]\d+""", self.comments)
-        if date_like is not None:
-            return utils.parse_date(date_like.group(0), error_collector)
-        else:
-            return self.notification_date + timedelta(days=NUM_FUTURE_DAYS_GUESS)
 
     def to_objects(self, error_collector: ErrorCollector):
         if self.picked_up:
@@ -76,13 +70,12 @@ def date_or_pending(s: str, error_collector: ErrorCollector):
 
 DONATION_DATA = SheetMapping(
     data_file=DataFile.CSH_DONATIONS,
-    sheet_name="List of Donations",
+    sheet_name="{e9b4915b-d988-ea11-a328-64006a",
     header_row_idx=2,
     mappings={
         Mapping(sheet_column_name="Donor", obj_column_name="donor",),
         Mapping(
-            # NOTE: typo. They might fix.
-            sheet_column_name="Donation notifcation Date",
+            sheet_column_name="Notified Date",
             obj_column_name="notification_date",
             proc=utils.parse_date,
         ),
@@ -90,7 +83,7 @@ DONATION_DATA = SheetMapping(
             sheet_column_name="Person of Contact", obj_column_name="contact_person",
         ),
         Mapping(
-            sheet_column_name="Detailed item description",
+            sheet_column_name="Detailed Item Description",
             obj_column_name="description",
         ),
         Mapping(
@@ -104,12 +97,11 @@ DONATION_DATA = SheetMapping(
             proc=utils.parse_int,
         ),
         Mapping(
-            sheet_column_name="Status Shipped DOHMH  Y/N   ",
-            obj_column_name="picked_up",
-            proc=utils.parse_bool,
+            sheet_column_name="Distribution Status",
+            obj_column_name="distribution_status",
         ),
         Mapping(
-            sheet_column_name="Received at CSH",
+            sheet_column_name="Receiving Status",
             obj_column_name="received_date",
             proc=date_or_pending,
         ),
