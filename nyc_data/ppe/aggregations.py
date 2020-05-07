@@ -323,6 +323,12 @@ def compute_scaling_factor(
     else:
         return projection_period.inclusive_length() / past_period.inclusive_length()
 
+# We get demand info for "Faceshields" but delivery info for eyewear.
+# Because of this, it's misleading to fall back to a delivery based estimate for `eyewear`
+# (and potentially other items in the future
+SUPPLY_BASED_DEMAND_BLACKLIST = {
+    dc.Item.generic_eyeware
+}
 
 def add_demand_estimate(
     time_start: datetime,
@@ -350,6 +356,9 @@ def add_demand_estimate(
                 )
             )
             asset_rollup.demand_src = {DemandSrc.past_deliveries}
+        if k in SUPPLY_BASED_DEMAND_BLACKLIST:
+            asset_rollup.demand = 0
+            asset_rollup.demand_src = set()
 
         # If desired & it exists, compute a calculation based on actual demand
         if demand_calculation_config.use_real_demand:
