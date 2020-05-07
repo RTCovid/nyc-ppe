@@ -61,7 +61,6 @@ DONATION_DATA = SheetMapping(
     mappings={
         Mapping(sheet_column_name="Donor", obj_column_name="donor",),
         Mapping(
-            # NOTE: typo. They might fix.
             sheet_column_name="Notified Date",
             obj_column_name="notification_date",
             proc=utils.parse_date,
@@ -91,6 +90,7 @@ DONATION_DATA = SheetMapping(
         Mapping(
             sheet_column_name="Distribution Status",
             obj_column_name="distribution_status",
+
         ),
         Mapping(
             sheet_column_name="Distributed To",
