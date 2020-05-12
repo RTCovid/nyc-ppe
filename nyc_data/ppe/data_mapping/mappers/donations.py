@@ -7,7 +7,7 @@ from ppe.data_mapping.types import ImportedRow, DataFile, repr_no_raw
 from ppe.data_mapping.utils import ErrorCollector
 from ppe.dataclasses import Item, OrderType
 from ppe.models import Purchase, ScheduledDelivery
-from xlsx_utils import SheetMapping, Mapping
+from xlsx_utils import SheetMapping, Mapping, RegexMatch
 
 NUM_FUTURE_DAYS_GUESS = 5
 
@@ -56,7 +56,10 @@ def date_or_pending(s: str, error_collector: ErrorCollector):
 
 DONATION_DATA = SheetMapping(
     data_file=DataFile.CSH_DONATIONS,
-    sheet_name="{e9b4915b-d988-ea11-a328-64006a",
+    sheet_name=RegexMatch(
+        # 05-12-20, not currently multiple sheets per workbook
+        "\d+-\d+-\d+"
+    ),
     header_row_idx=2,
     mappings={
         Mapping(sheet_column_name="Donor", obj_column_name="donor",),
