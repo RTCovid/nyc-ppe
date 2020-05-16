@@ -13,18 +13,23 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf import settings
 from django.contrib import admin
 from django.urls import path, include
 
+from django_otp.admin import OTPAdminSite
+
 import ppe
 
+otp_admin_site = OTPAdminSite(OTPAdminSite.name)
+for model_cls, model_admin in admin.site._registry.items():
+    otp_admin_site.register(model_cls, model_admin.__class__)
 
 def trigger_error(request):
     division_by_zero = 1 / 0
 
-
 urlpatterns = [
-    path("admax/", admin.site.urls),
+    path("admax/", admin.site.urls if settings.DEBUG else otp_admin_site.urls),
     path("accounts/", include("allauth.urls")),
     path("", include("ppe.urls")),
     path("sentry-debug/", trigger_error),
