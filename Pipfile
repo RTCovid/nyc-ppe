@@ -23,6 +23,9 @@ django-allauth = "*"
 freezegun = "*"
 fuzzywuzzy = "*"
 werkzeug = "*"
+django-otp = "*"
+qrcode = "*"
+pillow = "*"
 
 [requires]
 python_version = "3.8"
