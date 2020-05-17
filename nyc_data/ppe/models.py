@@ -17,9 +17,9 @@ def enum2choices(enum):
     return [(v[0], v[0]) for v in enum.__members__.items()]
 
 
-def ChoiceField(enum, default=None):
+def ChoiceField(enum, default=None, *args, **kwargs):
     return models.TextField(
-        choices=[(v[0], v[0]) for v in enum.__members__.items()], default=default
+        choices=[(v[0], v[0]) for v in enum.__members__.items()], default=default, *args, **kwargs
     )
 
 
@@ -32,8 +32,8 @@ class ImportStatus(str, Enum):
 
 class DataImport(models.Model):
     import_date = models.DateTimeField(auto_now_add=True, db_index=True)
-    status = ChoiceField(ImportStatus)
-    data_file = ChoiceField(DataFile)
+    status = ChoiceField(ImportStatus, db_index=True)
+    data_file = ChoiceField(DataFile, db_index=True)
 
     current_as_of = models.DateField(null=True)
 
@@ -284,7 +284,7 @@ class Facility(ImportedDataModel):
 
 class FacilityDelivery(ImportedDataModel):
     date = models.DateField()
-    facility = models.ForeignKey(Facility, on_delete=models.CASCADE)
+    facility = models.ForeignKey(Facility, null=True, on_delete=models.CASCADE)
     item = ChoiceField(dc.Item)
     quantity = models.IntegerField()
 
