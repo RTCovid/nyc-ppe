@@ -45,6 +45,7 @@ class Item(str, Enum):
     coveralls = "coveralls"
     ponchos = "ponchos"
     scrubs = "scrubs"
+    aprons = "aprons"
 
     n95_mask_non_surgical = "n95_mask"
     n95_mask_surgical = "n95_mask_surgical"
@@ -58,10 +59,13 @@ class Item(str, Enum):
     gloves = "gloves"
 
     swab_kit = "swab_kit"
+    boot_covers = "boot_covers"
 
     ventilators_full_service = "ventilators_full"
     ventilators_non_full_service = "ventilators_non_full"
     bipap_machines = "bipap_machines"
+
+    hand_sanitizer = "hand_sanitizer"
 
     ppe_other = "ppe_other"
     unknown = "unknown"
@@ -144,9 +148,15 @@ ITEM_TO_DISPLAYNAME = {
     Item.ppe_other: "Other PPE",
     Item.unknown: "Other Assets",
     Item.body_bags: "Post Mortem Bags",
+    Item.aprons: "Aprons",
+    Item.hand_sanitizer: "Hand Sanitizer",
+    Item.boot_covers: "Boot covers",
 }
 
 ITEM_TO_MAYORAL = {
+    Item.boot_covers: MayoralCategory.other_ppe,
+    Item.hand_sanitizer: MayoralCategory.other_medical_supplies,
+    Item.aprons: MayoralCategory.other_ppe,
     Item.faceshield: MayoralCategory.eye_protection,
     Item.swab_kit: MayoralCategory.uncategorized,
     Item.gown: MayoralCategory.iso_gowns,

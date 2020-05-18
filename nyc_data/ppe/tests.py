@@ -174,8 +174,7 @@ class TestAssetRollup(TestCase):
             today,
             rollup_fn=lambda row: row.to_mayoral_category(),
         )
-        # no uncategorized items in the rollup
-        self.assertEqual(len(rollup), len(dc.MayoralCategory) - 1)
+        self.assertEqual(len(rollup), len(dc.MayoralCategory))
         self.assertEqual(
             rollup[dc.MayoralCategory.iso_gowns].asset, dc.MayoralCategory.iso_gowns
         )

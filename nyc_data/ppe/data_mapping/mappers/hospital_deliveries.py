@@ -10,7 +10,7 @@ from xlsx_utils import SheetMapping, Mapping
 
 class DeliveryRow(ImportedRow):
     def __init__(
-        self, date, facility_type: str, facility_name: str, raw_data, **kwargs
+            self, date, facility_type: str, facility_name: str, raw_data, **kwargs
     ):
         self.date = date
         self.facility_type = facility_type
@@ -23,41 +23,31 @@ class DeliveryRow(ImportedRow):
         if self.date is None:
             return []
         objs = []
-        facility = Facility.active().filter(name=self.facility_name).first()
-        if not facility:
-            facility = Facility(name=self.facility_name, tpe=self.facility_type)
-            objs.append(facility)
+        #facility = Facility.active().filter(name=self.facility_name).first()
+        #if not facility:
+        #    facility = Facility(name=self.facility_name, tpe=self.facility_type)
+        #    objs.append(facility)
 
         for item_name, qt in self.items.items():
             item = utils.asset_name_to_item(item_name, error_collector)
-            if item == Item.unknown:
-                print(f"need mapping for: {item_name}")
             objs.append(
                 FacilityDelivery(
-                    date=self.date, facility=facility, item=item, quantity=qt
+                    date=self.date, facility=None, item=item, quantity=qt
                 )
             )
         return objs
 
 
 sheet_columns = [
-    "N95 Respirators",
-    "Face Masks",
-    "Eyewear",
-    "Gloves",
-    "Gowns",
-    "Vents",
-    "Post Mortem Bags",
-    "BiPap",
-    "Coveralls",
-    "Multipurpose PPE",
-    "Misc",
+    "N95 Respirators", "Other Respirators", "Face Masks", "Face Shields", "Goggles", "Gloves", "Gowns", "Ponchos",
+    "Aprons", "Vents", "Ventilator Parts", "Post Mortem Bags", "BiPap", "BiPap Parts", "Coveralls", "Shoe/Boot Covers",
+    "Scrubs", "Multipurpose PPE", "Hand Sanitizer", "Misc", "Misc Non-Deployable"
 ]
 
 item_mappings = [
     Mapping(
         sheet_column_name=column,
-        obj_column_name=column,  # .lower().replace(' ', '_'),
+        obj_column_name=column,
         proc=parse_int_or_zero,
     )
     for column in sheet_columns
