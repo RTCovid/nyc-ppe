@@ -58,7 +58,7 @@ DONATION_DATA = SheetMapping(
     data_file=DataFile.CSH_DONATIONS,
     sheet_name=RegexMatch(
         # 05-12-20, not currently multiple sheets per workbook
-        "\d+-\d+-\d+"
+        "(\d+-\d+-\d+)|({\w{8}-\w{4}-\w{4}-\w{4}-\w{5})"
     ),
     header_row_idx=2,
     mappings={
