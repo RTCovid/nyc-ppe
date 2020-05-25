@@ -30,7 +30,7 @@ class InventoryRow(ImportedRow):
 
 sheet_columns = [
     "N95 Respirators", "Other Respirators", "Face Masks", "Face Shields", "Goggles", "Gloves", "Gowns", "Lab Coats",
-    "Ponchos", "Coveralls", "Shoe/Boot covers", "Aprons", "Vents", "Vent Parts", "Vent Medicines", "BiPaps",
+    "Ponchos", "Coveralls", "Shoe Covers", "Aprons", "Vents", "Vent Parts", "Vent Medicines", "BiPaps",
     "BiPap Parts", "Multipurpose PPE", "Post Mortem Bags", "Scrubs", "Misc", "Misc Non-Deployable", "Hand Sanitizer"
 ]
 item_mappings = [
