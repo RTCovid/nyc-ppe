@@ -14,20 +14,12 @@ from ppe.data_mapping.utils import ErrorCollector, parse_date
 from ppe.errors import ColumnNameMismatch
 
 
-def XLSXDictReader(sheet, header_row):
-    rows = sheet.max_row
-    cols = sheet.max_column
-
-    def item(i, j):
-        return (
-            sheet.cell(row=header_row, column=j).value,
-            sheet.cell(row=i, column=j).value,
-        )
-
-    return (
-        dict(item(i, j) for j in range(1, cols + 1))
-        for i in range(header_row + 1, rows + 1)
-    )
+def XLSXDictReader(sheet, header_row_i):
+    header_row = sheet[header_row_i]
+    for (row_i, row) in enumerate(sheet.rows):
+        if row_i < header_row_i:
+            continue
+        yield {header.value: rowcol.value for (header, rowcol) in zip(header_row, row)}
 
 
 class Mapping(NamedTuple):
@@ -91,7 +83,7 @@ class SheetMapping(NamedTuple):
 
             return csv.DictReader(text.splitlines())
         else:
-            workbook = load_workbook(path, data_only=True)
+            workbook = load_workbook(path, data_only=True, read_only=True)
             actual_sheet = self.can_import(workbook.sheetnames)
             if actual_sheet is None:
                 raise Exception(
@@ -115,9 +107,8 @@ RAW_DATA = "raw_data"
 
 
 def guess_mapping(sheet: Path, all_mappings: List[SheetMapping]):
-    workbook = None
     if sheet.suffix == ".xlsx":
-        workbook = load_workbook(sheet, data_only=True)
+        workbook = load_workbook(sheet, data_only=True, read_only=True)
         possible_mappings = [
             m for m in all_mappings if m.can_import(workbook.sheetnames)
         ]
