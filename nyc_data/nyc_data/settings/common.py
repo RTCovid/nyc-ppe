@@ -132,6 +132,8 @@ STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
 # Authentication config
 
+INSECURE_MODE = True if (os.environ.get("INSECURE_MODE",'') == "True" or DEBUG) else False
+
 PASSWORD_HASHERS = [  # NYC Standard 4
     "django.contrib.auth.hashers.PBKDF2PasswordHasher",
     "django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher",
