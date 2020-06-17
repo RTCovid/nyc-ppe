@@ -10,3 +10,6 @@ DATABASES["default"] = dj_database_url.config(conn_max_age=600, ssl_require=True
 sentry_sdk.init(
     dsn=os.environ.get("SENTRY_DSN", ""), integrations=[DjangoIntegration()],
 )
+
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
