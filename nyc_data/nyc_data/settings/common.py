@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "django.contrib.sites",
     "ppe",
     "django_extensions",
+
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
