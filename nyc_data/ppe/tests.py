@@ -1,4 +1,5 @@
 import unittest
+import json
 from datetime import datetime, timedelta
 
 from django.contrib import auth
@@ -98,6 +99,9 @@ class TestAssetRollup(TestCase):
         for item in items:
             item.source = self.data_import
             item.save()
+
+        with open("../public-data/hospitalization_projection_new_york_20200412.json", "r") as f:
+            aggregations.HOSPITALIZATION = json.load(f)
 
     @freeze_time("2020-04-12")
     def test_rollup(self):

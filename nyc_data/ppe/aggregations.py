@@ -27,7 +27,7 @@ from ppe.models import (
 from ppe.utils import log_db_queries
 
 HOSPITALIZATION = {}
-with open("../public-data/hospitalization_projection_new_york.json", "r") as f:
+with open("../public-data/hospitalization_projection_new_york_20200419.json", "r") as f:
     HOSPITALIZATION = json.load(f)
 ALL_BEDS_AVAILABLE = 20420
 DEMAND_MESSAGE = (
