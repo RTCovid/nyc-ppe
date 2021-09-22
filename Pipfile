@@ -7,7 +7,7 @@ verify_ssl = true
 
 [packages]
 black = "*"
-django = "~=3.0.7"
+django = "~=3.1.13"
 dj-database-url = "~=0.5.0"
 django-allauth = "~=0.41.0"
 django-csp = "~=3.6"
